@@ -1,10 +1,8 @@
 import { 
-    create,
-  } from 'naive-ui';
+  create,
+} from 'naive-ui';
   
-  
-  export const naive = create({
-    components: [
-    ],
-  });
-  
+export const naive = create({
+  components: [
+  ],
+});
