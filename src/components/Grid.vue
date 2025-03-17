@@ -21,7 +21,7 @@ const resizeGrid = () => {
   gridWidth.value = Math.floor(parent.clientWidth / cellSize);
   gridHeight.value = Math.floor(parent.clientHeight / cellSize);
 
-  grid = new Array(gridWidth.value * gridHeight.value).fill("#000000");
+  grid = new Array(gridWidth.value * gridHeight.value).fill("#18181c");
 
   canvasRef.value.width = gridWidth.value * cellSize;
   canvasRef.value.height = gridHeight.value * cellSize;
