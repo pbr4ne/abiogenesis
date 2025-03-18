@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
-
+import { emitter } from '../utilities/emitter';
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const gridWidth = ref(0);
 const gridHeight = ref(0);
@@ -56,11 +56,12 @@ const handleResize = () => {
 onMounted(() => {
   resizeGrid();
   window.addEventListener("resize", handleResize);
-  setInterval(updateGrid, 100);
+  emitter.on('updateGrid', updateGrid);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", handleResize);
+  emitter.off('updateGrid');
 });
 </script>
 
