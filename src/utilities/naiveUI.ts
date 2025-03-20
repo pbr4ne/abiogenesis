@@ -3,7 +3,9 @@ import {
   NBadge,
   NButton,
   NConfigProvider,
+  NFlex,
   NIcon,
+  NIconWrapper,
   NLayout,
   NLayoutContent,
   NLayoutFooter,
@@ -11,6 +13,7 @@ import {
   NLayoutSider,
   NMenu,
   NPageHeader,
+  NSlider,
   NSpace,
 } from 'naive-ui';
   
@@ -19,7 +22,9 @@ export const naive = create({
     NBadge,
     NButton,
     NConfigProvider,
+    NFlex,
     NIcon,
+    NIconWrapper,
     NLayout,
     NLayoutContent,
     NLayoutFooter,
@@ -27,6 +32,7 @@ export const naive = create({
     NLayoutSider,
     NMenu,
     NPageHeader,
+    NSlider,
     NSpace,
   ],
 });

@@ -1,23 +1,25 @@
 import { emitter } from '../utilities/emitter';
 
-export function startLoop() {
+let tickRate = 50;
+let lastTick = Date.now();
+let _gameLoopId: number;
 
-  const TICK_RATE = 50;
-  let lastTick = Date.now();
-  let _gameLoopId: number;
+const gameLoop = () => {
+  const now = Date.now();
+  const delta = now - lastTick;
 
-  const gameLoop = () => {
-    const now = Date.now();
-    const delta = now - lastTick;
-
-    if (delta >= TICK_RATE) {
-      lastTick = now;
-      
-      emitter.emit('updateGrid');
-    }
-
-    _gameLoopId = requestAnimationFrame(gameLoop);
-  };
+  if (delta >= tickRate) {
+    lastTick = now;
+    emitter.emit('updateGrid');
+  }
 
   _gameLoopId = requestAnimationFrame(gameLoop);
+};
+
+export function startLoop() {
+  _gameLoopId = requestAnimationFrame(gameLoop);
 }
+
+emitter.on('updateSpeed', (newSpeed) => {
+  tickRate = newSpeed === Infinity ? 9999999 : newSpeed;
+});
