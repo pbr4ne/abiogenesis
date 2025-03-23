@@ -13,7 +13,7 @@
         bordered
         show-trigger
         collapse-mode="width"
-        :collapsed-width="64"
+        :collapsed-width="15"
         :collapsed="leftCollapsed"
         :width="245"
         :native-scrollbar="false"

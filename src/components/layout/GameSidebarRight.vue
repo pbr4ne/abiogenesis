@@ -1,5 +1,5 @@
 <template>
-  <n-space vertical style="padding: 20px; position: relative;" @mouseenter="showTrash = true" @mouseleave="showTrash = false">
+  <n-space vertical style="padding: 20px; position: relative;">
   </n-space>
 </template>
 
