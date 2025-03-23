@@ -3,7 +3,7 @@ import { emitter } from '../utilities/emitter';
 let tickRate = 50;
 let lastTick = Date.now();
 let _gameLoopId: number;
-let paused = false;
+let paused = true;
 
 const gameLoop = () => {
   if (!paused) {
@@ -24,10 +24,13 @@ export function startLoop() {
 }
 
 emitter.on('updateSpeed', (newSpeed: number) => {
-  if (newSpeed === 0) {
-    paused = true;
-  } else {
-    paused = false;
-    tickRate = 100 - newSpeed;
-  }
+  tickRate = 100 - newSpeed;
+});
+
+emitter.on('pause', () => {
+  paused = true;
+});
+
+emitter.on('play', () => {
+  paused = false;
 });

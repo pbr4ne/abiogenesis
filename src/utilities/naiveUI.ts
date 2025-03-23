@@ -17,6 +17,7 @@ import {
   NProgress,
   NSlider,
   NSpace,
+  NTooltip,
 } from 'naive-ui';
   
 export const naive = create({
@@ -38,5 +39,6 @@ export const naive = create({
     NProgress,
     NSlider,
     NSpace,
+    NTooltip,
   ],
 });

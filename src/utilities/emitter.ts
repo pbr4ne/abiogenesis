@@ -5,6 +5,9 @@ type GameEvent = {
   updateGrid: void;
   updateSpeed: number;
   updateAverageRGB: { r: number; g: number; b: number };
+  reset: void;
+  pause: void;
+  play: void;
 };
 
 export const emitter = mitt<GameEvent>();

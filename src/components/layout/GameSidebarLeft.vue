@@ -1,14 +1,17 @@
 <template>
   <n-space vertical size="medium" style="padding: 20px;">
-    <levels v-if="!collapsed"/>
+    <reset v-if="!collapsed"/>   
     <n-divider />
-    <speed v-if="!collapsed"/>    
+    <speed v-if="!collapsed"/>
+    <n-divider />
+    <levels v-if="!collapsed"/>
   </n-space>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import Levels from '../controls/Levels.vue';
+import Reset from '../controls/Reset.vue';
 import Speed from '../controls/Speed.vue';
 
 const { collapsed } = defineProps({

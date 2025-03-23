@@ -232,11 +232,15 @@ onMounted(() => {
   resizeGrid();
   window.addEventListener('resize', handleResize);
   emitter.on('updateGrid', updateGrid);
+  emitter.on('reset', () => {
+    resizeGrid();
+  });
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
   emitter.off('updateGrid', updateGrid);
+  emitter.off('reset');
 });
 </script>
 
