@@ -167,6 +167,32 @@ function roundColor(c: number) {
   return Math.round(c);
 }
 
+function calculateAverageRGB() {
+  const height = blips.length;
+  if (height === 0) return { r: 0, g: 0, b: 0 };
+  const width = blips[0].length;
+
+  let totalR = 0, totalG = 0, totalB = 0;
+  let count = 0;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const { r, g, b } = blips[y][x];
+      totalR += r;
+      totalG += g;
+      totalB += b;
+      count++;
+    }
+  }
+
+  return {
+    r: totalR / count,
+    g: totalG / count,
+    b: totalB / count,
+  };
+}
+
+
 function drawBlips(ctx: CanvasRenderingContext2D) {
   const height = blips.length;
   if (height === 0) return;
@@ -189,6 +215,13 @@ function drawBlips(ctx: CanvasRenderingContext2D) {
 function updateGrid() {
   processBlips();
   drawGrid();
+
+  const avg = calculateAverageRGB();
+  emitter.emit('updateAverageRGB', {
+    r: avg.r,
+    g: avg.g,
+    b: avg.b
+  });
 }
 
 function handleResize() {
