@@ -3,29 +3,16 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref } from 'vue';
-import { PauseCircleOutline, PlayCircleOutline, PlayForwardCircleOutline } from '@vicons/ionicons5';
-import { NFlex, NIcon } from 'naive-ui';
+import { ref } from 'vue';
 import { emitter } from '../../utilities/emitter';
 
-const value = ref(50);
+const value = ref(33);
 
 const customMarks = {
-  0: () => renderMark(PauseCircleOutline),
-  50: () => renderMark(PlayCircleOutline),
-  100: () => renderMark(PlayForwardCircleOutline),
-}
-
-const renderMark = (component: object) => {
-  return h(
-    NFlex,
-    { style: {  } },
-    {
-      default: () => [
-        h(NIcon, { size: 24, component }),
-      ]
-    }
-  )
+  0: () => "0.5x",
+  33: () => "1x",
+  66: () => "1.5x",
+  100: () => "2x",
 }
 
 const updateSpeed = () => {
