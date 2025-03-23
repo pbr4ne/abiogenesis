@@ -29,6 +29,6 @@ const renderMark = (component: object) => {
 }
 
 const updateSpeed = () => {
-  emitter.emit('updateSpeed', 100 - value.value);
+  emitter.emit('updateSpeed', value.value);
 };
 </script>
