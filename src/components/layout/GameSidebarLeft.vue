@@ -1,38 +1,12 @@
 <template>
   <n-space vertical size="medium" style="padding: 20px;">
-    <n-slider v-model:value="value" :marks="customMarks" @update:value="updateSpeed" />
+    <speed v-if="!collapsed"/>
   </n-space>
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, onMounted, onBeforeUnmount } from 'vue';
-import { PauseCircleOutline, PlayCircleOutline, PlayForwardCircleOutline } from '@vicons/ionicons5';
-import { NFlex, NIcon } from 'naive-ui';
-import { emitter } from '../../utilities/emitter';
-
-const value = ref(50);
-
-const customMarks = {
-  0: () => renderMark(PauseCircleOutline),
-  50: () => renderMark(PlayCircleOutline),
-  100: () => renderMark(PlayForwardCircleOutline),
-}
-
-const renderMark = (component: object) => {
-  return h(
-    NFlex,
-    { style: {  } },
-    {
-      default: () => [
-        h(NIcon, { size: 24, component }),
-      ]
-    }
-  )
-}
-
-const updateSpeed = () => {
-  emitter.emit('updateSpeed', 100 - value.value);
-};
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
+import Speed from './Speed.vue';
 
 const { collapsed } = defineProps({
   collapsed: {
