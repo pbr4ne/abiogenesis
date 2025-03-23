@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
-import Speed from './Speed.vue';
+import Speed from '../controls/Speed.vue';
 
 const { collapsed } = defineProps({
   collapsed: {
