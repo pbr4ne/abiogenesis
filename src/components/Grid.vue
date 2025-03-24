@@ -61,6 +61,8 @@ function handleResize() {
   if (ctx) {
     draw(ctx);
   }
+
+  emitter.emit('updateAverageRGB', calculateAverageRGB());
 }
 
 function updateGrid() {
@@ -73,8 +75,7 @@ function updateGrid() {
     draw(ctx);
   }
 
-  const avg = calculateAverageRGB();
-  emitter.emit('updateAverageRGB', avg);
+  emitter.emit('updateAverageRGB', calculateAverageRGB());
 }
 
 onMounted(() => {
