@@ -128,12 +128,12 @@ export function useBlips(config: BlipConfig) {
     if (!gridHeight || !gridWidth) {
       return { r: 0, g: 0, b: 0 };
     }
-
+  
     let totalR = 0,
       totalG = 0,
       totalB = 0;
-    let count = gridWidth * gridHeight;
-
+    const count = gridWidth * gridHeight;
+  
     for (let y = 0; y < gridHeight; y++) {
       for (let x = 0; x < gridWidth; x++) {
         const { r, g, b } = current[y][x];
@@ -142,11 +142,11 @@ export function useBlips(config: BlipConfig) {
         totalB += b;
       }
     }
-
+  
     return {
-      r: totalR / count,
-      g: totalG / count,
-      b: totalB / count,
+      r: Math.round((totalR / count / 256) * 100),
+      g: Math.round((totalG / count / 256) * 100),
+      b: Math.round((totalB / count / 256) * 100),
     };
   }
 
