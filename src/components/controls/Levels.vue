@@ -1,26 +1,40 @@
 <template>
   <n-space vertical>
-    <n-progress 
-      type="line"
-      status="success"
-      :percentage="greenPercentage"
-      indicator-placement="inside"
-    >
-    </n-progress>
-    <n-progress 
-      type="line"
-      status="info"
-      :percentage="bluePercentage"
-      indicator-placement="inside"
-    >
-    </n-progress>
-    <n-progress 
-      type="line"
-      status="error"
-      :percentage="redPercentage"
-      indicator-placement="inside"
-    >
-    </n-progress>
+    <n-tooltip placement="top" trigger="hover">
+      <template #trigger>
+        <n-progress 
+          type="line"
+          status="success"
+          :percentage="greenPercentage"
+          indicator-placement="inside"
+        >
+        </n-progress>
+      </template>
+      <span>Plants</span>
+    </n-tooltip>
+    <n-tooltip placement="top" trigger="hover">
+      <template #trigger>
+        <n-progress 
+          type="line"
+          status="info"
+          :percentage="bluePercentage"
+          indicator-placement="inside"
+        ></n-progress>
+      </template>
+      <span>Herbivores</span>
+    </n-tooltip>
+    <n-tooltip placement="top" trigger="hover">
+      <template #trigger>
+        <n-progress 
+          type="line"
+          status="error"
+          :percentage="redPercentage"
+          indicator-placement="inside"
+        >
+        </n-progress>
+      </template>
+      <span>Carnivores</span>
+    </n-tooltip>
   </n-space>  
 </template>
 
