@@ -1,6 +1,6 @@
 <template>
   <n-space vertical size="medium" style="padding: 20px;">
-    <reset v-if="!collapsed"/>   
+    <playback v-if="!collapsed"/>   
     <n-divider />
     <speed v-if="!collapsed"/>
     <n-divider />
@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import Levels from '../controls/Levels.vue';
-import Reset from '../controls/Reset.vue';
+import Playback from '../controls/Playback.vue';
 import Speed from '../controls/Speed.vue';
 
 const { collapsed } = defineProps({
