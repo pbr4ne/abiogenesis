@@ -52,9 +52,9 @@ export function useBlips(config: BlipsConfig) {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         current[y][x] = {
-          r: Math.floor(Math.random() * 50),
-          g: Math.floor(Math.random() * 50),
-          b: Math.floor(Math.random() * 50),
+          r: Math.floor(Math.random() * config.INITIAL_R),
+          g: Math.floor(Math.random() * config.INITIAL_G),
+          b: Math.floor(Math.random() * config.INITIAL_B),
         };
       }
     }
