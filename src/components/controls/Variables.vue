@@ -1,5 +1,5 @@
 <template>
-	<n-tabs  justify-content="space-evenly" animated>
+	<n-tabs justify-content="space-evenly" animated>
 		<n-tab-pane name="plants">
       <template #tab>
         <n-tooltip trigger="hover">
@@ -11,6 +11,15 @@
           <span>Plants</span>
         </n-tooltip>
       </template>
+
+			<n-form label-placement="left">
+				<n-form-item label="Other Growth Rate">
+					<n-input-number :show-button="false" :value="50">
+						<template #suffix>%</template>
+					</n-input-number>
+				</n-form-item>
+			</n-form>
+
     </n-tab-pane>
 		<n-tab-pane name="herbivores">
       <template #tab>
