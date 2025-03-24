@@ -32,9 +32,9 @@ const bluePercentage = ref(0);
 const redPercentage = ref(0);
 
 const updatePercentages = (averageRGB: { r: number; g: number; b: number }) => {
-  redPercentage.value = Math.round(averageRGB.r);
-  greenPercentage.value = Math.round(averageRGB.g);
-  bluePercentage.value = Math.round(averageRGB.b);
+  redPercentage.value = Math.round(averageRGB.r/256 * 100);
+  greenPercentage.value = Math.round(averageRGB.g/256 * 100);
+  bluePercentage.value = Math.round(averageRGB.b/256 * 100);
 };
 
 onMounted(() => {
