@@ -1,6 +1,6 @@
-import { Blip, BlipsConfig } from '../utilities/types';
+import { Blip, BlipConfig } from '../utilities/types';
 
-export function useBlips(config: BlipsConfig) {
+export function useBlips(config: BlipConfig) {
   const cellSize = 5;
 
   let current: Blip[][] = [];

@@ -8,6 +8,7 @@ type GameEvent = {
   reset: void;
   pause: void;
   play: void;
+  changeBlipConfig: string;
 };
 
 export const emitter = mitt<GameEvent>();

@@ -4,7 +4,10 @@ export interface Blip {
   b: number;
 }
 
-export interface BlipsConfig {
+export interface BlipConfig {
+  id: string;
+  name: string;
+
   redInitial: number;
   greenInitial: number;
   blueInitial: number;
