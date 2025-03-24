@@ -1,4 +1,3 @@
-import { channel } from 'diagnostics_channel';
 import { BlipConfig } from './types';
 
 const defaultConfig: BlipConfig = {
@@ -33,7 +32,7 @@ const defaultConfig: BlipConfig = {
   greenEatenOtherRate: 0.5,
 };
 
-const chlorophyllConfig: BlipConfig = {
+const chlorophyll: BlipConfig = {
   id: 'chlorophyll',
   name: 'Chlorophyll',
 
@@ -65,7 +64,7 @@ const chlorophyllConfig: BlipConfig = {
   greenEatenOtherRate: 0.65,
 };
 
-const cyanGooConfig: BlipConfig = {
+const cyanGoo: BlipConfig = {
   id: 'cyangoo',
   name: 'Cyan Goo',
   
@@ -97,13 +96,13 @@ const cyanGooConfig: BlipConfig = {
   greenEatenOtherRate: 0.7,
 };
 
-const darkCoral: BlipConfig = {
-  id: 'darkCoral',
-  name: 'Dark Coral',
+const evilOrbs: BlipConfig = {
+  id: 'evilOrbs',
+  name: 'Evil Orbs',
 
-  redInitial: 256,
+  redInitial: 128,
   blueInitial: 256,
-  greenInitial: 64,
+  greenInitial: 38,
 
   redGrowRate: 0.4,
   redEatRate: 0.45,
@@ -118,20 +117,52 @@ const darkCoral: BlipConfig = {
   blueStarveRate: 0.1,
   blueGrowSelfRate: 0.4,
   blueGrowOtherRate: 0.7,
-  blueEatenSelfRate: 0.65,
+  blueEatenSelfRate: 1.0,
   blueEatenOtherRate: 0.75,
 
   greenGrowRate: 0.47,
   greenDieRate: 0.05,
   greenGrowSelfRate: 0.35,
   greenGrowOtherRate: 0.7,
-  greenEatenSelfRate: 0.95,
+  greenEatenSelfRate: 1.05,
   greenEatenOtherRate: 0.65,
 };
 
-const mazeWaves: BlipConfig = {
-  id: 'mazeWaves',
-  name: 'Maze Waves',
+const islandWaves: BlipConfig = {
+  id: 'islandWaves',
+  name: 'Island Waves',
+
+  redInitial: 128,
+  blueInitial: 256,
+  greenInitial: 256,
+
+  redGrowRate: 0.15,
+  redEatRate: 0.2,
+  redDieRate: 0.05,
+  redStarveRate: 0.05,
+  redGrowSelfRate: 0.05,
+  redGrowOtherRate: 0.1,
+
+  blueGrowRate: 0.5,
+  blueEatRate: 0.4,
+  blueDieRate: 0.05,
+  blueStarveRate: 0.05,
+  blueGrowSelfRate: 0.5,
+  blueGrowOtherRate: 0.75,
+  blueEatenSelfRate: 1.0,
+  blueEatenOtherRate: 0.75,
+
+  greenGrowRate: 0.75,
+  greenDieRate: 0.01,
+  greenGrowSelfRate: 0.35,
+  greenGrowOtherRate: 0.9,
+  greenEatenSelfRate: 1.05,
+  greenEatenOtherRate: 0.7,
+};
+
+const brainMaze: BlipConfig = {
+  id: 'brainMaze',
+  name: 'Brain Maze',
 
   redInitial: 256,
   blueInitial: 256,
@@ -154,6 +185,70 @@ const mazeWaves: BlipConfig = {
   blueEatenOtherRate: 0.75,
 
   greenGrowRate: 0.45,
+  greenDieRate: 0.05,
+  greenGrowSelfRate: 0.35,
+  greenGrowOtherRate: 0.7,
+  greenEatenSelfRate: 0.95,
+  greenEatenOtherRate: 0.65,
+};
+
+const formationOfTheUniverse: BlipConfig = {
+  id: 'formation',
+  name: 'Formation of the Universe',
+
+  redInitial: 256,
+  blueInitial: 256,
+  greenInitial: 128,
+
+  redGrowRate: 0.15,
+  redEatRate: 0.5,
+  redDieRate: 0.1,
+  redStarveRate: 0.05,
+  redGrowSelfRate: 0.5,
+  redGrowOtherRate: 0.5,
+
+  blueGrowRate: 0.5,
+  blueEatRate: 1.0,
+  blueDieRate: 0.1,
+  blueStarveRate: 0.5,
+  blueGrowSelfRate: 0.5,
+  blueGrowOtherRate: 0.5,
+  blueEatenSelfRate: 0.5,
+  blueEatenOtherRate: 0.5,
+
+  greenGrowRate: 0.85,
+  greenDieRate: 0.1,
+  greenGrowSelfRate: 0.5,
+  greenGrowOtherRate: 0.5,
+  greenEatenSelfRate: 0.5,
+  greenEatenOtherRate: 0.5,
+};
+
+const neonCoral: BlipConfig = {
+  id: 'neonCoral',
+  name: 'Neon Coral',
+
+  redInitial: 256,
+  blueInitial: 256,
+  greenInitial: 64,
+
+  redGrowRate: 0.4,
+  redEatRate: 0.45,
+  redDieRate: 0.05,
+  redStarveRate: 0.05,
+  redGrowSelfRate: 0.5,
+  redGrowOtherRate: 0.6,
+
+  blueGrowRate: 0.8,
+  blueEatRate: 0.9,
+  blueDieRate: 0.2,
+  blueStarveRate: 0.1,
+  blueGrowSelfRate: 0.4,
+  blueGrowOtherRate: 0.7,
+  blueEatenSelfRate: 0.65,
+  blueEatenOtherRate: 0.75,
+
+  greenGrowRate: 0.47,
   greenDieRate: 0.05,
   greenGrowSelfRate: 0.35,
   greenGrowOtherRate: 0.7,
@@ -193,11 +288,80 @@ const raverCloud: BlipConfig = {
   greenEatenOtherRate: 0.5,
 };
 
+const wildfire: BlipConfig = {
+  id: 'wildfire',
+  name: 'Wildfire',
+
+  redInitial: 256,
+  blueInitial: 256,
+  greenInitial: 64,
+
+  redGrowRate: 0.4,
+  redEatRate: 0.65,
+  redDieRate: 0.05,
+  redStarveRate: 0.05,
+  redGrowSelfRate: 0.5,
+  redGrowOtherRate: 0.6,
+
+  blueGrowRate: 0.8,
+  blueEatRate: 0.97,
+  blueDieRate: 0.25,
+  blueStarveRate: 0.15,
+  blueGrowSelfRate: 0.4,
+  blueGrowOtherRate: 0.7,
+  blueEatenSelfRate: 0.65,
+  blueEatenOtherRate: 0.75,
+
+  greenGrowRate: 0.45,
+  greenDieRate: 0.05,
+  greenGrowSelfRate: 0.35,
+  greenGrowOtherRate: 0.7,
+  greenEatenSelfRate: 0.95,
+  greenEatenOtherRate: 0.65,
+};
+
+const lavaLamp: BlipConfig = {
+  id: 'lavaLamp',
+  name: 'Lava Lamp',
+
+  redInitial: 76,
+  blueInitial: 64,
+  greenInitial: 256,
+
+  redGrowRate: 0.15,
+  redEatRate: 0.5,
+  redDieRate: 0.05,
+  redStarveRate: 0.05,
+  redGrowSelfRate: 0.35,
+  redGrowOtherRate: 0.1,
+
+  blueGrowRate: 0.25,
+  blueEatRate: 0.6,
+  blueDieRate: 0.15,
+  blueStarveRate: 0.5,
+  blueGrowSelfRate: 0.5,
+  blueGrowOtherRate: 0.75,
+  blueEatenSelfRate: 0.5,
+  blueEatenOtherRate: 1.3,
+
+  greenGrowRate: 0.85,
+  greenDieRate: 0.5,
+  greenGrowSelfRate: 0.35,
+  greenGrowOtherRate: 0.9,
+  greenEatenSelfRate: 0.8,
+  greenEatenOtherRate: 1.3,
+};
+
 export const blipConfigs = { 
   'default': defaultConfig, 
-  'chlorophyll': chlorophyllConfig,
-  'cyangoo': cyanGooConfig,
-  'darkCoral': darkCoral,
-  'mazeWaves': mazeWaves,
+  'brainMaze': brainMaze,
+  'chlorophyll': chlorophyll,
+  'cyangoo': cyanGoo,
+  //'evilOrbs': evilOrbs,
+  'formation': formationOfTheUniverse,
+  'islandWaves': islandWaves,
+  //'lavaLamp': lavaLamp,
+  'neonCoral': neonCoral,
   'raverCloud': raverCloud,
+  //'wildfire': wildfire,
 } as const;
