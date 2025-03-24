@@ -19,6 +19,8 @@ import {
   NSelect,
   NSlider,
   NSpace,
+  NTabs,
+  NTabPane,
   NTooltip,
 } from 'naive-ui';
   
@@ -43,6 +45,8 @@ export const naive = create({
     NSelect,
     NSlider,
     NSpace,
+    NTabs,
+    NTabPane,
     NTooltip,
   ],
 });
