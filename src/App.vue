@@ -1,8 +1,10 @@
 <template>
   <n-config-provider :theme="theme">
-    <div id="app">
-      <game />
-    </div>
+    <n-dialog-provider>
+      <div id="app">
+        <game />
+      </div>
+    </n-dialog-provider>
   </n-config-provider>
 </template>
 
