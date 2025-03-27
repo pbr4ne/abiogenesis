@@ -28,8 +28,11 @@ const showVariables = function() {
     content: () => h(VariablesLarge),
     positiveText: 'Close',
     icon: () => h(BracesVariable24Filled),
+    style: 'width: 550px;'
   });
 };
+
+showVariables();
 
 const { collapsed } = defineProps({
   collapsed: {

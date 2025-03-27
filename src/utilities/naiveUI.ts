@@ -8,6 +8,8 @@ import {
   NFlex,
   NForm,
   NFormItem,
+  NFormItemGi,
+  NGrid,
   NH3,
   NIcon,
   NIconWrapper,
@@ -25,9 +27,10 @@ import {
   NSpace,
   NTabs,
   NTabPane,
+  NText,
   NTooltip,
 } from 'naive-ui';
-  
+
 export const naive = create({
   components: [
     NBadge,
@@ -38,6 +41,8 @@ export const naive = create({
     NFlex,
     NForm,
     NFormItem,
+    NFormItemGi,
+    NGrid,
     NH3,
     NIcon,
     NIconWrapper,
@@ -55,6 +60,7 @@ export const naive = create({
     NSpace,
     NTabs,
     NTabPane,
+    NText,
     NTooltip,
   ],
 });
