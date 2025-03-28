@@ -8,6 +8,7 @@
     :style="{ textAlign: 'center' }"
     :theme-overrides="themeOverride()"
     :step="props.step"
+    min="0"
   />
 </template>
   
