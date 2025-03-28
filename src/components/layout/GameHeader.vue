@@ -1,30 +1,18 @@
 <template>
   <n-space justify="space-between">
-    <n-space v-if="showTitle" style="padding-left: 15px;" width="100%" class="header">
-      <span>Abiogenesis</span>
+    <n-space style="padding-left: 15px;" width="100%" class="header">
+      <n-gradient-text :gradient="{
+        deg: 90,
+        from: '#f0900b',
+        to: '#f2c97d',
+      }">
+      Abiogenesis
+      </n-gradient-text>
     </n-space>
   </n-space>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount } from 'vue';
-
-  const showTitle = ref(window.innerWidth > 730);
-
-  const updateTitle = () => {
-    showTitle.value = window.innerWidth > 730;
-  };
-
-  const roomsBadge = ref(0);
-  const profileBadge = ref(0);
-
-  onMounted(() => {
-    window.addEventListener('resize', updateTitle);
-  });
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('resize', updateTitle);
-  });
 </script>
   
 <style scoped>
