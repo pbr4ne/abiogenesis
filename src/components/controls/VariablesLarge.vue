@@ -6,13 +6,13 @@
         <n-text>Initial Amount</n-text>
       </n-form-item-gi>
       <n-form-item-gi>
-        <variable-input v-model:value="config.greenInitial" type="green" />
+        <variable-input v-model:value="config.greenInitial" type="green" :step="1" />
       </n-form-item-gi>
       <n-form-item-gi>
-        <variable-input v-model:value="config.blueInitial" type="blue" />
+        <variable-input v-model:value="config.blueInitial" type="blue" :step="1" />
       </n-form-item-gi>
       <n-form-item-gi>
-        <variable-input v-model:value="config.redInitial" type="red" />
+        <variable-input v-model:value="config.redInitial" type="red" :step="1" />
       </n-form-item-gi>
 
       <n-form-item-gi>

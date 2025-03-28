@@ -7,6 +7,7 @@
     round
     :style="{ textAlign: 'center' }"
     :theme-overrides="themeOverride()"
+    :step="props.step"
   />
 </template>
   
@@ -14,14 +15,18 @@
 import { ref, watch } from 'vue';
 
 const props = defineProps({
-value: {
-  type: Number,
-  required: true,
-},
-type: {
-  type: String,
-  default: 'green',
-},
+  value: {
+    type: Number,
+    required: true,
+  },
+  type: {
+    type: String,
+    default: 'green',
+  },
+  step: {
+    type: Number,
+    default: 0.05,
+  },
 });
 
 const emit = defineEmits(['update:value']);
@@ -29,14 +34,14 @@ const emit = defineEmits(['update:value']);
 const localValue = ref(props.value);
 
 watch(
-() => props.value,
-(newVal) => {
-  localValue.value = newVal;
-}
+  () => props.value,
+  (newVal) => {
+    localValue.value = newVal;
+  }
 );
 
 function onInputChange(newVal: number) {
-emit('update:value', newVal);
+  emit('update:value', newVal);
 }
 
 const themeOverride = () => {
@@ -67,4 +72,3 @@ function getBlipTypeColor(type: string) {
   return '#e88080';
 }
 </script>
-  
