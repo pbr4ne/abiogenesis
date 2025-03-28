@@ -25,7 +25,6 @@
 
       <n-layout has-sider sider-placement="right">
         <n-layout-content>
-          <grid />
         </n-layout-content>
 
         <n-layout-sider
@@ -52,7 +51,6 @@
 
 <script setup lang="ts">
   import { ref, watchEffect, onBeforeUnmount, onMounted } from 'vue';
-  import Grid from '../Grid.vue';
   import GameFooter from './GameFooter.vue';
   import GameHeader from './GameHeader.vue';
   import GameSidebarRight from './GameSidebarRight.vue';
@@ -107,3 +105,13 @@
     updateScreenSize();
   });
 </script>
+
+<style scoped>
+.n-layout-content {
+  background-color: transparent !important;
+}
+
+.n-layout-header, .n-layout-footer {
+  z-index: 2;
+}
+</style>

@@ -31,11 +31,11 @@ function handleResize() {
   const canvas = canvasRef.value;
   if (!canvas) return;
 
-  const parent = canvas.parentElement;
-  if (!parent) return;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
 
-  gridWidth.value = Math.floor(parent.clientWidth / blipsInstance.cellSize);
-  gridHeight.value = Math.floor(parent.clientHeight / blipsInstance.cellSize);
+  gridWidth.value = Math.floor(width / blipsInstance.cellSize);
+  gridHeight.value = Math.floor(height / blipsInstance.cellSize);
 
   blipsInstance.init(gridWidth.value, gridHeight.value);
 
