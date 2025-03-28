@@ -5,7 +5,7 @@
     button-placement="both"
     size="tiny"
     round
-    :style="{ textAlign: 'center' }"
+    :style="{ textAlign: 'center', width: '100px' }"
     :theme-overrides="themeOverride()"
     :step="props.step"
     min="0"
