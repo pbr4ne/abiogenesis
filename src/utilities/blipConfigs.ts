@@ -65,7 +65,7 @@ const chlorophyll: BlipConfig = {
 };
 
 const cyanGoo: BlipConfig = {
-  id: 'cyangoo',
+  id: 'cyanGoo',
   name: 'Cyan Goo',
   
   redInitial: 128,
@@ -352,14 +352,47 @@ const lavaLamp: BlipConfig = {
   greenEatenOtherRate: 1.3,
 };
 
+const ledLights: BlipConfig = {
+  id: 'ledLights',
+  name: 'LED Lights',
+
+  redInitial: 256,
+  greenInitial: 256,
+  blueInitial: 256,
+
+  redGrowRate: 0.3,
+  redEatRate: 0.6,
+  redDieRate: 0.25,
+  redStarveRate: 0.05,
+  redGrowSelfRate: 0.5,
+  redGrowOtherRate: 0.5,
+
+  blueGrowRate: 0.5,
+  blueEatRate: 1.05,
+  blueDieRate: 0.1,
+  blueStarveRate: 0.5,
+  blueGrowSelfRate: 0.5,
+  blueGrowOtherRate: 0.55,
+  blueEatenSelfRate: 0.5,
+  blueEatenOtherRate: 0.7,
+
+  greenGrowRate: 0.6,
+  greenDieRate: 0.05,
+  greenGrowSelfRate: 0.5,
+  greenGrowOtherRate: 0.5,
+  greenEatenSelfRate: 0.5,
+  greenEatenOtherRate: 0.6,
+};
+
 export const blipConfigs = { 
   'default': defaultConfig, 
   'brainMaze': brainMaze,
   'chlorophyll': chlorophyll,
-  'cyangoo': cyanGoo,
+  'cyanGoo': cyanGoo,
   //'evilOrbs': evilOrbs,
   'formation': formationOfTheUniverse,
   'islandWaves': islandWaves,
+  'ledLights': ledLights,
   //'lavaLamp': lavaLamp,
   'neonCoral': neonCoral,
   'raverCloud': raverCloud,
