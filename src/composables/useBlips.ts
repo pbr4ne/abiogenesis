@@ -5,7 +5,7 @@ export function useBlips() {
   const store = useStore();
   const config = store.$state.currentConfig;
 
-  const cellSize = 5;
+  let cellSize = 5;
 
   let current: Blip[][] = [];
   let next: Blip[][] = [];
@@ -14,14 +14,23 @@ export function useBlips() {
   let gridHeight = 0;
 
   function init(width: number, height: number) {
-    gridWidth = width;
-    gridHeight = height;
 
-    current = createBlipsArray(width, height);
-    next = createBlipsArray(width, height);
+    const totalPixels = width * height;
+    const maxCells = 20000;
+    const minCellSize = 5;
+    cellSize = Math.floor(Math.sqrt(totalPixels / maxCells));
+    if (cellSize < minCellSize) {
+      cellSize = minCellSize;
+    }
 
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    gridWidth = width / cellSize;
+    gridHeight = height / cellSize;
+
+    current = createBlipsArray(gridWidth, gridHeight);
+    next = createBlipsArray(gridWidth, gridHeight);
+
+    for (let y = 0; y < gridHeight; y++) {
+      for (let x = 0; x < gridWidth; x++) {
         current[y][x] = {
           r: Math.floor(Math.random() * config.redInitial),
           g: Math.floor(Math.random() * config.greenInitial),

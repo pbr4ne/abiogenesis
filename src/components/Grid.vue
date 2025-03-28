@@ -34,13 +34,13 @@ function handleResize() {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  gridWidth.value = Math.floor(width / blipsInstance.cellSize);
-  gridHeight.value = Math.floor(height / blipsInstance.cellSize);
+  gridWidth.value = width;
+  gridHeight.value = height;
 
   blipsInstance.init(gridWidth.value, gridHeight.value);
 
-  canvas.width = gridWidth.value * blipsInstance.cellSize;
-  canvas.height = gridHeight.value * blipsInstance.cellSize;
+  canvas.width = width;
+  canvas.height = height;
 
   showPlayButton.value = true;
 
