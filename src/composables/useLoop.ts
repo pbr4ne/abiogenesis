@@ -1,6 +1,6 @@
 import { emitter } from '../utilities/emitter';
 
-let tickRate = 50;
+let tickRate = 60;
 let lastTick = Date.now();
 let _gameLoopId: number;
 let paused = true;
