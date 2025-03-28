@@ -401,3 +401,44 @@ export const blipConfigs = {
 
 //deep copy
 export const originalConfigs = JSON.parse(JSON.stringify(blipConfigs)) as Record<string, BlipConfig>;
+
+const RANGES: Record<string, { min: number; max: number }> = {
+  redInitial:   { min: 50,  max: 300 },
+  greenInitial: { min: 50,  max: 300 },
+  blueInitial:  { min: 50,  max: 300 },
+
+  redGrowRate:         { min: 0,   max: 1 },
+  redEatRate:          { min: 0,   max: 1.5 },
+  redDieRate:          { min: 0,   max: 0.6 },
+  redStarveRate:       { min: 0,   max: 0.6 },
+  redGrowSelfRate:     { min: 0,   max: 1 },
+  redGrowOtherRate:    { min: 0,   max: 1 },
+  
+  blueGrowRate:        { min: 0,   max: 1 },
+  blueEatRate:         { min: 0,   max: 1.5 },
+  blueDieRate:         { min: 0,   max: 0.6 },
+  blueStarveRate:      { min: 0,   max: 0.6 },
+  blueGrowSelfRate:    { min: 0,   max: 1 },
+  blueGrowOtherRate:   { min: 0,   max: 1 },
+  blueEatenSelfRate:   { min: 0,   max: 1.3 },
+  blueEatenOtherRate:  { min: 0,   max: 1.3 },
+
+  greenGrowRate:       { min: 0,   max: 1 },
+  greenDieRate:        { min: 0,   max: 0.6 },
+  greenGrowSelfRate:   { min: 0,   max: 1 },
+  greenGrowOtherRate:  { min: 0,   max: 1 },
+  greenEatenSelfRate:  { min: 0,   max: 1.3 },
+  greenEatenOtherRate: { min: 0,   max: 1.3 },
+};
+
+export function randomize(config: BlipConfig) {
+  (Object.keys(RANGES) as Array<keyof BlipConfig>).forEach(key => {
+    config[key] = randomInRange(RANGES[key].min, RANGES[key].max) as any;
+  });
+}
+
+function randomInRange(min: number, max: number) {
+  const raw = Math.random() * (max - min) + min;
+  const stepped = Math.round(raw * 20) / 20;
+  return parseFloat(stepped.toFixed(2));
+}
