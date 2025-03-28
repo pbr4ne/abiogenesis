@@ -9,6 +9,12 @@
         </template>
         Change Variables
       </n-button>
+      <n-button size="large" secondary round type="error" @click="randomizeVariables">
+        <template #icon>
+          <n-icon><dice-outline /></n-icon>
+        </template>
+        Randomize Variables
+      </n-button>
     </n-space>
   </n-space>
 </template>
@@ -20,11 +26,21 @@ import Presets from '../controls/Presets.vue';
 import VariableActions from '../controls/VariableActions.vue';
 import VariablesLarge from '../controls/VariablesLarge.vue';
 import { BracesVariable24Filled } from '@vicons/fluent';
+import { DiceOutline } from '@vicons/ionicons5';
 import { emitter } from '../../utilities/emitter';
+import { useStore } from '../../composables/useStore';
+import { randomize } from '../../utilities/blipConfigs';
 
 const dialog = useDialog();
 
-const showVariables = function() {
+const randomizeVariables = () => {
+  const store = useStore();
+  const config = store.$state.currentConfig;
+  randomize(config);
+  emitter.emit('reset');
+}
+
+const showVariables = () => {
   const variableDialog = dialog.warning({
     title: 'Variables',
     content: () => h(VariablesLarge),

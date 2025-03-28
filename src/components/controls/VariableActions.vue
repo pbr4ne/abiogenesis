@@ -1,7 +1,7 @@
 <template>
   <!-- <n-button type="warning" @click="saveNewConfig">Save as New</n-button> -->
   <n-button type="warning" @click="randomizeConfig">Randomize</n-button>
-  <n-button type="warning" @click="resetVariables">Reset</n-button>
+  <n-button type="warning" @click="resetVariables">Reset to Default</n-button>
   <n-button type="warning" @click="closeDialog">Okay</n-button>
 </template>
 
