@@ -17,19 +17,27 @@
 import { h } from 'vue';
 import { useDialog } from 'naive-ui'
 import Presets from '../controls/Presets.vue';
+import VariableActions from '../controls/VariableActions.vue';
 import VariablesLarge from '../controls/VariablesLarge.vue';
 import { BracesVariable24Filled } from '@vicons/fluent';
+import { emitter } from '../../utilities/emitter';
 
 const dialog = useDialog();
 
 const showVariables = function() {
-  dialog.warning({
+  const variableDialog = dialog.warning({
     title: 'Variables',
     content: () => h(VariablesLarge),
-    positiveText: 'Close',
+    action: () => h(VariableActions),
     icon: () => h(BracesVariable24Filled),
     style: 'width: 550px;'
   });
+
+  const closeHandler = () => {
+    variableDialog.destroy();
+    emitter.off('closeVariableDialog', closeHandler);
+  };
+  emitter.on('closeVariableDialog', closeHandler);
 };
 
 const { collapsed } = defineProps({

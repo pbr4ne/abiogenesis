@@ -9,6 +9,7 @@ type GameEvent = {
   pause: void;
   play: void;
   changeBlipConfig: void;
+  closeVariableDialog: void;
 };
 
 export const emitter = mitt<GameEvent>();
