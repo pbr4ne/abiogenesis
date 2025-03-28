@@ -32,8 +32,6 @@ const showVariables = function() {
   });
 };
 
-showVariables();
-
 const { collapsed } = defineProps({
   collapsed: {
     type: Boolean,
