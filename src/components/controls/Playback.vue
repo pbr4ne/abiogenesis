@@ -50,7 +50,6 @@ const pause = function() {
 const paused = ref(true);
 
 onMounted(() => {
-
   emitter.on('pause', pause);
   emitter.on('play', play);
   emitter.on('reset', reset);

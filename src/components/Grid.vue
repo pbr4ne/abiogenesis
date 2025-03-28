@@ -1,6 +1,13 @@
 <template>
   <div class="grid-container">
     <canvas ref="canvasRef"></canvas>
+
+    <n-button size="large" round type="success" @click="handlePlayClick" v-if="showPlayButton" class="play-overlay">
+      <template #icon>
+        <n-icon><play-outline /></n-icon>
+      </template>
+    </n-button>
+    
   </div>
 </template>
 
@@ -8,12 +15,17 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useBlips } from '../composables/useBlips';
 import { emitter } from '../utilities/emitter';
-import { blipConfigs } from '../utilities/blipConfigs';
+import { PlayOutline } from '@vicons/ionicons5';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+const showPlayButton = ref(true);
 let blipsInstance = useBlips();
 const gridWidth = ref(0);
 const gridHeight = ref(0);
+
+function handlePlayClick() {
+  emitter.emit('play');
+}
 
 function handleResize() {
   const canvas = canvasRef.value;
@@ -29,6 +41,8 @@ function handleResize() {
 
   canvas.width = gridWidth.value * blipsInstance.cellSize;
   canvas.height = gridHeight.value * blipsInstance.cellSize;
+
+  showPlayButton.value = true;
 
   const ctx = canvas.getContext('2d');
   if (ctx) {
@@ -68,10 +82,15 @@ function changeBlipConfig() {
   emitter.emit('updateAverageRGB', blipsInstance.calculateAverageRGB());
 }
 
+const play = function() {
+  showPlayButton.value = false;
+};
+
 onMounted(() => {
   handleResize();
   window.addEventListener('resize', handleResize);
 
+  emitter.on('play', play);
   emitter.on('updateGrid', updateGrid);
   emitter.on('reset', () => handleResize());
   emitter.on('changeBlipConfig', () => changeBlipConfig());
@@ -80,6 +99,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
 
+  emitter.off('play', play);
   emitter.off('updateGrid', updateGrid);
   emitter.off('reset');
 });
@@ -91,8 +111,17 @@ onBeforeUnmount(() => {
   height: 100%;
   display: flex;
   overflow: hidden;
+  position: relative;
 }
 canvas {
   display: block;
+}
+
+.play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid black;
 }
 </style>
