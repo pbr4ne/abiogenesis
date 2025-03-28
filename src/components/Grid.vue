@@ -11,8 +11,7 @@ import { emitter } from '../utilities/emitter';
 import { blipConfigs } from '../utilities/blipConfigs';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-const currentConfigId = ref('default');
-let blipsInstance = useBlips(blipConfigs.default);
+let blipsInstance = useBlips();
 const gridWidth = ref(0);
 const gridHeight = ref(0);
 
@@ -52,24 +51,21 @@ function updateGrid() {
   emitter.emit('updateAverageRGB', blipsInstance.calculateAverageRGB());
 }
 
-function changeBlipConfig(newId: string) {
-  if (blipConfigs[newId]) {
-    currentConfigId.value = newId;
-    blipsInstance = useBlips(blipConfigs[newId]);
+function changeBlipConfig() {
+  blipsInstance = useBlips();
 
-    blipsInstance.init(gridWidth.value, gridHeight.value);
+  blipsInstance.init(gridWidth.value, gridHeight.value);
 
-    const canvas = canvasRef.value;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        blipsInstance.draw(ctx);
-      }
+  const canvas = canvasRef.value;
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      blipsInstance.draw(ctx);
     }
-
-    emitter.emit('pause');
-    emitter.emit('updateAverageRGB', blipsInstance.calculateAverageRGB());
   }
+
+  emitter.emit('pause');
+  emitter.emit('updateAverageRGB', blipsInstance.calculateAverageRGB());
 }
 
 onMounted(() => {
@@ -78,7 +74,7 @@ onMounted(() => {
 
   emitter.on('updateGrid', updateGrid);
   emitter.on('reset', () => handleResize());
-  emitter.on('changeBlipConfig', (newId: string) => changeBlipConfig(newId));
+  emitter.on('changeBlipConfig', () => changeBlipConfig());
 });
 
 onBeforeUnmount(() => {

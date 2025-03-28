@@ -7,6 +7,7 @@
 import { ref } from 'vue'
 import { blipConfigs } from '../../utilities/blipConfigs';
 import { emitter } from '../../utilities/emitter';
+import { useStore } from '../../composables/useStore';
 const value = ref("default");
 
 const options = Object.values(blipConfigs).map((config) => {
@@ -17,7 +18,10 @@ const options = Object.values(blipConfigs).map((config) => {
 });
 
 const handleUpdateValue = (value: string) => {
-  emitter.emit('changeBlipConfig', value);
+
+  const store = useStore();
+  store.$state.currentConfig = blipConfigs[value];
+  emitter.emit('changeBlipConfig');
   emitter.emit('reset');
 }
 </script>

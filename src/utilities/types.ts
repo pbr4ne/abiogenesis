@@ -35,3 +35,8 @@ export interface BlipConfig {
   greenEatenSelfRate: number;
   greenEatenOtherRate: number;
 }
+
+export interface GameState {
+  currentConfig: BlipConfig;
+  configs: Record<string, BlipConfig>;
+}

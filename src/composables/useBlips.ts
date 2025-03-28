@@ -1,6 +1,10 @@
 import { Blip, BlipConfig } from '../utilities/types';
+import { useStore } from './useStore';
 
-export function useBlips(config: BlipConfig) {
+export function useBlips() {
+  const store = useStore();
+  const config = store.$state.currentConfig;
+
   const cellSize = 5;
 
   let current: Blip[][] = [];
