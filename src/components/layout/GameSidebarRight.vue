@@ -23,7 +23,7 @@ import { BracesVariable24Filled } from '@vicons/fluent';
 const dialog = useDialog();
 
 const showVariables = function() {
-  dialog.info({
+  dialog.warning({
     title: 'Variables',
     content: () => h(VariablesLarge),
     positiveText: 'Close',
