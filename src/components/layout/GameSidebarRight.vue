@@ -7,7 +7,7 @@
         <template #icon>
           <n-icon><braces-variable24-filled /></n-icon>
         </template>
-        Variables
+        Change Variables
       </n-button>
     </n-space>
   </n-space>
