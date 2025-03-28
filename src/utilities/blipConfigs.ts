@@ -398,3 +398,6 @@ export const blipConfigs = {
   'raverCloud': raverCloud,
   //'wildfire': wildfire,
 } as const;
+
+//deep copy
+export const originalConfigs = JSON.parse(JSON.stringify(blipConfigs)) as Record<string, BlipConfig>;
