@@ -5,23 +5,44 @@ import { log } from "../utilities/GameUtils";
 
 export default class Game extends BaseScene {
 
-	constructor() {
-		super("Game");
-	}
+  constructor() {
+    super("Game");
+  }
 
-	public planet!: Planet;
+  public planet!: Planet;
 
-	editorCreate(): void {
-        super.create();
-		
-		this.events.emit("scene-awake");
-	}
+  editorCreate(): void {
+    super.create();
+    
+    this.events.emit("scene-awake");
+  }
 
-	create() {
-		this.editorCreate();
+  private createStarLayer(count: number, minR: number, maxR: number, alpha: number, depth: number) {
+    const g = this.add.graphics();
+    g.setDepth(depth);
 
-		log("Game create");
-		this.planet = new Planet(this);
-		this.add.existing(this.planet);
-	}
+    const { width, height } = this.scale;
+
+    for (let i = 0; i < count; i++) {
+      const x = Phaser.Math.Between(0, width);
+      const y = Phaser.Math.Between(0, height);
+      const r = Phaser.Math.FloatBetween(minR, maxR);
+
+      g.fillStyle(0xffffff, alpha);
+      g.fillCircle(x, y, r);
+    }
+  }
+
+  create() {
+    this.editorCreate();
+
+    this.createStarLayer(200, 0.5, 1.2, 0.3, -1002);
+    this.createStarLayer(120, 1, 2, 0.6, -1001);
+    this.createStarLayer(40, 2, 3, 0.9, -1000);
+
+    this.planet = new Planet(this);
+    this.add.existing(this.planet);
+
+    log("Game create");
+  }
 }
