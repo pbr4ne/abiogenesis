@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { makeRotator } from "../planet/sphereMath";
+import { makeRotator, pickCellByNearestProjectedCenter } from "../planet/sphereMath";
 import { generateColours, createRevealGrid } from "../planet/colourGrid";
 import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/planetRender";
 import { revealRandomVisibleCell } from "../planet/tempReveal";
@@ -10,6 +10,7 @@ export default class Planet extends Phaser.GameObjects.Container {
   private r: number;
 
   private rotate: ReturnType<typeof makeRotator>;
+  private hitZone!: Phaser.GameObjects.Zone;
 
   private base!: Phaser.GameObjects.Graphics;
   private tiles!: Phaser.GameObjects.Graphics;
@@ -59,9 +60,36 @@ export default class Planet extends Phaser.GameObjects.Container {
     drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.colours, this.revealed);
     drawWireGrid(this.grid, this.r, this.divisions, 160, 3, 0.35, this.rotate);
 
+    this.hitZone = scene.add.zone(-this.r, -this.r, this.diameter, this.diameter);
+    this.hitZone.setOrigin(0, 0);
+    this.hitZone.setInteractive(new Phaser.Geom.Circle(this.r, this.r, this.r), Phaser.Geom.Circle.Contains);
+    this.add(this.hitZone);
+
     this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onUpdate);
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.onUpdate);
     });
+  }
+
+  public onPlanetPointerDown(cb: (pointer: Phaser.Input.Pointer) => void) {
+    this.hitZone.on("pointerdown", cb);
+  }
+
+  public paintAtPoint(worldX: number, worldY: number, colourHex: string): boolean {
+    const dx = worldX - this.x;
+    const dy = worldY - this.y;
+
+    const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+
+    if (!cell) {
+      return false;
+    }
+
+    const { row, col } = cell;
+    this.colours[row][col] = colourHex;
+    this.revealed[row][col] = true;    
+
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.colours, this.revealed);
+    return true;
   }
 }
