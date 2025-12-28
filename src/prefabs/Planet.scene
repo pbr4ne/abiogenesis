@@ -13,14 +13,21 @@
     },
     "displayList": [
         {
-            "type": "Ellipse",
-            "id": "3e1168ee-6b90-4131-9963-17611c2be43d",
-            "label": "ellipse_1",
-            "x": 959,
-            "y": 499,
-            "isFilled": true,
-            "width": 512,
-            "height": 512
+            "type": "Container",
+            "id": "a7e17f81-5722-438e-8232-632bb22b1d30",
+            "label": "container_2",
+            "list": [
+                {
+                    "type": "Ellipse",
+                    "id": "3e1168ee-6b90-4131-9963-17611c2be43d",
+                    "label": "planet",
+                    "x": 959,
+                    "y": 499,
+                    "isFilled": true,
+                    "width": 768,
+                    "height": 768
+                }
+            ]
         }
     ],
     "plainObjects": [],
