@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { makeRotator } from "../planet/sphereMath";
 import { generateColours, createRevealGrid } from "../planet/colourGrid";
 import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/planetRender";
+import { revealRandomVisibleCell } from "../planet/tempReveal";
 
 export default class Planet extends Phaser.GameObjects.Container {
   private divisions: number;
@@ -26,7 +27,7 @@ export default class Planet extends Phaser.GameObjects.Container {
     }
     this.lastRevealAt = now;
 
-    this.revealRandomVisibleCell();
+    revealRandomVisibleCell(this.revealed, this.divisions, this.r, this.rotate);
     drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.colours, this.revealed);
   };
 
@@ -62,33 +63,5 @@ export default class Planet extends Phaser.GameObjects.Container {
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.onUpdate);
     });
-  }
-
-  private revealRandomVisibleCell(): void {
-    const maxTries = 4000;
-
-    for (let i = 0; i < maxTries; i++) {
-      const latI = Phaser.Math.Between(0, this.divisions - 1);
-      const lonI = Phaser.Math.Between(0, this.divisions - 1);
-
-      if (this.revealed[latI][lonI]) {
-        continue;
-      }
-
-      const latMid = Phaser.Math.Linear(-Math.PI / 2, Math.PI / 2, (latI + 0.5) / this.divisions);
-      const lonMid = Phaser.Math.Linear(-Math.PI, Math.PI, (lonI + 0.5) / this.divisions);
-
-      const px = this.r * Math.cos(latMid) * Math.sin(lonMid);
-      const py = this.r * Math.sin(latMid);
-      const pz = this.r * Math.cos(latMid) * Math.cos(lonMid);
-
-      const p = this.rotate(px, py, pz);
-      if (p.z < 0) {
-        continue;
-      }
-
-      this.revealed[latI][lonI] = true;
-      return;
-    }
   }
 }
