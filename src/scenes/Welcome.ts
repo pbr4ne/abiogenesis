@@ -8,44 +8,58 @@ import BaseScene from "./BaseScene";
 
 
 export default class Welcome extends BaseScene {
+  private playBtn!: Phaser.GameObjects.Text;
 
-	constructor() {
-		super("Welcome");
-	}
+  constructor() {
+    super("Welcome");
+  }
 
-	editorCreate(): void {
-		super.create();
-		
-		let playBtn = this.add.text(831.5, 509, "Play Abiogenesis, Inc.", {
-			color: "#ffffffff",
-			fontFamily: '"Courier New", monospace',
-			fontSize: "25px",
-			strokeThickness: 2,
-			stroke: "#ffffffff"
-		});
+  private layout(): void {
+    const w = this.scale.width;
+    const h = this.scale.height;
 
-		const onPointerDownScript = new OnPointerDownScript(playBtn);
-		const pushActionScript_2 = new PushActionScript(onPointerDownScript);
-		const startGameAction = new StartSceneActionScript(pushActionScript_2);
+    this.playBtn.setPosition(w / 2, h / 2);
+  }
 
-		const onKeydown_SPACE = new OnEventScript(this);
-		const startGame_2 = new ExecActionScript(onKeydown_SPACE);
-		const onKeydown_ENTER = new OnEventScript(this);
-		const startGame_1 = new ExecActionScript(onKeydown_ENTER);
+  editorCreate(): void {
+    super.create();
 
-		onKeydown_SPACE.eventName = "keydown-SPACE";
-		onKeydown_SPACE.eventEmitter = "scene.input.keyboard";
-		startGame_2.targetAction = startGameAction;
-		onKeydown_ENTER.eventName = "keydown-ENTER";
-		onKeydown_ENTER.eventEmitter = "scene.input.keyboard";
-		startGameAction.sceneKey = "Game";
-		startGame_1.targetAction = startGameAction;
+    this.playBtn = this.add.text(0, 0, "Play Abiogenesis, Inc.", {
+      color: "#ffffffff",
+      fontFamily: '"Courier New", monospace',
+      fontSize: "25px",
+      strokeThickness: 2,
+      stroke: "#ffffffff",
+    });
+    this.playBtn.setOrigin(0.5, 0.5);
+    this.playBtn.setInteractive({ useHandCursor: true });
 
-		this.events.emit("scene-awake");
-	}
+    const onPointerDownScript = new OnPointerDownScript(this.playBtn);
+    const pushActionScript = new PushActionScript(onPointerDownScript);
+    const startGameAction = new StartSceneActionScript(pushActionScript);
 
+    const onKeydown_SPACE = new OnEventScript(this);
+    const startGame_SPACE = new ExecActionScript(onKeydown_SPACE);
+    const onKeydown_ENTER = new OnEventScript(this);
+    const startGame_ENTER = new ExecActionScript(onKeydown_ENTER);
 
-	async create() {
-		this.editorCreate();
-	}
+    onKeydown_SPACE.eventName = "keydown-SPACE";
+    onKeydown_SPACE.eventEmitter = "scene.input.keyboard";
+    startGame_SPACE.targetAction = startGameAction;
+
+    onKeydown_ENTER.eventName = "keydown-ENTER";
+    onKeydown_ENTER.eventEmitter = "scene.input.keyboard";
+    startGame_ENTER.targetAction = startGameAction;
+
+    startGameAction.sceneKey = "Game";
+
+    this.layout();
+    this.scale.on("resize", this.layout, this);
+
+    this.events.emit("scene-awake");
+  }
+
+  create(): void {
+    this.editorCreate();
+  }
 }
