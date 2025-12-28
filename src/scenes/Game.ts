@@ -2,9 +2,9 @@ import Phaser from "phaser";
 import BaseScene from "./BaseScene";
 import Planet from "../prefabs/Planet";
 import { log } from "../utilities/GameUtils";
+import { createStarfield, Starfield } from "../utilities/StarField";
 
 export default class Game extends BaseScene {
-
   constructor() {
     super("Game");
   }
@@ -14,48 +14,11 @@ export default class Game extends BaseScene {
   private bgCam!: Phaser.Cameras.Scene2D.Camera;
   private gameCam!: Phaser.Cameras.Scene2D.Camera;
 
-  private starLayers: Phaser.GameObjects.Graphics[] = [];
+  private starfield!: Starfield;
 
   editorCreate(): void {
     super.create();
-    
     this.events.emit("scene-awake");
-  }
-
-  private createStarLayer(count: number, minR: number, maxR: number, alpha: number, depth: number) {
-    const g = this.add.graphics();
-    g.setDepth(depth);
-    g.setScrollFactor(0);
-
-    const w = this.scale.width;
-    const h = this.scale.height;
-
-    for (let i = 0; i < count; i++) {
-      const x = Phaser.Math.FloatBetween(0, w);
-      const y = Phaser.Math.FloatBetween(0, h);
-      const r = Phaser.Math.FloatBetween(minR, maxR);
-
-      g.fillStyle(0xffffff, alpha);
-      g.fillCircle(x, y, r);
-    }
-
-    return g;
-  }
-
-  private buildStars() {
-    for (const layer of this.starLayers) {
-      layer.destroy();
-    }
-
-    this.starLayers = [
-      this.createStarLayer(200, 0.5, 1.2, 0.25, -1002),
-      this.createStarLayer(140, 1.0, 2.0, 0.55, -1001),
-      this.createStarLayer(70, 1.5, 2.0, 0.9, -1000),
-    ];
-
-    for (const layer of this.starLayers) {
-      this.gameCam.ignore(layer);
-    }
   }
 
   private layoutCameras() {
@@ -91,7 +54,7 @@ export default class Game extends BaseScene {
     this.gameCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
     this.gameCam.setScroll(0, 0);
 
-    this.buildStars();
+    this.starfield = createStarfield(this, this.bgCam, this.gameCam);
 
     this.planet = new Planet(this, 960, 540);
     this.add.existing(this.planet);
@@ -101,7 +64,11 @@ export default class Game extends BaseScene {
 
     this.scale.on("resize", () => {
       this.layoutCameras();
-      this.buildStars();
+      this.starfield.rebuild();
+    });
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.starfield.destroy();
     });
   }
 }
