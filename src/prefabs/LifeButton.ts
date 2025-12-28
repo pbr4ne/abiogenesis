@@ -7,6 +7,8 @@ export default class LifeButton extends Phaser.GameObjects.Container {
   private outline!: Phaser.GameObjects.Rectangle;
   private label!: Phaser.GameObjects.Text;
 
+  private hitZone!: Phaser.GameObjects.Zone;
+
   constructor(
     scene: Phaser.Scene,
     x: number,
@@ -36,16 +38,12 @@ export default class LifeButton extends Phaser.GameObjects.Container {
 
     this.add([this.outline, this.bg, this.label]);
 
-    this.setSize(w, h);
-    this.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
+    this.hitZone = scene.add.zone(-w / 2, -h / 2, w, h);
+    this.hitZone.setOrigin(0, 0);
+    this.hitZone.setInteractive(new Phaser.Geom.Rectangle(0, 0, w, h), Phaser.Geom.Rectangle.Contains);
+    this.add(this.hitZone);
 
-    this.on("pointerover", () => {
-      this.bg.setAlpha(1);
-    });
-    this.on("pointerout", () => {
-      this.bg.setAlpha(0.95);
-    });
-    this.on("pointerdown", () => {
+    this.hitZone.on("pointerdown", () => {
       this.emit("selected", this.colourHex);
     });
   }
