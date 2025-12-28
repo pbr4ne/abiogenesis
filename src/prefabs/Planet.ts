@@ -92,4 +92,35 @@ export default class Planet extends Phaser.GameObjects.Container {
     drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.colours, this.revealed);
     return true;
   }
+
+  public getAverageRevealedColour(): { r: number; g: number; b: number } | null {
+    let  rSum = 0;
+    let  gSum = 0;
+    let  bSum = 0;
+    let  n = 0;
+
+    for (let row = 0; row < this.divisions; row++) {
+      for (let col = 0; col < this.divisions; col++) {
+        if (!this.revealed[row][col]) continue;
+
+        const hex = this.colours[row][col];
+        const c = Phaser.Display.Color.HexStringToColor(hex);
+
+        rSum += c.red;
+        gSum += c.green;
+        bSum += c.blue;
+        n++;
+      }
+    }
+
+    if (n === 0) {
+      return null;
+    }
+
+    return {
+      r: Math.round(rSum / n),
+      g: Math.round(gSum / n),
+      b: Math.round(bSum / n),
+    };
+  }
 }

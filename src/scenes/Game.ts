@@ -4,6 +4,7 @@ import Planet from "../prefabs/Planet";
 import { log } from "../utilities/GameUtils";
 import { createStarfield, Starfield } from "../utilities/StarField";
 import ColourButton from "../prefabs/LifeButton";
+import AverageColourBox from "../prefabs/AverageColourBox";
 
 export default class Game extends BaseScene {
   constructor() {
@@ -19,6 +20,7 @@ export default class Game extends BaseScene {
 
   private selectedColourHex: string | null = null;
   private colourButtons: ColourButton[] = [];
+  private avgBox!: AverageColourBox;
 
   editorCreate(): void {
     super.create();
@@ -100,6 +102,10 @@ export default class Game extends BaseScene {
       const p = pointer.positionToCamera(this.gameCam) as Phaser.Math.Vector2;
       this.planet.paintAtPoint(p.x, p.y, this.selectedColourHex);
     });
+
+    this.avgBox = new AverageColourBox(this, this.planet, 1920 - 40, 40);
+    this.add.existing(this.avgBox);
+    this.bgCam.ignore(this.avgBox);
 
     this.layoutCameras();
 
