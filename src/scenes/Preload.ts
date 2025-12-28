@@ -5,15 +5,22 @@ import WebFont from 'webfontloader';
 import { log } from "../utilities/GameUtils";
 
 export default class Preload extends Phaser.Scene {
-  private loadingText!: Phaser.GameObjects.Text;
-  private progressBarBg!: Phaser.GameObjects.Rectangle;
-  private progressBar!: Phaser.GameObjects.Rectangle;
+  private loadingText?: Phaser.GameObjects.Text;
+  private progressBarBg?: Phaser.GameObjects.Rectangle;
+  private progressBar?: Phaser.GameObjects.Rectangle;
 
   constructor() {
     super("Preload");
   }
 
   private layout(): void {
+    if (!this.loadingText || !this.progressBarBg || !this.progressBar) {
+      return;
+    }
+    if (!this.loadingText.active || !this.progressBarBg.active || !this.progressBar.active) {
+      return;
+    }
+
     const w = this.scale.width;
     const h = this.scale.height;
 
@@ -25,11 +32,9 @@ export default class Preload extends Phaser.Scene {
 
     this.progressBarBg.setSize(barWidth, barHeight);
     this.progressBarBg.setPosition(w / 2 - barWidth / 2, h / 2);
-    this.progressBarBg.setOrigin(0, 0);
 
     this.progressBar.setSize(barWidth, barHeight);
     this.progressBar.setPosition(w / 2 - barWidth / 2, h / 2);
-    this.progressBar.setOrigin(0, 0);
   }
 
   editorCreate(): void {
@@ -57,6 +62,10 @@ export default class Preload extends Phaser.Scene {
 
     this.layout();
     this.scale.on("resize", this.layout, this);
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off("resize", this.layout, this);
+    });
 
     this.events.emit("scene-awake");
   }
