@@ -60,9 +60,9 @@ export default class Game extends BaseScene {
     const gap = 64;
 
     const defs = [
-      { label: "CARNIVORE", colourHex: "#ff3b3b" },
-      { label: "PLANT", colourHex: "#2ecc71" },
-      { label: "HERBIVORE", colourHex: "#3498ff" }
+      { label: "CARNIVORE", colourHex: "#ff0000" },
+      { label: "PLANT", colourHex: "#00ff00" },
+      { label: "HERBIVORE", colourHex: "#0000ff" }
     ];
 
     this.colourButtons = defs.map((d, i) => {
