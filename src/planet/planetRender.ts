@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 import { Rotator, projectLatLon, latForIndex, lonForIndex } from "./sphereMath";
-import { toPhaserColour } from "./colourGrid";
 
 export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number) => {
   g.clear();
@@ -162,4 +161,8 @@ export const drawWireGrid = (
     }
     drawCurveFrontOnly(pts);
   }
+};
+
+export const toPhaserColour = (hex: string) => {
+  return Phaser.Display.Color.HexStringToColor(hex).color;
 };

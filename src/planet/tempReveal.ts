@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { Rotator } from "./sphereMath";
 
+//TODO - this file isn't currently used
 export const revealRandomVisibleCell = (
   revealed: boolean[][],
   divisions: number,

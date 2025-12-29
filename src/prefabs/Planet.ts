@@ -1,8 +1,7 @@
 import Phaser from "phaser";
 import { makeRotator, pickCellByNearestProjectedCenter } from "../planet/sphereMath";
-import { generateColours, createRevealGrid } from "../planet/colourGrid";
-import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/planetRender";
-import { revealRandomVisibleCell } from "../planet/tempReveal";
+import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/PlanetRender";
+import PlanetGrid from "../planet/PlanetGrid";
 
 export default class Planet extends Phaser.GameObjects.Container {
   private divisions: number;
@@ -16,8 +15,7 @@ export default class Planet extends Phaser.GameObjects.Container {
   private tiles!: Phaser.GameObjects.Graphics;
   private grid!: Phaser.GameObjects.Graphics;
 
-  private colours: string[][];
-  private revealed: boolean[][];
+  private gridData: PlanetGrid;
 
   private lastRevealAt: number;
 
@@ -28,8 +26,7 @@ export default class Planet extends Phaser.GameObjects.Container {
     }
     this.lastRevealAt = now;
 
-    revealRandomVisibleCell(this.revealed, this.divisions, this.r, this.rotate);
-    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.colours, this.revealed);
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getColoursRef(), this.gridData.getRevealedRef());
   };
 
   constructor(scene: Phaser.Scene, x = 960, y = 540, colours?: string[][]) {
@@ -43,8 +40,7 @@ export default class Planet extends Phaser.GameObjects.Container {
     const yaw = Phaser.Math.DegToRad(20);
     this.rotate = makeRotator(tilt, yaw);
 
-    this.colours = generateColours(colours, this.divisions);
-    this.revealed = createRevealGrid(this.divisions);
+    this.gridData = new PlanetGrid(this.divisions, colours);
 
     this.lastRevealAt = this.scene.time.now;
 
@@ -57,7 +53,7 @@ export default class Planet extends Phaser.GameObjects.Container {
     this.add(this.grid);
 
     drawBaseGradient(this.base, this.r);
-    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.colours, this.revealed);
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getColoursRef(), this.gridData.getRevealedRef());
     drawWireGrid(this.grid, this.r, this.divisions, 160, 3, 0.35, this.rotate);
 
     this.hitZone = scene.add.zone(-this.r, -this.r, this.diameter, this.diameter);
@@ -86,41 +82,13 @@ export default class Planet extends Phaser.GameObjects.Container {
     }
 
     const { row, col } = cell;
-    this.colours[row][col] = colourHex;
-    this.revealed[row][col] = true;    
+    this.gridData.setColour(row, col, colourHex, true);
 
-    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.colours, this.revealed);
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getColoursRef(), this.gridData.getRevealedRef());
     return true;
   }
 
-  public getAverageRevealedColour(): { r: number; g: number; b: number } | null {
-    let  rSum = 0;
-    let  gSum = 0;
-    let  bSum = 0;
-    let  n = 0;
-
-    for (let row = 0; row < this.divisions; row++) {
-      for (let col = 0; col < this.divisions; col++) {
-        if (!this.revealed[row][col]) continue;
-
-        const hex = this.colours[row][col];
-        const c = Phaser.Display.Color.HexStringToColor(hex);
-
-        rSum += c.red;
-        gSum += c.green;
-        bSum += c.blue;
-        n++;
-      }
-    }
-
-    if (n === 0) {
-      return null;
-    }
-
-    return {
-      r: Math.round(rSum / n),
-      g: Math.round(gSum / n),
-      b: Math.round(bSum / n),
-    };
+  public getAverageRevealedColour() {
+    return this.gridData.averageRevealedRGB();
   }
 }
