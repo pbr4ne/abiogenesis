@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { log } from "../utilities/GameUtils";
 
 export default class PlanetGrid {
   public readonly divisions: number;
@@ -32,7 +33,9 @@ export default class PlanetGrid {
   public forEachRevealed(fn: (row: number, col: number, hex: string) => void) {
     for (let row = 0; row < this.divisions; row++) {
       for (let col = 0; col < this.divisions; col++) {
-        if (!this.revealed[row][col]) continue;
+        if (!this.revealed[row][col]) {
+            continue;
+        }
         fn(row, col, this.colours[row][col]);
       }
     }
@@ -52,7 +55,11 @@ export default class PlanetGrid {
       n++;
     });
 
-    if (n === 0) return null;
+    if (n === 0) {
+        return null;
+    }
+
+    log(`Average revealed colour RGB: (${Math.round(rSum / n)}, ${Math.round(gSum / n)}, ${Math.round(bSum / n)})`);
 
     return {
       r: Math.round(rSum / n),

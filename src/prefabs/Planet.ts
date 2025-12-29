@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import { makeRotator, pickCellByNearestProjectedCenter } from "../planet/sphereMath";
-import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/PlanetRender";
+import { makeRotator, pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
+import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/PlanetRenderer";
 import PlanetGrid from "../planet/PlanetGrid";
 
 export default class Planet extends Phaser.GameObjects.Container {

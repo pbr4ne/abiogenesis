@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { Rotator, projectLatLon, latForIndex, lonForIndex } from "./sphereMath";
+import { Rotator, projectLatLon, latForIndex, lonForIndex } from "./PlanetMath";
 
 export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number) => {
   g.clear();

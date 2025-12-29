@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { Rotator } from "./sphereMath";
+import { Rotator } from "./PlanetMath";
 
 //TODO - this file isn't currently used
 export const revealRandomVisibleCell = (
