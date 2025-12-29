@@ -26,10 +26,10 @@ export default class Planet extends Phaser.GameObjects.Container {
     }
     this.lastRevealAt = now;
 
-    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getColoursRef(), this.gridData.getRevealedRef());
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
   };
 
-  constructor(scene: Phaser.Scene, x = 960, y = 540, colours?: string[][]) {
+  constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
 
     this.divisions = 40;
@@ -40,7 +40,7 @@ export default class Planet extends Phaser.GameObjects.Container {
     const yaw = Phaser.Math.DegToRad(20);
     this.rotate = makeRotator(tilt, yaw);
 
-    this.gridData = new PlanetGrid(this.divisions, colours);
+    this.gridData = new PlanetGrid(this.divisions);
 
     this.lastRevealAt = this.scene.time.now;
 
@@ -53,7 +53,7 @@ export default class Planet extends Phaser.GameObjects.Container {
     this.add(this.grid);
 
     drawBaseGradient(this.base, this.r);
-    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getColoursRef(), this.gridData.getRevealedRef());
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
     drawWireGrid(this.grid, this.r, this.divisions, 160, 3, 0.35, this.rotate);
 
     this.hitZone = scene.add.zone(-this.r, -this.r, this.diameter, this.diameter);
@@ -82,13 +82,18 @@ export default class Planet extends Phaser.GameObjects.Container {
     }
 
     const { row, col } = cell;
-    this.gridData.setColour(row, col, colourHex, true);
 
-    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getColoursRef(), this.gridData.getRevealedRef());
+    this.gridData.setHex(row, col, colourHex, 1);
+
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
     return true;
   }
 
-  public getAverageRevealedColour() {
-    return this.gridData.averageRevealedRGB();
+  public getAverageColour() {
+    return this.gridData.averageRGBWeightedByAlpha();
+  }
+
+  public getGridData() {
+    return this.gridData;
   }
 }

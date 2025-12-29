@@ -47,7 +47,7 @@ export default class AverageColourBox extends Phaser.GameObjects.Container {
   };
 
   private refresh() {
-    const avg = this.planet.getAverageRevealedColour();
+    const avg = this.planet.getAverageColour();
 
     if (!avg) {
       return;

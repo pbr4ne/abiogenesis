@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { Rotator, projectLatLon, latForIndex, lonForIndex } from "./PlanetMath";
+import type { RGBA } from "./PlanetGrid";
 
 export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number) => {
   g.clear();
@@ -49,8 +50,7 @@ export const drawTiles = (
   divisions: number,
   sub: number,
   rotate: Rotator,
-  colours: string[][],
-  revealed: boolean[][],
+  cells: RGBA[][],
 ) => {
   g.clear();
 
@@ -59,14 +59,14 @@ export const drawTiles = (
     const lat1 = latForIndex(latI + 1, divisions);
 
     for (let lonI = 0; lonI < divisions; lonI++) {
-      if (!revealed[latI][lonI]) {
-        continue;
-      }
+      const cell = cells[latI][lonI];
+      if (cell.a <= 0) continue;
 
       const lon0 = lonForIndex(lonI, divisions);
       const lon1 = lonForIndex(lonI + 1, divisions);
 
-      g.fillStyle(toPhaserColour(colours[latI][lonI]), 1);
+      const fillCol = Phaser.Display.Color.GetColor(cell.r, cell.g, cell.b);
+      g.fillStyle(fillCol, cell.a);
 
       for (let a = 0; a < sub; a++) {
         const t0 = a / sub;
@@ -161,8 +161,4 @@ export const drawWireGrid = (
     }
     drawCurveFrontOnly(pts);
   }
-};
-
-export const toPhaserColour = (hex: string) => {
-  return Phaser.Display.Color.HexStringToColor(hex).color;
 };
