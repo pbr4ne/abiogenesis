@@ -2,19 +2,19 @@
     "section1": {
         "files": [
             {
-                "url": "assets/images/atmosphere.png",
+                "url": "assets/images/atmosphereDevice1.png",
                 "type": "image",
-                "key": "atmosphere"
+                "key": "atmosphereDevice1"
             },
             {
-                "url": "assets/images/atmosphere2.png",
+                "url": "assets/images/atmosphereDevice2.png",
                 "type": "image",
-                "key": "atmosphere2"
+                "key": "atmosphereDevice2"
             },
             {
-                "url": "assets/images/atmosphere3.png",
+                "url": "assets/images/atmosphereDevice3.png",
                 "type": "image",
-                "key": "atmosphere3"
+                "key": "atmosphereDevice3"
             }
         ]
     },

@@ -76,7 +76,7 @@ export default class Game extends BaseScene {
     const atmosphere = new Atmosphere(this, 960, 1200, {
       diameter: 2200,
       offsetRatio: 0.62,
-      textureKey: "atmosphere",
+      textureKey: "atmosphereDevice1",
       count: 5,
       arcStartDeg: 225,
       arcEndDeg: 315,
