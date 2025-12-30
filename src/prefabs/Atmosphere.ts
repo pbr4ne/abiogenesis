@@ -25,6 +25,9 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
   private deviceSlots: (0 | 1 | 2 | null)[] = [];
   private deviceKeys = ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"] as const;
+  private selectedDevice: 0 | 1 | 2 | null = null;
+  private slotMarkers: Phaser.GameObjects.Container[] = [];
+  private suppressNextGlobalDeselect = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: AtmosphereConfig) {
     super(scene, x, y);
@@ -45,7 +48,24 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     this.rebuildSprites();
     this.createDeviceButtons(x);
+    this.scene.input.on("pointerdown", this.onGlobalPointerDown);
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      this.scene.input.off("pointerdown", this.onGlobalPointerDown);
+    });
   }
+
+  private onGlobalPointerDown = () => {
+    if (this.selectedDevice === null) return;
+
+    if (this.suppressNextGlobalDeselect) {
+      this.suppressNextGlobalDeselect = false;
+      return;
+    }
+
+    this.selectedDevice = null;
+    this.clearSlotMarkers();
+  };
 
   //todo - temporary
   private makeRandomDeviceSlots(count: number): (0 | 1 | 2 | null)[] {
@@ -81,7 +101,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     const xPositions = [x - 360, x, x + 360];
 
     for (let i = 0; i < 3; i++) {
-      const btn = this.makeCircleImageButton(xPositions[i] - this.x, y - this.y, radius, keys[i]);
+      const btn = this.makeCircleImageButton(xPositions[i] - this.x, y - this.y, radius, keys[i], i as 0 | 1 | 2);
       this.add(btn);
       this.deviceButtons.push(btn);
     }
@@ -112,7 +132,8 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     localX: number,
     localY: number,
     radius: number,
-    imageKey: string
+    imageKey: string,
+    deviceIndex: 0 | 1 | 2
   ) {
     const btn = this.scene.add.container(localX, localY);
 
@@ -157,12 +178,115 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
       btn.setScale(1.0);
     });
 
+    hit.on("pointerdown", () => {
+      this.suppressNextGlobalDeselect = true;
+      this.selectDevice(deviceIndex);
+    });
+
     btn.add(glow);
     btn.add(bg);
     btn.add(img);
     btn.add(hit);
 
     return btn;
+  }
+
+  private selectDevice(device: 0 | 1 | 2) {
+    if (this.selectedDevice === device) {
+      this.selectedDevice = null;
+      this.clearSlotMarkers();
+      return;
+    }
+
+    this.selectedDevice = device;
+    this.showEmptySlotMarkers();
+
+    this.suppressNextGlobalDeselect = true;
+  }
+
+  private clearSlotMarkers() {
+    for (const m of this.slotMarkers) {
+      m.destroy();
+    }
+    this.slotMarkers = [];
+  }
+
+  private showEmptySlotMarkers() {
+    this.clearSlotMarkers();
+
+    if (this.selectedDevice === null) {
+      return;
+    }
+
+    const localCenterX = 0;
+    const localCenterY = this.r * this.offsetRatio;
+
+    const arcStart = Phaser.Math.DegToRad(this.arcStartDeg);
+    const arcEnd = Phaser.Math.DegToRad(this.arcEndDeg);
+
+    const radius = this.r + this.radiusOffset-20;
+
+    for (let i = 0; i < this.atmoCount; i++) {
+      if (this.deviceSlots[i] !== null) continue;
+
+      const t = this.atmoCount === 1 ? 0.5 : i / (this.atmoCount - 1);
+      const ang = Phaser.Math.Linear(arcStart, arcEnd, t);
+
+      const x = localCenterX + Math.cos(ang) * radius;
+      const y = localCenterY + Math.sin(ang) * radius;
+
+      const marker = this.makeEmptySlotMarker(x, y, i);
+      this.add(marker);
+      this.slotMarkers.push(marker);
+    }
+  }
+
+  private makeEmptySlotMarker(x: number, y: number, slotIndex: number) {
+    const c = this.scene.add.container(x, y);
+
+    const dot = this.scene.add.graphics();
+    dot.lineStyle(4, 0xffff00, 0.85);
+    dot.strokeCircle(0, 0, 16);
+
+    const hitRadius = 26;
+    const hit = this.scene.add.zone(0, 0, hitRadius * 2, hitRadius * 2).setOrigin(0.5, 0.5);
+    hit.setInteractive(new Phaser.Geom.Circle(hitRadius, hitRadius, hitRadius), Phaser.Geom.Circle.Contains);
+
+    hit.on("pointerover", () => {
+      this.scene.input.setDefaultCursor("pointer");
+      dot.clear();
+      dot.lineStyle(5, 0xffd84d, 1);
+      dot.strokeCircle(0, 0, 18);
+    });
+
+    hit.on("pointerout", () => {
+      this.scene.input.setDefaultCursor("default");
+      dot.clear();
+      dot.lineStyle(4, 0xffffff, 0.85);
+      dot.strokeCircle(0, 0, 16);
+    });
+
+    hit.on("pointerdown", () => {
+      this.suppressNextGlobalDeselect = true;
+      this.placeSelectedDevice(slotIndex);
+    });
+
+    c.add(dot);
+    c.add(hit);
+
+    return c;
+  }
+
+  private placeSelectedDevice(slotIndex: number) {
+    if (this.selectedDevice === null) return;
+    if (this.deviceSlots[slotIndex] !== null) return;
+
+    this.deviceSlots[slotIndex] = this.selectedDevice;
+
+    this.rebuildSprites();
+
+    this.selectedDevice = null;
+    this.clearSlotMarkers();
   }
 
   public rebuildSprites() {
