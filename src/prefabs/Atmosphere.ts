@@ -86,7 +86,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
       const rad = Phaser.Math.Linear(inner, outer, t);
       const a = 0.22 * Math.pow(1 - t, 2.0);
 
-      g.lineStyle(3, color, a);
+      g.lineStyle(10, color, a);
       g.strokeCircle(0, 0, rad);
     }
   };
@@ -137,7 +137,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     hit.on("pointerout", () => {
       this.scene.input.setDefaultCursor("default");
-      draw(0x9a9a9a);
+      draw(0x494949);
       btn.setScale(1.0);
     });
 
@@ -222,7 +222,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     hit.on("pointerout", () => {
       this.scene.input.setDefaultCursor("default");
       dot.clear();
-      dot.lineStyle(4, 0xffffff, 0.85);
+      dot.lineStyle(4, 0xffff00, 0.85);
       dot.strokeCircle(0, 0, 16);
     });
 
