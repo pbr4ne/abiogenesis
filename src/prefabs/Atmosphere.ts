@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import PlanetEdge from "./PlanetEdge";
+import { log } from "../utilities/GameUtils";
 
 type AtmosphereConfig = {
   diameter: number;
@@ -21,12 +22,29 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
   private planetEdge!: PlanetEdge;
   private sprites: Phaser.GameObjects.Image[] = [];
-  private deviceButtons: Phaser.GameObjects.Container[] = [];
+  private deviceButtons = new Map<0 | 1 | 2, Phaser.GameObjects.Container>();
 
   private deviceSlots: (0 | 1 | 2 | null)[] = [];
   private deviceKeys = ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"] as const;
   private selectedDevice: 0 | 1 | 2 | null = null;
   private slotMarkers: Phaser.GameObjects.Container[] = [];
+
+  private atmospherePoints = 5;
+
+  private readonly deviceCosts: Record<0 | 1 | 2, number> = {
+    0: 5,
+    1: 20,
+    2: 100
+  };
+
+  private readonly deviceRates: Record<0 | 1 | 2, number> = {
+    0: 1,
+    1: 5,
+    2: 10
+  };
+
+  private pointsTimer?: Phaser.Time.TimerEvent;
+
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: AtmosphereConfig) {
     super(scene, x, y);
@@ -47,13 +65,36 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     this.rebuildSprites();
     this.createDeviceButtons(x);
+
+    this.pointsTimer = this.scene.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        this.atmospherePoints += this.getAtmospherePerSecond();
+        log(`Atmosphere points: ${this.atmospherePoints}`);
+        this.updateDeviceButtonStates();
+      }
+    });
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      this.pointsTimer?.remove(false);
+    });
+
+    this.updateDeviceButtonStates();
+  }
+
+  private getAtmospherePerSecond() {
+    let total = 0;
+
+    for (const slot of this.deviceSlots) {
+      if (slot === null) continue;
+      total += this.deviceRates[slot];
+    }
+
+    return total;
   }
 
   private createDeviceButtons(x: number) {
-    for (const b of this.deviceButtons) {
-      b.destroy();
-    }
-    this.deviceButtons = [];
 
     const keys = ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"];
 
@@ -63,10 +104,20 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     const xPositions = [x - 360, x, x + 360];
 
+    this.deviceButtons.clear();
+
     for (let i = 0; i < 3; i++) {
-      const btn = this.makeCircleImageButton(xPositions[i] - this.x, y - this.y, radius, keys[i], i as 0 | 1 | 2);
+      const device = i as 0 | 1 | 2;
+      const btn = this.makeCircleImageButton(
+        xPositions[i] - this.x,
+        y - this.y,
+        radius,
+        keys[i],
+        device
+      );
+
       this.add(btn);
-      this.deviceButtons.push(btn);
+      this.deviceButtons.set(device, btn);
     }
   }
 
@@ -162,6 +213,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     this.selectedDevice = device;
     this.showEmptySlotMarkers();
+    this.updateDeviceButtonStates();
   }
 
   private clearSlotMarkers() {
@@ -240,12 +292,18 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     if (this.selectedDevice === null) return;
     if (this.deviceSlots[slotIndex] !== null) return;
 
+    const cost = this.deviceCosts[this.selectedDevice];
+    if (this.atmospherePoints < cost) return;
+
+    this.atmospherePoints -= cost;
     this.deviceSlots[slotIndex] = this.selectedDevice;
 
     this.rebuildSprites();
 
     this.selectedDevice = null;
     this.clearSlotMarkers();
+
+    this.updateDeviceButtonStates();
   }
 
   public rebuildSprites() {
@@ -281,6 +339,23 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
       this.add(img);
       this.sprites.push(img);
+    }
+  }
+
+  private updateDeviceButtonStates() {
+    for (const [device, btn] of this.deviceButtons) {
+      const cost = this.deviceCosts[device];
+      const affordable = this.atmospherePoints >= cost;
+
+      btn.setAlpha(affordable ? 1 : 0.4);
+
+      const hit = btn.list[btn.list.length - 1] as Phaser.GameObjects.Zone;
+
+      if (affordable) {
+        hit.setInteractive();
+      } else {
+        hit.disableInteractive();
+      }
     }
   }
 }
