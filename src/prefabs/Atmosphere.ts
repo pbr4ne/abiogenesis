@@ -100,7 +100,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     const draw = (strokeColor: number) => {
       bg.clear();
-      bg.fillStyle(0xadadad, 1);
+      bg.fillStyle(0x20202c, 1);
       bg.fillCircle(0, 0, radius);
       bg.lineStyle(6, strokeColor, 1);
       bg.strokeCircle(0, 0, radius);
