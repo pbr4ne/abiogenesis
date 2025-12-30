@@ -23,6 +23,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
   private planetEdge!: PlanetEdge;
   private sprites: Phaser.GameObjects.Image[] = [];
   private deviceButtons = new Map<0 | 1 | 2, Phaser.GameObjects.Container>();
+  private backToPlanetButton?: Phaser.GameObjects.Container;
 
   private deviceSlots: (0 | 1 | 2 | null)[] = [];
   private deviceKeys = ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"] as const;
@@ -74,6 +75,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     this.rebuildSprites();
     this.createDeviceButtons(x);
+    this.createBackToPlanetButton();
 
     this.createThermometer();
     this.updateThermometer();
@@ -104,6 +106,62 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     this.add(this.thermoFill);
 
     this.drawThermometerFrame();
+  }
+
+  private createBackToPlanetButton() {
+    this.backToPlanetButton?.destroy();
+
+    const size = 120;
+    const half = size / 2;
+
+    const localX = 820;
+    const localY = -1080;
+
+    const btn = this.scene.add.container(localX, localY);
+
+    const bg = this.scene.add.graphics();
+
+    const draw = (strokeColor: number) => {
+      bg.clear();
+      bg.fillStyle(0x20202c, 1);
+      bg.fillRect(-half, -half, size, size);
+      bg.lineStyle(6, strokeColor, 1);
+      bg.strokeRect(-half, -half, size, size);
+    };
+
+    draw(0x494949);
+
+    const img = this.scene.add.image(0, 0, "planet");
+    const pad = 16;
+    const max = size - pad * 2;
+    const scale = Math.min(max / img.width, max / img.height);
+    img.setScale(scale);
+
+    const hit = this.scene.add.zone(0, 0, size, size).setOrigin(0.5, 0.5);
+    hit.setInteractive();
+
+    hit.on("pointerover", () => {
+      this.scene.input.setDefaultCursor("pointer");
+      draw(0xffd84d);
+      btn.setScale(1.03);
+    });
+
+    hit.on("pointerout", () => {
+      this.scene.input.setDefaultCursor("default");
+      draw(0x494949);
+      btn.setScale(1.0);
+    });
+
+    hit.on("pointerdown", () => {
+      this.scene.events.emit("ui:goToPlanet");
+    });
+
+    btn.add(bg);
+    btn.add(img);
+    btn.add(hit);
+
+    this.add(btn);
+    this.backToPlanetButton = btn;
   }
 
   private drawThermometerFrame() {
@@ -164,7 +222,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     const diameter = 200;
     const radius = diameter / 2;
-    const y = 240;
+    const y = 315;
 
     const xPositions = [x - 360, x, x + 360];
 

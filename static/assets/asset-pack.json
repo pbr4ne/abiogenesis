@@ -15,6 +15,11 @@
                 "url": "assets/images/atmosphereDevice3.png",
                 "type": "image",
                 "key": "atmosphereDevice3"
+            },
+            {
+                "url": "assets/images/planet.png",
+                "type": "image",
+                "key": "planet"
             }
         ]
     },

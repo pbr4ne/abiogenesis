@@ -92,6 +92,15 @@ export default class Game extends BaseScene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.starfield.destroy();
+      this.events.off("ui:goToPlanet");
+    });
+
+    this.events.on("ui:goToPlanet", () => {
+      atmosphere.setVisible(false);
+
+      this.planet = new Planet(this, 960, 540);
+      this.add.existing(this.planet);
+      this.bgCam.ignore(this.planet);
     });
   }
 }
