@@ -77,9 +77,9 @@ export default class Game extends BaseScene {
       diameter: 2200,
       offsetRatio: 0.62,
       textureKey: "atmosphere",
-      count: 18,
-      arcStartDeg: 230,
-      arcEndDeg: 310,
+      count: 5,
+      arcStartDeg: 225,
+      arcEndDeg: 315,
       radiusOffset: 54,
     });
     this.add.existing(atmosphere);
