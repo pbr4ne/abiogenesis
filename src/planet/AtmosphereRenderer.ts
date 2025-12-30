@@ -14,6 +14,6 @@ export const drawAtmosphereGlow = (
     const a = 0.09 * Math.pow(1 - t, 2.1);
 
     g.lineStyle(2, 0x9fd6ff, a);
-    g.strokeCircle(0, centerY, rad);
+    g.strokeCircle(0, centerY+9, rad);
   }
 };
