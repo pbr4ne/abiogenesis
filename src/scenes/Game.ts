@@ -3,7 +3,7 @@ import BaseScene from "./BaseScene";
 import Planet from "../prefabs/Planet";
 import { log } from "../utilities/GameUtils";
 import { createStarfield, Starfield } from "../utilities/StarField";
-import PlanetEdge from "../prefabs/PlanetEdge";
+import Atmosphere from "../prefabs/Atmosphere";
 
 export default class Game extends BaseScene {
   constructor() {
@@ -57,21 +57,36 @@ export default class Game extends BaseScene {
 
     this.starfield = createStarfield(this, this.bgCam, this.gameCam);
 
-    this.planet = new Planet(this, 960, 540);
-    this.add.existing(this.planet);
-    this.bgCam.ignore(this.planet);
+    // this.planet = new Planet(this, 960, 540);
+    // this.add.existing(this.planet);
+    // this.bgCam.ignore(this.planet);
 
-    const planetNorthPole = new PlanetEdge(this, 960, 1200, { diameter: 2200, capRatio: 0.62 });
-    this.add.existing(planetNorthPole);
-    this.bgCam.ignore(planetNorthPole);
+    // const planetNorthPole = new PlanetEdge(this, 960, 1200, { diameter: 2200, capRatio: 0.62 });
+    // this.add.existing(planetNorthPole);
+    // this.bgCam.ignore(planetNorthPole);
 
-    const planetSouthPole = new PlanetEdge(this, 960, -1500, { diameter: 2200, capRatio: 0.62 });
-    this.add.existing(planetSouthPole);
-    this.bgCam.ignore(planetSouthPole);
+    // const planetSouthPole = new PlanetEdge(this, 960, -1500, { diameter: 2200, capRatio: 0.62 });
+    // this.add.existing(planetSouthPole);
+    // this.bgCam.ignore(planetSouthPole);
 
-    const planetEdge = new PlanetEdge(this, 2600, -100, { diameter: 2200, capRatio: 0.62 });
-    this.add.existing(planetEdge);
-    this.bgCam.ignore(planetEdge);
+    // const planetEdge = new PlanetEdge(this, 2600, -100, { diameter: 2200, capRatio: 0.62 });
+    // this.add.existing(planetEdge);
+    // this.bgCam.ignore(planetEdge);
+
+    const atmosphere = new Atmosphere(this, 960, 1200, {
+      diameter: 2200,
+      capRatio: 0.62,
+      textureKey: "atmosphere",
+      count: 18,
+      arcStartDeg: 205,
+      arcEndDeg: 335,
+      radiusOffset: 54,
+      spriteScale: 1.0,
+      spriteAlpha: 0.9,
+      depth: 5
+    });
+    this.add.existing(atmosphere);
+    this.bgCam.ignore(atmosphere);
 
     this.layoutCameras();
 
