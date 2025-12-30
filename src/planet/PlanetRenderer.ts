@@ -2,8 +2,8 @@ import Phaser from "phaser";
 import { Rotator, projectLatLon, latForIndex, lonForIndex } from "./PlanetMath";
 import type { RGBA } from "./PlanetGrid";
 
-export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number) => {
-  g.clear();
+export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number, centerY: number) => {
+    g.clear();
 
   const layers = 110;
   const inner = Phaser.Display.Color.ValueToColor(0x656057);
@@ -17,12 +17,12 @@ export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number) => {
     const col = Phaser.Display.Color.GetColor(c.r, c.g, c.b);
 
     g.fillStyle(col, 1);
-    g.fillCircle(0, 0, rad);
+    g.fillCircle(0, centerY, rad);
   }
 
   const lx = -r * 0.20;
-  const ly = -r * 0.20;
-  const lDist = Math.sqrt(lx * lx + ly * ly);
+  const ly = centerY - r * 0.20;
+  const lDist = Math.sqrt(lx * lx + (ly - centerY) * (ly - centerY));
   const lRad = (r - lDist) * 0.98;
 
   for (let i = 0; i < 34; i++) {
@@ -40,7 +40,7 @@ export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number) => {
     const a = 0.006 + 0.014 * t;
 
     g.fillStyle(0x000000, a);
-    g.fillCircle(0, 0, rad);
+    g.fillCircle(0, centerY, rad);
   }
 };
 

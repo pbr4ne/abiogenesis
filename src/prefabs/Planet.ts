@@ -52,7 +52,7 @@ export default class Planet extends Phaser.GameObjects.Container {
     this.add(this.tiles);
     this.add(this.grid);
 
-    drawBaseGradient(this.base, this.r);
+    drawBaseGradient(this.base, this.r, 0);
     drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
     drawWireGrid(this.grid, this.r, this.divisions, 160, 3, 0.35, this.rotate);
 
