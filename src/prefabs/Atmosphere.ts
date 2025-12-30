@@ -2,26 +2,22 @@ import Phaser from "phaser";
 import PlanetEdge from "./PlanetEdge";
 
 type AtmosphereConfig = {
-  diameter?: number;
-  capRatio?: number;
+  diameter: number;
+  offsetRatio: number;
 
-  textureKey?: string;
+  textureKey: string;
 
-  count?: number;
-  arcStartDeg?: number;
-  arcEndDeg?: number;
+  count: number;
+  arcStartDeg: number;
+  arcEndDeg: number;
 
-  radiusOffset?: number;
-  spriteScale?: number;
-  spriteAlpha?: number;
-
-  depth?: number;
+  radiusOffset: number;
 };
 
 export default class Atmosphere extends Phaser.GameObjects.Container {
   private diameter: number;
   private r: number;
-  private capRatio: number;
+  private offsetRatio: number;
 
   private textureKey: string;
 
@@ -30,34 +26,26 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
   private arcEndDeg: number;
 
   private radiusOffset: number;
-  private spriteScale: number;
-  private spriteAlpha: number;
 
   private planetEdge!: PlanetEdge;
   private sprites: Phaser.GameObjects.Image[] = [];
 
-  constructor(scene: Phaser.Scene, x = 960, y = 0, cfg: AtmosphereConfig = {}) {
+  constructor(scene: Phaser.Scene, x: number, y: number, cfg: AtmosphereConfig) {
     super(scene, x, y);
 
-    this.diameter = cfg.diameter ?? 2200;
+    this.diameter = cfg.diameter;
     this.r = this.diameter / 2;
-    this.capRatio = Phaser.Math.Clamp(cfg.capRatio ?? 0.62, 0.25, 0.95);
+    this.offsetRatio = Phaser.Math.Clamp(cfg.offsetRatio, 0.25, 0.95);
 
-    this.textureKey = cfg.textureKey ?? "atmosphere";
+    this.textureKey = cfg.textureKey;
 
-    this.atmoCount = cfg.count ?? 28;
-    this.arcStartDeg = cfg.arcStartDeg ?? 205;
-    this.arcEndDeg = cfg.arcEndDeg ?? 335;
+    this.atmoCount = cfg.count;
+    this.arcStartDeg = cfg.arcStartDeg;
+    this.arcEndDeg = cfg.arcEndDeg;
 
-    this.radiusOffset = cfg.radiusOffset ?? 54;
-    this.spriteScale = cfg.spriteScale ?? 1.0;
-    this.spriteAlpha = cfg.spriteAlpha ?? 0.9;
+    this.radiusOffset = cfg.radiusOffset;
 
-    if (cfg.depth !== undefined) {
-      this.setDepth(cfg.depth);
-    }
-
-    this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.capRatio });
+    this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.offsetRatio });
     this.add(this.planetEdge);
 
     this.rebuildSprites();
@@ -70,7 +58,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     this.sprites = [];
 
     const localCenterX = 0;
-    const localCenterY = this.r * this.capRatio;
+    const localCenterY = this.r * this.offsetRatio;
 
     const arcStart = Phaser.Math.DegToRad(this.arcStartDeg);
     const arcEnd = Phaser.Math.DegToRad(this.arcEndDeg);
@@ -85,8 +73,6 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
       const y = localCenterY + Math.sin(ang) * radius;
 
       const img = this.scene.add.image(x, y, this.textureKey);
-      img.setAlpha(this.spriteAlpha);
-      img.setScale(this.spriteScale);
 
       img.setRotation(ang + Math.PI / 2);
 

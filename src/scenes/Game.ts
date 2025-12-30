@@ -75,15 +75,12 @@ export default class Game extends BaseScene {
 
     const atmosphere = new Atmosphere(this, 960, 1200, {
       diameter: 2200,
-      capRatio: 0.62,
+      offsetRatio: 0.62,
       textureKey: "atmosphere",
       count: 18,
       arcStartDeg: 230,
       arcEndDeg: 310,
       radiusOffset: 54,
-      spriteScale: 1.0,
-      spriteAlpha: 0.9,
-      depth: 5
     });
     this.add.existing(atmosphere);
     this.bgCam.ignore(atmosphere);
