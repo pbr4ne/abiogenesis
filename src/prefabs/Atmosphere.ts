@@ -40,32 +40,13 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     this.radiusOffset = cfg.radiusOffset;
     this.atmoCount = 20;
-    this.deviceSlots = this.makeRandomDeviceSlots(this.atmoCount);
+    this.deviceSlots = this.deviceSlots = Array(this.atmoCount).fill(null);
 
     this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.offsetRatio });
     this.add(this.planetEdge);
 
     this.rebuildSprites();
     this.createDeviceButtons(x);
-  }
-
-  //todo - temporary
-  private makeRandomDeviceSlots(count: number): (0 | 1 | 2 | null)[] {
-    const out: (0 | 1 | 2 | null)[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const roll = Math.random();
-
-      if (roll < 0.45) {
-        out.push(null);
-        continue;
-      }
-
-      const v = Math.floor(Math.random() * 3) as 0 | 1 | 2;
-      out.push(v);
-    }
-
-    return out;
   }
 
   private createDeviceButtons(x: number) {
@@ -301,17 +282,5 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
       this.add(img);
       this.sprites.push(img);
     }
-  }
-
-  public setArc(arcStartDeg: number, arcEndDeg: number) {
-    this.arcStartDeg = arcStartDeg;
-    this.arcEndDeg = arcEndDeg;
-    this.rebuildSprites();
-  }
-
-  public setCount(count: number) {
-    this.atmoCount = Math.max(1, Math.floor(count));
-    this.deviceSlots = this.makeRandomDeviceSlots(this.atmoCount);
-    this.rebuildSprites();
   }
 }
