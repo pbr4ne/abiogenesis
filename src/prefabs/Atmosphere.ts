@@ -50,7 +50,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
   private thermoBg!: Phaser.GameObjects.Graphics;
   private thermoFill!: Phaser.GameObjects.Graphics;
 
-  private thermoX = 820;
+  private thermoX = -820;
   private thermoTopY = -1000;
   private thermoH = 700;
   private thermoW = 60;
