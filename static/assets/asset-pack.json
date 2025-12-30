@@ -10,6 +10,11 @@
                 "url": "assets/images/atmosphere2.png",
                 "type": "image",
                 "key": "atmosphere2"
+            },
+            {
+                "url": "assets/images/atmosphere3.png",
+                "type": "image",
+                "key": "atmosphere3"
             }
         ]
     },
