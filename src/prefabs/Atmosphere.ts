@@ -27,7 +27,6 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
   private deviceKeys = ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"] as const;
   private selectedDevice: 0 | 1 | 2 | null = null;
   private slotMarkers: Phaser.GameObjects.Container[] = [];
-  private suppressNextGlobalDeselect = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: AtmosphereConfig) {
     super(scene, x, y);
@@ -48,24 +47,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     this.rebuildSprites();
     this.createDeviceButtons(x);
-    this.scene.input.on("pointerdown", this.onGlobalPointerDown);
-
-    this.once(Phaser.GameObjects.Events.DESTROY, () => {
-      this.scene.input.off("pointerdown", this.onGlobalPointerDown);
-    });
   }
-
-  private onGlobalPointerDown = () => {
-    if (this.selectedDevice === null) return;
-
-    if (this.suppressNextGlobalDeselect) {
-      this.suppressNextGlobalDeselect = false;
-      return;
-    }
-
-    this.selectedDevice = null;
-    this.clearSlotMarkers();
-  };
 
   //todo - temporary
   private makeRandomDeviceSlots(count: number): (0 | 1 | 2 | null)[] {
@@ -179,7 +161,6 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     });
 
     hit.on("pointerdown", () => {
-      this.suppressNextGlobalDeselect = true;
       this.selectDevice(deviceIndex);
     });
 
@@ -200,8 +181,6 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
     this.selectedDevice = device;
     this.showEmptySlotMarkers();
-
-    this.suppressNextGlobalDeselect = true;
   }
 
   private clearSlotMarkers() {
@@ -267,7 +246,6 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     });
 
     hit.on("pointerdown", () => {
-      this.suppressNextGlobalDeselect = true;
       this.placeSelectedDevice(slotIndex);
     });
 
