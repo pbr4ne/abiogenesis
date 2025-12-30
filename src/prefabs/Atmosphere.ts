@@ -45,6 +45,15 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
 
   private pointsTimer?: Phaser.Time.TimerEvent;
 
+  private thermometerMax = 1000;
+
+  private thermoBg!: Phaser.GameObjects.Graphics;
+  private thermoFill!: Phaser.GameObjects.Graphics;
+
+  private thermoX = 820;
+  private thermoTopY = -1000;
+  private thermoH = 700;
+  private thermoW = 60;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: AtmosphereConfig) {
     super(scene, x, y);
@@ -66,12 +75,16 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     this.rebuildSprites();
     this.createDeviceButtons(x);
 
+    this.createThermometer();
+    this.updateThermometer();
+
     this.pointsTimer = this.scene.time.addEvent({
       delay: 1000,
       loop: true,
       callback: () => {
         this.atmospherePoints += this.getAtmospherePerSecond();
         log(`Atmosphere points: ${this.atmospherePoints}`);
+        this.updateThermometer();
         this.updateDeviceButtonStates();
       }
     });
@@ -81,6 +94,57 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     });
 
     this.updateDeviceButtonStates();
+  }
+
+  private createThermometer() {
+    this.thermoBg = this.scene.add.graphics();
+    this.thermoFill = this.scene.add.graphics();
+
+    this.add(this.thermoBg);
+    this.add(this.thermoFill);
+
+    this.drawThermometerFrame();
+  }
+
+  private drawThermometerFrame() {
+    const x = this.thermoX;
+    const y = this.thermoTopY;
+    const w = this.thermoW;
+    const h = this.thermoH;
+
+    this.thermoBg.clear();
+
+    this.thermoBg.fillStyle(0x11111a, 0.65);
+    this.thermoBg.fillRect(x - w / 2, y, w, h);
+
+    this.thermoBg.lineStyle(4, 0xffffff, 0.55);
+    this.thermoBg.strokeRect(x - w / 2, y, w, h);
+  }
+
+  private updateThermometer() {
+    const ratio = Phaser.Math.Clamp(
+      this.atmospherePoints / this.thermometerMax,
+      0,
+      1
+    );
+
+    const x = this.thermoX;
+    const y = this.thermoTopY;
+    const w = this.thermoW;
+    const h = this.thermoH;
+
+    const inset = 4;
+    const iw = w - inset * 2;
+    const ih = h - inset * 2;
+
+    const fillH = Math.floor(ih * ratio);
+    const fillY = y + inset + (ih - fillH);
+
+    this.thermoFill.clear();
+    if (fillH <= 0) return;
+
+    this.thermoFill.fillStyle(0xff0000, 0.85);
+    this.thermoFill.fillRect(x - iw / 2, fillY, iw, fillH);
   }
 
   private getAtmospherePerSecond() {
@@ -303,6 +367,7 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     this.selectedDevice = null;
     this.clearSlotMarkers();
 
+    this.updateThermometer();
     this.updateDeviceButtonStates();
   }
 
