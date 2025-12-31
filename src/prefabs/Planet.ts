@@ -19,8 +19,8 @@ export default class Planet extends Phaser.GameObjects.Container {
 
   private lastRevealAt: number;
 
-  private hotspotCell!: { row: number; col: number };
-  private hotspotHovered = false;
+  private hotspots: { row: number; col: number; event: string; baseA: number; hoverA: number }[] = [];
+  private hoveredHotspotIndex: number | null = null;
 
   private onUpdate = () => {
     const now = this.scene.time.now;
@@ -45,9 +45,14 @@ export default class Planet extends Phaser.GameObjects.Container {
 
     this.gridData = new PlanetGrid(this.divisions);
 
-    this.hotspotCell = { row: 5, col: 20 };
+    this.hotspots = [
+      { row: 5, col: 20, event: "ui:goToAtmosphere", baseA: 0.45, hoverA: 0.85 },
+      { row: 20, col: 20, event: "ui:goToMagnetosphere", baseA: 0.45, hoverA: 0.85 }
+    ];
 
-    this.gridData.setHex(this.hotspotCell.row, this.hotspotCell.col, "#ffd84d", 0.45);
+    for (const h of this.hotspots) {
+      this.gridData.setHex(h.row, h.col, "#ffd84d", h.baseA);
+    }
 
     this.lastRevealAt = this.scene.time.now;
 
@@ -72,60 +77,37 @@ export default class Planet extends Phaser.GameObjects.Container {
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
 
-      const cell = pickCellByNearestProjectedCenter(
-        dx,
-        dy,
-        this.r,
-        this.divisions,
-        this.rotate
-      );
+      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
 
-      const isHotspot =
-        cell &&
-        cell.row === this.hotspotCell.row &&
-        cell.col === this.hotspotCell.col;
+      let idx: number | null = null;
 
-      if (isHotspot && !this.hotspotHovered) {
-        this.hotspotHovered = true;
-        this.scene.input.setDefaultCursor("pointer");
-
-        this.gridData.setHex(
-          this.hotspotCell.row,
-          this.hotspotCell.col,
-          "#ffd84d",
-          0.85
-        );
-
-        drawTiles(
-          this.tiles,
-          this.r,
-          this.divisions,
-          2,
-          this.rotate,
-          this.gridData.getCellsRef()
-        );
+      if (cell) {
+        for (let i = 0; i < this.hotspots.length; i++) {
+          const h = this.hotspots[i];
+          if (cell.row === h.row && cell.col === h.col) {
+            idx = i;
+            break;
+          }
+        }
       }
 
-      if (!isHotspot && this.hotspotHovered) {
-        this.hotspotHovered = false;
+      if (idx === this.hoveredHotspotIndex) return;
+
+      if (this.hoveredHotspotIndex !== null) {
+        const prev = this.hotspots[this.hoveredHotspotIndex];
+        this.gridData.setHex(prev.row, prev.col, "#ffd84d", prev.baseA);
         this.scene.input.setDefaultCursor("default");
-
-        this.gridData.setHex(
-          this.hotspotCell.row,
-          this.hotspotCell.col,
-          "#ffd84d",
-          0.45
-        );
-
-        drawTiles(
-          this.tiles,
-          this.r,
-          this.divisions,
-          2,
-          this.rotate,
-          this.gridData.getCellsRef()
-        );
       }
+
+      this.hoveredHotspotIndex = idx;
+
+      if (idx !== null) {
+        const cur = this.hotspots[idx];
+        this.gridData.setHex(cur.row, cur.col, "#ffd84d", cur.hoverA);
+        this.scene.input.setDefaultCursor("pointer");
+      }
+
+      drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
     });
 
     this.hitZone.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
@@ -135,8 +117,11 @@ export default class Planet extends Phaser.GameObjects.Container {
       const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
       if (!cell) return;
 
-      if (cell.row === this.hotspotCell.row && cell.col === this.hotspotCell.col) {
-        this.scene.events.emit("ui:goToAtmosphere");
+      for (const h of this.hotspots) {
+        if (cell.row === h.row && cell.col === h.col) {
+          this.scene.events.emit(h.event);
+          return;
+        }
       }
     });
 

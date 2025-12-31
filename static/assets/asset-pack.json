@@ -17,6 +17,21 @@
                 "key": "atmosphereDevice3"
             },
             {
+                "url": "assets/images/magnetosphereDevice1.png",
+                "type": "image",
+                "key": "magnetosphereDevice1"
+            },
+            {
+                "url": "assets/images/magnetosphereDevice2.png",
+                "type": "image",
+                "key": "magnetosphereDevice2"
+            },
+            {
+                "url": "assets/images/magnetosphereDevice3.png",
+                "type": "image",
+                "key": "magnetosphereDevice3"
+            },
+            {
                 "url": "assets/images/planet.png",
                 "type": "image",
                 "key": "planet"

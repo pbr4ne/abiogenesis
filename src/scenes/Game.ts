@@ -4,6 +4,7 @@ import Planet from "../prefabs/Planet";
 import { log } from "../utilities/GameUtils";
 import { createStarfield, Starfield } from "../utilities/StarField";
 import Atmosphere from "../prefabs/Atmosphere";
+import Magnetosphere from "../prefabs/Magnetosphere";
 
 export default class Game extends BaseScene {
   constructor() {
@@ -61,13 +62,6 @@ export default class Game extends BaseScene {
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);
 
-    // const planetNorthPole = new PlanetEdge(this, 960, 1200, { diameter: 2200, capRatio: 0.62 });
-    // this.add.existing(planetNorthPole);
-    // this.bgCam.ignore(planetNorthPole);
-
-    // const planetSouthPole = new PlanetEdge(this, 960, -1500, { diameter: 2200, capRatio: 0.62 });
-    // this.add.existing(planetSouthPole);
-    // this.bgCam.ignore(planetSouthPole);
 
     // const planetEdge = new PlanetEdge(this, 2600, -100, { diameter: 2200, capRatio: 0.62 });
     // this.add.existing(planetEdge);
@@ -83,17 +77,36 @@ export default class Game extends BaseScene {
     this.add.existing(atmosphere);
     this.bgCam.ignore(atmosphere);
 
+    const magnetosphere = new Magnetosphere(this, 960, -120, {
+      diameter: 2200,
+      offsetRatio: 0.62,
+      arcStartDeg: 45,
+      arcEndDeg: 135,
+      radiusOffset: 54,
+    });
+    this.add.existing(magnetosphere);
+    this.bgCam.ignore(magnetosphere);
+
     atmosphere.setVisible(false);
+    magnetosphere.setVisible(false);
     this.planet.setVisible(true);
 
     this.events.on("ui:goToPlanet", () => {
       atmosphere.setVisible(false);
+      magnetosphere.setVisible(false);
       this.planet.setVisible(true);
     });
 
     this.events.on("ui:goToAtmosphere", () => {
       this.planet.setVisible(false);
+      magnetosphere.setVisible(false);
       atmosphere.setVisible(true);
+    });
+
+    this.events.on("ui:goToMagnetosphere", () => {
+      this.planet.setVisible(false);
+      atmosphere.setVisible(false);
+      magnetosphere.setVisible(true);
     });
 
     this.layoutCameras();
@@ -107,6 +120,7 @@ export default class Game extends BaseScene {
       this.starfield.destroy();
       this.events.off("ui:goToPlanet");
       this.events.off("ui:goToAtmosphere");
+      this.events.off("ui:goToMagnetosphere");
     });
   }
 }

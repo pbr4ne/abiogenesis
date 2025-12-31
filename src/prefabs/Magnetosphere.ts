@@ -1,6 +1,6 @@
 import CapDeviceView from "./CapDeviceView";
 
-type AtmosphereConfig = {
+type MagnetosphereConfig = {
   diameter: number;
   offsetRatio: number;
   arcStartDeg: number;
@@ -8,24 +8,24 @@ type AtmosphereConfig = {
   radiusOffset: number;
 };
 
-export default class Atmosphere extends CapDeviceView {
-  constructor(scene: Phaser.Scene, x: number, y: number, cfg: AtmosphereConfig) {
+export default class Magnetosphere extends CapDeviceView {
+  constructor(scene: Phaser.Scene, x: number, y: number, cfg: MagnetosphereConfig) {
     super(scene, x, y, {
       ...cfg,
 
-      flipWorldY: false,
+      flipWorldY: true,
 
-      buttonRowLocalY: 315 - y,
+      buttonRowLocalY: 1080 - 240 - y,
 
       backButtonLocalX: 820,
-      backButtonLocalY: -1080,
+      backButtonLocalY: 950,
 
       thermoLocalX: -820,
-      thermoTopLocalY: -1000,
+      thermoTopLocalY: 300,
       thermoH: 700,
       thermoW: 60,
 
-      deviceKeys: ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"],
+      deviceKeys: ["magnetosphereDevice1", "magnetosphereDevice2", "magnetosphereDevice3"],
 
       deviceCosts: { 0: 5, 1: 20, 2: 100 },
       deviceRates: { 0: 1, 1: 5, 2: 10 },
