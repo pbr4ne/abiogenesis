@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import PlanetEdge from "./PlanetEdge";
 import { log } from "../utilities/GameUtils";
+import { makeRotator } from "../planet/PlanetMath";
+import { drawWireGrid } from "../planet/PlanetRenderer";
 
 type AtmosphereConfig = {
   diameter: number;
@@ -29,6 +31,8 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
   private deviceKeys = ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"] as const;
   private selectedDevice: 0 | 1 | 2 | null = null;
   private slotMarkers: Phaser.GameObjects.Container[] = [];
+
+  private grid!: Phaser.GameObjects.Graphics;
 
   private atmospherePoints = 5;
 
@@ -73,6 +77,10 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.offsetRatio });
     this.add(this.planetEdge);
 
+    this.grid = scene.add.graphics();
+    this.add(this.grid);
+    this.drawGridLines();
+
     this.rebuildSprites();
     this.createDeviceButtons(x);
     this.createBackToPlanetButton();
@@ -96,6 +104,23 @@ export default class Atmosphere extends Phaser.GameObjects.Container {
     });
 
     this.updateDeviceButtonStates();
+  }
+
+  private drawGridLines() {
+    const centerY = this.r * this.offsetRatio;
+
+    this.grid.setPosition(0, centerY);
+
+    const tilt = Phaser.Math.DegToRad(0);
+    const yaw = Phaser.Math.DegToRad(0);
+    const rotate = makeRotator(tilt, yaw);
+
+    const divisions = 40;
+    const samples = 200;
+    const lineWidth = 3;
+    const lineAlpha = 0.35;
+
+    drawWireGrid(this.grid, this.r, divisions, samples, lineWidth, lineAlpha, rotate);
   }
 
   private createThermometer() {
