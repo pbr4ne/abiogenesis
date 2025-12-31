@@ -57,9 +57,9 @@ export default class Game extends BaseScene {
 
     this.starfield = createStarfield(this, this.bgCam, this.gameCam);
 
-    // this.planet = new Planet(this, 960, 540);
-    // this.add.existing(this.planet);
-    // this.bgCam.ignore(this.planet);
+    this.planet = new Planet(this, 960, 540);
+    this.add.existing(this.planet);
+    this.bgCam.ignore(this.planet);
 
     // const planetNorthPole = new PlanetEdge(this, 960, 1200, { diameter: 2200, capRatio: 0.62 });
     // this.add.existing(planetNorthPole);
@@ -83,6 +83,19 @@ export default class Game extends BaseScene {
     this.add.existing(atmosphere);
     this.bgCam.ignore(atmosphere);
 
+    atmosphere.setVisible(false);
+    this.planet.setVisible(true);
+
+    this.events.on("ui:goToPlanet", () => {
+      atmosphere.setVisible(false);
+      this.planet.setVisible(true);
+    });
+
+    this.events.on("ui:goToAtmosphere", () => {
+      this.planet.setVisible(false);
+      atmosphere.setVisible(true);
+    });
+
     this.layoutCameras();
 
     this.scale.on("resize", () => {
@@ -93,14 +106,7 @@ export default class Game extends BaseScene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.starfield.destroy();
       this.events.off("ui:goToPlanet");
-    });
-
-    this.events.on("ui:goToPlanet", () => {
-      atmosphere.setVisible(false);
-
-      this.planet = new Planet(this, 960, 540);
-      this.add.existing(this.planet);
-      this.bgCam.ignore(this.planet);
+      this.events.off("ui:goToAtmosphere");
     });
   }
 }

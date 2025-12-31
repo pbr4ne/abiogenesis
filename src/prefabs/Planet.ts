@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { makeRotator, pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
+import { makeRotator, pickCellByNearestProjectedCenter, projectLatLon } from "../planet/PlanetMath";
 import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/PlanetRenderer";
 import PlanetGrid from "../planet/PlanetGrid";
 
@@ -18,6 +18,9 @@ export default class Planet extends Phaser.GameObjects.Container {
   private gridData: PlanetGrid;
 
   private lastRevealAt: number;
+
+  private hotspotCell!: { row: number; col: number };
+  private hotspotHovered = false;
 
   private onUpdate = () => {
     const now = this.scene.time.now;
@@ -42,6 +45,10 @@ export default class Planet extends Phaser.GameObjects.Container {
 
     this.gridData = new PlanetGrid(this.divisions);
 
+    this.hotspotCell = { row: 5, col: 20 };
+
+    this.gridData.setHex(this.hotspotCell.row, this.hotspotCell.col, "#ffd84d", 0.45);
+
     this.lastRevealAt = this.scene.time.now;
 
     this.base = scene.add.graphics();
@@ -60,6 +67,78 @@ export default class Planet extends Phaser.GameObjects.Container {
     this.hitZone.setOrigin(0, 0);
     this.hitZone.setInteractive(new Phaser.Geom.Circle(this.r, this.r, this.r), Phaser.Geom.Circle.Contains);
     this.add(this.hitZone);
+
+    this.hitZone.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      const dx = pointer.worldX - this.x;
+      const dy = pointer.worldY - this.y;
+
+      const cell = pickCellByNearestProjectedCenter(
+        dx,
+        dy,
+        this.r,
+        this.divisions,
+        this.rotate
+      );
+
+      const isHotspot =
+        cell &&
+        cell.row === this.hotspotCell.row &&
+        cell.col === this.hotspotCell.col;
+
+      if (isHotspot && !this.hotspotHovered) {
+        this.hotspotHovered = true;
+        this.scene.input.setDefaultCursor("pointer");
+
+        this.gridData.setHex(
+          this.hotspotCell.row,
+          this.hotspotCell.col,
+          "#ffd84d",
+          0.85
+        );
+
+        drawTiles(
+          this.tiles,
+          this.r,
+          this.divisions,
+          2,
+          this.rotate,
+          this.gridData.getCellsRef()
+        );
+      }
+
+      if (!isHotspot && this.hotspotHovered) {
+        this.hotspotHovered = false;
+        this.scene.input.setDefaultCursor("default");
+
+        this.gridData.setHex(
+          this.hotspotCell.row,
+          this.hotspotCell.col,
+          "#ffd84d",
+          0.45
+        );
+
+        drawTiles(
+          this.tiles,
+          this.r,
+          this.divisions,
+          2,
+          this.rotate,
+          this.gridData.getCellsRef()
+        );
+      }
+    });
+
+    this.hitZone.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      const dx = pointer.worldX - this.x;
+      const dy = pointer.worldY - this.y;
+
+      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+      if (!cell) return;
+
+      if (cell.row === this.hotspotCell.row && cell.col === this.hotspotCell.col) {
+        this.scene.events.emit("ui:goToAtmosphere");
+      }
+    });
 
     this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onUpdate);
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
