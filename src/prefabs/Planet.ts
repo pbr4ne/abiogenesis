@@ -19,7 +19,7 @@ export default class Planet extends Phaser.GameObjects.Container {
 
   private lastRevealAt: number;
 
-  private hotspots: { row: number; col: number; event: string; baseA: number; hoverA: number }[] = [];
+  private hotspots: { row: number; col: number; event: string; baseA: number; hoverA: number; colourHex: string }[] = [];
   private hoveredHotspotIndex: number | null = null;
 
   private onUpdate = () => {
@@ -46,12 +46,12 @@ export default class Planet extends Phaser.GameObjects.Container {
     this.gridData = new PlanetGrid(this.divisions);
 
     this.hotspots = [
-      { row: 5, col: 20, event: "ui:goToAtmosphere", baseA: 0.45, hoverA: 0.85 },
-      { row: 20, col: 20, event: "ui:goToMagnetosphere", baseA: 0.45, hoverA: 0.85 }
+      { row: 5, col: 20, event: "ui:goToAtmosphere", baseA: 0.45, hoverA: 0.85, colourHex: "#ffd84d" },
+      { row: 20, col: 20, event: "ui:goToMagnetosphere", baseA: 0.45, hoverA: 0.85, colourHex: "#9dff4d" },
     ];
 
     for (const h of this.hotspots) {
-      this.gridData.setHex(h.row, h.col, "#ffd84d", h.baseA);
+      this.gridData.setHex(h.row, h.col, h.colourHex, h.baseA);
     }
 
     this.lastRevealAt = this.scene.time.now;
@@ -95,7 +95,7 @@ export default class Planet extends Phaser.GameObjects.Container {
 
       if (this.hoveredHotspotIndex !== null) {
         const prev = this.hotspots[this.hoveredHotspotIndex];
-        this.gridData.setHex(prev.row, prev.col, "#ffd84d", prev.baseA);
+        this.gridData.setHex(prev.row, prev.col, prev.colourHex, prev.baseA);
         this.scene.input.setDefaultCursor("default");
       }
 
@@ -103,7 +103,7 @@ export default class Planet extends Phaser.GameObjects.Container {
 
       if (idx !== null) {
         const cur = this.hotspots[idx];
-        this.gridData.setHex(cur.row, cur.col, "#ffd84d", cur.hoverA);
+        this.gridData.setHex(cur.row, cur.col, cur.colourHex, cur.hoverA);
         this.scene.input.setDefaultCursor("pointer");
       }
 
