@@ -1,4 +1,4 @@
-import CapDeviceView from "./CapDeviceView";
+import TerraformingView from "./TerraformingView";
 
 type MagnetosphereConfig = {
   diameter: number;
@@ -8,7 +8,7 @@ type MagnetosphereConfig = {
   radiusOffset: number;
 };
 
-export default class Magnetosphere extends CapDeviceView {
+export default class Magnetosphere extends TerraformingView {
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: MagnetosphereConfig) {
     super(scene, x, y, {
       ...cfg,
@@ -32,5 +32,12 @@ export default class Magnetosphere extends CapDeviceView {
 
       onBackEvent: "ui:goToPlanet"
     });
+
+    this.onPointsChanged();
+  }
+
+  protected onPointsChanged() {
+    const ratio = Phaser.Math.Clamp(this.atmospherePoints / this.thermometerMax, 0, 1);
+    this.scene.events.emit("ui:magnetosphereStrength", ratio);
   }
 }

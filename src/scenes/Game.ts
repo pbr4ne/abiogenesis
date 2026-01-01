@@ -62,7 +62,6 @@ export default class Game extends BaseScene {
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);
 
-
     // const planetEdge = new PlanetEdge(this, 2600, -100, { diameter: 2200, capRatio: 0.62 });
     // this.add.existing(planetEdge);
     // this.bgCam.ignore(planetEdge);
@@ -91,23 +90,28 @@ export default class Game extends BaseScene {
     magnetosphere.setVisible(false);
     this.planet.setVisible(true);
 
-    this.events.on("ui:goToPlanet", () => {
+    const onGoToPlanet = () => {
       atmosphere.setVisible(false);
       magnetosphere.setVisible(false);
       this.planet.setVisible(true);
-    });
+    };
 
-    this.events.on("ui:goToAtmosphere", () => {
+    const onGoToAtmosphere = () => {
       this.planet.setVisible(false);
       magnetosphere.setVisible(false);
       atmosphere.setVisible(true);
-    });
+    };
 
-    this.events.on("ui:goToMagnetosphere", () => {
+    const onGoToMagnetosphere = () => {
       this.planet.setVisible(false);
       atmosphere.setVisible(false);
       magnetosphere.setVisible(true);
-    });
+    };
+
+
+    this.events.on("ui:goToPlanet", onGoToPlanet);
+    this.events.on("ui:goToAtmosphere", onGoToAtmosphere);
+    this.events.on("ui:goToMagnetosphere", onGoToMagnetosphere);
 
     this.layoutCameras();
 
@@ -118,9 +122,10 @@ export default class Game extends BaseScene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.starfield.destroy();
-      this.events.off("ui:goToPlanet");
-      this.events.off("ui:goToAtmosphere");
-      this.events.off("ui:goToMagnetosphere");
+
+      this.events.off("ui:goToPlanet", onGoToPlanet);
+      this.events.off("ui:goToAtmosphere", onGoToAtmosphere);
+      this.events.off("ui:goToMagnetosphere", onGoToMagnetosphere);
     });
   }
 }

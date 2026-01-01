@@ -3,8 +3,9 @@ import PlanetEdge from "./PlanetEdge";
 import { makeRotator } from "../planet/PlanetMath";
 import { drawWireGrid } from "../planet/PlanetRenderer";
 import { log } from "../utilities/GameUtils";
+import MagneticField from "./MagneticField";
 
-export type CapDeviceViewConfig = {
+export type TerraformingViewConfig = {
   diameter: number;
   offsetRatio: number;
   arcStartDeg: number;
@@ -29,7 +30,7 @@ export type CapDeviceViewConfig = {
   onBackEvent: string;
 };
 
-export default class CapDeviceView extends Phaser.GameObjects.Container {
+export default class TerraformingView extends Phaser.GameObjects.Container {
   protected diameter: number;
   protected r: number;
   protected offsetRatio: number;
@@ -81,7 +82,11 @@ export default class CapDeviceView extends Phaser.GameObjects.Container {
 
   protected onBackEvent: string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, cfg: CapDeviceViewConfig) {
+  protected magField?: MagneticField;
+  protected debugForceFieldMax = true;
+  protected behindWorld = new Phaser.GameObjects.Container(this.scene, 0, 0);
+
+  constructor(scene: Phaser.Scene, x: number, y: number, cfg: TerraformingViewConfig) {
     super(scene, x, y);
 
     this.diameter = cfg.diameter;
@@ -116,6 +121,20 @@ export default class CapDeviceView extends Phaser.GameObjects.Container {
     this.add(this.world);
     this.add(this.ui);
 
+    this.world.add(this.behindWorld);
+    this.magField = new MagneticField(scene, this.behindWorld, {
+      r: this.r,
+      centerX: 0,
+      centerY: this.r * this.offsetRatio,
+      lineAlpha: 0.18,
+      lineWidth: 2,
+      perSideLines: 5,
+      loopCenterOffsetMul: 0.62,
+      innerRadiusMul: 0.55,
+      outerRadiusMul: 1.85,
+      strengthOverride01: 1
+    });
+
     this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.offsetRatio });
     this.world.add(this.planetEdge);
 
@@ -125,6 +144,25 @@ export default class CapDeviceView extends Phaser.GameObjects.Container {
     if (this.flipWorldY) {
       this.world.setScale(1, -1);
     }
+
+    const centerY = this.r * this.offsetRatio;
+
+    this.magField = new MagneticField(scene, this.world, {
+      r: this.r,
+      centerX: 0,
+      centerY,
+
+      lineAlpha: 0.18,
+      lineWidth: 2,
+
+      perSideLines: 5,
+
+      loopCenterOffsetMul: 0.62,
+      innerRadiusMul: 0.55,
+      outerRadiusMul: 1.85,
+
+      strengthOverride01: this.debugForceFieldMax ? 1 : null
+    });
 
     this.drawGridLines();
 
@@ -143,6 +181,9 @@ export default class CapDeviceView extends Phaser.GameObjects.Container {
         log(`Points: ${this.atmospherePoints}`);
         this.updateThermometer();
         this.updateDeviceButtonStates();
+        this.onPointsChanged();
+        const ratio = Phaser.Math.Clamp(this.atmospherePoints / this.thermometerMax, 0, 1);
+        this.magField?.setStrength01(ratio);
       }
     });
 
@@ -533,6 +574,9 @@ export default class CapDeviceView extends Phaser.GameObjects.Container {
       this.sprites.push(img);
     }
   }
+
+  protected onPointsChanged() {}
+
 
   protected updateDeviceButtonStates() {
     for (const [device, btn] of this.deviceButtons) {

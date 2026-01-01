@@ -1,4 +1,4 @@
-import CapDeviceView from "./CapDeviceView";
+import TerraformingView from "./TerraformingView";
 
 type AtmosphereConfig = {
   diameter: number;
@@ -8,7 +8,7 @@ type AtmosphereConfig = {
   radiusOffset: number;
 };
 
-export default class Atmosphere extends CapDeviceView {
+export default class Atmosphere extends TerraformingView {
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: AtmosphereConfig) {
     super(scene, x, y, {
       ...cfg,

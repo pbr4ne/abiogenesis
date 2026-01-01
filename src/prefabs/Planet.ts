@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { makeRotator, pickCellByNearestProjectedCenter, projectLatLon } from "../planet/PlanetMath";
 import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/PlanetRenderer";
 import PlanetGrid from "../planet/PlanetGrid";
+import MagneticField from "./MagneticField";
 
 export default class Planet extends Phaser.GameObjects.Container {
   private divisions: number;
@@ -21,6 +22,8 @@ export default class Planet extends Phaser.GameObjects.Container {
 
   private hotspots: { row: number; col: number; event: string; baseA: number; hoverA: number; colourHex: string }[] = [];
   private hoveredHotspotIndex: number | null = null;
+
+  private magField?: MagneticField;
 
   private onUpdate = () => {
     const now = this.scene.time.now;
@@ -55,6 +58,23 @@ export default class Planet extends Phaser.GameObjects.Container {
     }
 
     this.lastRevealAt = this.scene.time.now;
+
+    this.magField = new MagneticField(scene, this, {
+      r: this.r,
+      centerX: 0,
+      centerY: 0,
+
+      lineAlpha: 0.2,
+      lineWidth: 2,
+
+      perSideLines: 5,
+
+      loopCenterOffsetMul: 1,
+      innerRadiusMul: 0.15,
+      outerRadiusMul: 1.35,
+
+      strengthOverride01: 1
+    });
 
     this.base = scene.add.graphics();
     this.tiles = scene.add.graphics();
