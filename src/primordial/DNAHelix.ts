@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { log } from "../utilities/GameUtils";
+import SoupProgress from "./SoupProgress";
 
 type DNAHelixConfig = {
   height?: number;
@@ -21,9 +22,9 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
   private turns: number;
   private strandWidth: number;
   private stepsPx: number;
-
+  private progress?: SoupProgress;
   private revealed: { r: number; g: number; b: number; w: number }[] = [];
-
+  private unlockedHues: { h: number; w: number }[] = [];
   private phase = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: DNAHelixConfig = {}) {
@@ -47,16 +48,112 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
     });
   }
 
-  public addRevealColour(rgb: { r: number; g: number; b: number }, weight = 1) {
+  public pickRevealedGradientRGB() {
+    if (this.revealed.length === 0) return null;
+
+    const topY = this.getTopY();
+    const botY = this.getBotY();
+
+    const colorAtY = (y: number) => {
+      const t = Phaser.Math.Clamp((y - topY) / (botY - topY), 0, 1);
+      const hue01 = Phaser.Math.Linear(0, 0.75, t);
+      return Phaser.Display.Color.HSVToRGB(hue01, 1, 1) as Phaser.Types.Display.ColorObject;
+    };
+
+    const revealAlphaAtY = (y: number) => {
+      const c = colorAtY(y);
+      let best = 0;
+
+      for (const s of this.revealed) {
+        const dr = (c.r - s.r) / 255;
+        const dg = (c.g - s.g) / 255;
+        const db = (c.b - s.b) / 255;
+
+        const d = Math.sqrt(dr * dr + dg * dg + db * db);
+        const sim = Phaser.Math.Clamp(1 - d / 0.65, 0, 1);
+
+        const w = Phaser.Math.Clamp(s.w / 6, 0.15, 1);
+        best = Math.max(best, sim * w);
+      }
+
+      return Phaser.Math.Clamp(Math.pow(best, 1.6), 0, 1);
+    };
+
+    for (let tries = 0; tries < 18; tries++) {
+      const y = Phaser.Math.FloatBetween(topY, botY);
+      const a = revealAlphaAtY(y);
+      if (Math.random() > a) continue;
+
+      const c = colorAtY(y);
+      return { r: c.r, g: c.g, b: c.b };
+    }
+
+    return null;
+  }
+
+  private addRevealPoint(rgb: { r: number; g: number; b: number }, w: number) {
     const close = (a: any, b: any) =>
       Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) < 30;
 
     const found = this.revealed.find(c => close(c, rgb));
-    if (found) {
-      found.w += weight;
-    } else {
-      this.revealed.push({ r: rgb.r, g: rgb.g, b: rgb.b, w: weight });
+    if (found) found.w += w;
+    else this.revealed.push({ r: rgb.r, g: rgb.g, b: rgb.b, w });
+  }
+
+  private lerpRGB(a: any, b: any, t: number) {
+    return {
+      r: Math.round(Phaser.Math.Linear(a.r, b.r, t)),
+      g: Math.round(Phaser.Math.Linear(a.g, b.g, t)),
+      b: Math.round(Phaser.Math.Linear(a.b, b.b, t))
+    };
+  }
+
+  public addRevealColour(rgb: { r: number; g: number; b: number }, weight = 1) {
+    this.addRevealPoint(rgb, weight);
+
+    const rOnly = { r: rgb.r, g: 0, b: 0 };
+    const gOnly = { r: 0, g: rgb.g, b: 0 };
+    const bOnly = { r: 0, g: 0, b: rgb.b };
+
+    const rOn = rgb.r > 32;
+    const gOn = rgb.g > 32;
+    const bOn = rgb.b > 32;
+
+    if (rOn) this.addRevealPoint(rOnly, weight * 0.25);
+    if (gOn) this.addRevealPoint(gOnly, weight * 0.25);
+    if (bOn) this.addRevealPoint(bOnly, weight * 0.25);
+
+    const ts = [0.25, 0.5, 0.75];
+
+    if (rOn) for (const t of ts) this.addRevealPoint(this.lerpRGB(rgb, rOnly, t), weight * 0.14);
+    if (gOn) for (const t of ts) this.addRevealPoint(this.lerpRGB(rgb, gOnly, t), weight * 0.14);
+    if (bOn) for (const t of ts) this.addRevealPoint(this.lerpRGB(rgb, bOnly, t), weight * 0.14);
+  }
+
+  public hasUnlockedSpawnColours() {
+    return this.unlockedHues.length > 0;
+  }
+
+  public pickUnlockedSpawnRGB() {
+    if (this.unlockedHues.length === 0) return null;
+
+    const total = this.unlockedHues.reduce((s, x) => s + x.w, 0);
+    let roll = Math.random() * total;
+    let picked = this.unlockedHues[0];
+
+    for (const x of this.unlockedHues) {
+      roll -= x.w;
+      if (roll <= 0) {
+        picked = x;
+        break;
+      }
     }
+
+    const spread = Phaser.Math.Clamp(0.015 + 0.06 * (picked.w / (picked.w + 6)), 0.015, 0.075);
+    const h = Phaser.Math.Wrap(picked.h + Phaser.Math.FloatBetween(-spread, spread), 0, 1);
+
+    const c = Phaser.Display.Color.HSVToRGB(h, 1, 1) as Phaser.Types.Display.ColorObject;
+    return { r: c.r, g: c.g, b: c.b };
   }
 
   public clearReveal() {
@@ -93,24 +190,6 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
       return Phaser.Display.Color.HSVToRGB(hue01, 1, 1) as Phaser.Types.Display.ColorObject;
     };
 
-    const revealAlphaAtY = (y: number) => {
-      if (this.revealed.length === 0) return 0;
-
-      const c = colorAtY(y);
-      let best = 0;
-
-      for (const s of this.revealed) {
-        const dr = (c.r - s.r) / 255;
-        const dg = (c.g - s.g) / 255;
-        const db = (c.b - s.b) / 255;
-
-        const d = Math.sqrt(dr * dr + dg * dg + db * db);
-        const sim = Phaser.Math.Clamp(1 - d / 0.75, 0, 1);
-        best = Math.max(best, sim * Phaser.Math.Clamp(s.w / 6, 0.25, 1));
-      }
-
-      return Phaser.Math.Clamp(Math.pow(best, 1.6), 0, 1);
-    };
 
     const alphaStrandAtY = (y: number) => {
       const z = Math.cos((y - topY) * freq + this.phase);
@@ -163,10 +242,12 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
       const c = colorAtY((y + y2) / 2);
       const packed = Phaser.Display.Color.GetColor(c.r, c.g, c.b);
 
-      const reveal = revealAlphaAtY((y + y2) / 2);
-      if (reveal <= 0.001) continue;
+      const hue01 = Phaser.Math.Linear(0, 0.75, Phaser.Math.Clamp((((y + y2) / 2) - topY) / (botY - topY), 0, 1));
+      const a = this.progress ? this.progress.helixAlphaForHue01(hue01) : 0;
 
-      g.fillStyle(packed, 0.05 + 0.95 * reveal);
+      if (a <= 0.001) continue;
+
+      g.fillStyle(packed, 0.05 + 0.85 * a);
       g.beginPath();
       g.moveTo(left1, y);
       g.lineTo(right1, y);
@@ -222,5 +303,26 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
       g.lineTo(xB(y2), y2);
       g.strokePath();
     }
+  }
+
+  public sampleGradientAtY(y: number) {
+    const topY = this.getTopY();
+    const botY = this.getBotY();
+    const t = Phaser.Math.Clamp((y - topY) / (botY - topY), 0, 1);
+    const hue01 = Phaser.Math.Linear(0, 0.75, t);
+    const c = Phaser.Display.Color.HSVToRGB(hue01, 1, 1) as Phaser.Types.Display.ColorObject;
+    return { r: c.r, g: c.g, b: c.b };
+  }
+
+  public getTopY() { 
+    return -this.dnaHeight / 2; 
+  }
+  
+  public getBotY() { 
+    return this.dnaHeight / 2; 
+  }
+
+  public setProgress(progress: SoupProgress) {
+    this.progress = progress;
   }
 }

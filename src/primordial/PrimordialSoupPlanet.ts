@@ -10,20 +10,13 @@ import DNAHelix from "./DNAHelix";
 
 export default class PrimordialSoupPlanet extends PlanetBase {
   private spawnEvent?: Phaser.Time.TimerEvent;
-
   private field: CellLayerField;
   private spawner: SoupSpawner;
-
-  private colours = new PaletteColourSource(["#1080F0", "#80F0FF", "#F0FF10", "#FF1080"]);
-  private useRandom = false;
-
   private progress = new SoupProgress();
-  private helix?: DNAHelix;
 
   constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}, helix?: DNAHelix) {
     super(scene, x, y, cfg);
 
-    this.helix = helix;
     this.field = new CellLayerField(this.divisions);
     this.spawner = new SoupSpawner(this.divisions, this.r, this.rotate);
 
@@ -60,8 +53,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     const now = this.scene.time.now;
 
-    const baseSource = this.useRandom ? new RandomHSVColourSource() : this.colours;
-    const rgb = this.progress.pickColour(() => baseSource.next());
+    const rgb = this.progress.pickSpawnRGB();
 
     this.field.addSeed(pos.row, pos.col, rgb, now, 5000, true);
 
@@ -91,12 +83,11 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const cell = this.gridData.getCell(picked.row, picked.col);
 
     if (cell && cell.a > 0) {
-      this.helix?.addRevealColour({ r: cell.r, g: cell.g, b: cell.b }, 1);
+      this.progress.onClickColour({ r: cell.r, g: cell.g, b: cell.b });
       this.rescheduleSpawner();
     }
 
     this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true);
-    const cellAfter = this.gridData.getCell(picked.row, picked.col);
   };
 
   private onPlanetMove = (pointer: Phaser.Input.Pointer) => {
@@ -124,6 +115,22 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.gridData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
     });
 
+    this.progress.computeHelixBinsFromGrid(() => this.iterVisibleGridColours());
+
     if (changed) this.redrawTiles();
+  }
+
+  private * iterVisibleGridColours() {
+    for (let r = 0; r < this.divisions; r++) {
+      for (let c = 0; c < this.divisions; c++) {
+        const cell = this.gridData.getCell(r, c);
+        if (!cell || cell.a <= 0) continue;
+        yield { r: cell.r, g: cell.g, b: cell.b };
+      }
+    }
+  }
+
+  public getProgress() {
+    return this.progress;
   }
 }
