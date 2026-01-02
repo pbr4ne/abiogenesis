@@ -10,6 +10,7 @@ type ActiveCell = {
   r: number;
   g: number;
   b: number;
+  baseA: number;
 };
 
 export default class PrimordialSoupPlanet extends PlanetBase {
@@ -72,10 +73,11 @@ export default class PrimordialSoupPlanet extends PlanetBase {
         row,
         col,
         startAt: now,
-        lifeMs: 10000,
+        lifeMs: 5000,
         r: c.red,
         g: c.green,
-        b: c.blue
+        b: c.blue,
+        baseA: 1
       });
 
       this.gridData.setCell(row, col, { r: c.red, g: c.green, b: c.blue, a: 1 });
@@ -101,29 +103,42 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   private triggerStepBloom(seed: ActiveCell) {
     const now = this.scene.time.now;
 
-    this.activeCells.delete(`${seed.row},${seed.col}`);
-    this.gridData.setCell(seed.row, seed.col, { r: seed.r, g: seed.g, b: seed.b, a: 0 });
-    this.redrawTiles();
+    const seedEndAt = seed.startAt + seed.lifeMs;
+
+    const baseAAt = (timeMs: number) => {
+      const t = (timeMs - seed.startAt) / seed.lifeMs;
+      return Phaser.Math.Clamp(1 - Phaser.Math.Clamp(t, 0, 1), 0, 1);
+    };
+
+    const ensureBloomCell = (row: number, col: number, startAt: number) => {
+      const lifeMs = seedEndAt - startAt;
+      if (lifeMs <= 0) return;
+
+      const baseA = baseAAt(startAt);
+      if (baseA <= 0) return;
+
+      const key = `${row},${col}`;
+      if (this.activeCells.has(key)) return;
+
+      this.activeCells.set(key, {
+        row,
+        col,
+        startAt,
+        lifeMs,
+        r: seed.r,
+        g: seed.g,
+        b: seed.b,
+        baseA
+      });
+    };
 
     const addAt = (delayMs: number, offsets: Array<[number, number]>) => {
+      const startAt = now + delayMs;
+
       for (const [dr, dc] of offsets) {
         const row = Phaser.Math.Wrap(seed.row + dr, 0, this.divisions);
         const col = Phaser.Math.Wrap(seed.col + dc, 0, this.divisions);
-
-        const key = `${row},${col}`;
-
-        const startAt = now + delayMs;
-        const lifeMs = 10000;
-
-        this.activeCells.set(key, {
-          row,
-          col,
-          startAt,
-          lifeMs,
-          r: seed.r,
-          g: seed.g,
-          b: seed.b
-        });
+        ensureBloomCell(row, col, startAt);
       }
     };
 
@@ -134,11 +149,10 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       [0, -1]
     ];
 
-    const diag1: Array<[number, number]> = [
-      [-1, -1],
-      [-1, 1],
-      [1, 1],
-      [1, -1]
+    const square3: Array<[number, number]> = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1],           [0, 1],
+      [1, -1],  [1, 0],  [1, 1]
     ];
 
     const cross2: Array<[number, number]> = [
@@ -148,29 +162,17 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       [0, -2]
     ];
 
-    const ring2Sides: Array<[number, number]> = [
-      [-2, -1],
-      [-2, 1],
-      [-1, 2],
-      [1, 2],
-      [2, 1],
-      [2, -1],
-      [1, -2],
-      [-1, -2]
-    ];
-
-    const corners2: Array<[number, number]> = [
-      [-2, -2],
-      [-2, 2],
-      [2, 2],
-      [2, -2]
+    const cross3: Array<[number, number]> = [
+      [-2, -1], [-2, 1],
+      [-1, -2], [-1, 2],
+      [1, -2],  [1, 2],
+      [2, -1],  [2, 1]
     ];
 
     addAt(0, cross1);
-    addAt(1000, diag1);
+    addAt(1000, square3);
     addAt(2000, cross2);
-    addAt(3000, ring2Sides);
-    addAt(4000, corners2);
+    addAt(3000, cross3);
   }
 
   private onSoupUpdate(_time: number, _delta: number) {
@@ -194,8 +196,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
         continue;
       }
 
-      const a = 1 - Phaser.Math.Clamp(t, 0, 1);
-
+      const a = Phaser.Math.Clamp(cell.baseA * (1 - Phaser.Math.Clamp(t, 0, 1)), 0, 1);
       this.gridData.setCell(cell.row, cell.col, { r: cell.r, g: cell.g, b: cell.b, a });
       changed = true;
     }
