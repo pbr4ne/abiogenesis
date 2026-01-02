@@ -27,7 +27,7 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
     super(scene, x, y);
 
     this.dnaHeight = cfg.height ?? 768;
-    this.amp = cfg.amp ?? 28;
+    this.amp = cfg.amp ?? 44;
     this.centerGap = cfg.centerGap ?? 26;
     this.turns = cfg.turns ?? 3.2;
     this.strandWidth = cfg.strandWidth ?? 4;
@@ -82,6 +82,23 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
       return Phaser.Math.Clamp(0.25 + 0.75 * ((z + 1) / 2), 0.25, 1);
     };
 
+    const drawRung = (y: number, alpha: number) => {
+      const ax = xA(y);
+      const bx = xB(y);
+
+      g.lineStyle(9, 0x000000, alpha);
+      g.beginPath();
+      g.moveTo(ax, y);
+      g.lineTo(bx, y);
+      g.strokePath();
+
+      g.lineStyle(3, 0xffffff, alpha);
+      g.beginPath();
+      g.moveTo(ax, y);
+      g.lineTo(bx, y);
+      g.strokePath();
+    };
+
     for (let y = topY; y < botY; y += this.stepsPx) {
       const y2 = Math.min(y + this.stepsPx, botY);
 
@@ -118,6 +135,22 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
       g.lineTo(left2, y2);
       g.closePath();
       g.fillPath();
+    }
+
+    const rungCount = 30;
+
+    for (let i = 0; i < rungCount; i++) {
+      const t = i / (rungCount - 1);
+      const y = Phaser.Math.Linear(topY, botY, t);
+
+      const widthHere = Math.abs(xB(y) - xA(y));
+      const minW = this.centerGap;
+      const maxW = this.centerGap + this.amp * 2;
+
+      const w01 = Phaser.Math.Clamp((widthHere - minW) / (maxW - minW), 0, 1);
+      const a = 0.25 + 0.55 * Math.pow(w01, 0.8);
+
+      drawRung(y, a);
     }
 
     for (let y = topY; y < botY; y += this.stepsPx) {
