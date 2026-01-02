@@ -23,7 +23,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
   private activeCells = new Map<string, ActiveCell>();
 
-  private coloursHex = ["#ff00ff", "#00ffff", "#00ff00", "#ffff00"];
+  private coloursHex = ["#1080F0", "#80F0FF",	"#F0FF10",	"#FF1080"];
 
   constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}) {
     super(scene, x, y, cfg);
@@ -43,11 +43,20 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     });
   }
 
+  private randomColour() {
+    const h = Phaser.Math.FloatBetween(0, 360);
+    const s = Phaser.Math.FloatBetween(0.65, 1.0);
+    const v = Phaser.Math.FloatBetween(0.75, 1.0);
+
+    const c = Phaser.Display.Color.HSVToRGB(h, s, v) as Phaser.Types.Display.ColorObject;
+    return { red: c.r, green: c.g, blue: c.b };
+  }
+
   public startSoup() {
     this.spawnEvent?.remove(false);
 
     this.spawnEvent = this.scene.time.addEvent({
-      delay: 100,
+      delay: 50,
       loop: true,
       callback: () => this.spawnOne()
     });
@@ -75,6 +84,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       const hex = Phaser.Utils.Array.GetRandom(this.coloursHex);
       const c = Phaser.Display.Color.HexStringToColor(hex);
 
+      //const c = this.randomColour();
+
       const now = this.scene.time.now;
 
       this.activeCells.set(key, {
@@ -91,6 +102,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
         }]
       });
 
+      const seedCell = this.activeCells.get(key)!;
+      this.triggerStepBloom(seedCell);
 
       this.gridData.setCell(row, col, { r: c.red, g: c.green, b: c.blue, a: 1 });
       this.redrawTiles();
@@ -242,10 +255,19 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       [2, -1],  [2, 1]
     ];
 
-    addAt(0, cross1);
-    addAt(1000, square3);
-    addAt(2000, cross2);
-    addAt(3000, cross3);
+    const full: Array<[number, number]> = [
+      [-2, -2], [-2, -1], [-2, 0], [-2, 1], [-2, 2],
+      [-1, -2], [-1, -1], [-1, 0], [-1, 1], [-1, 2],
+      [0, -2],  [0, -1],           [0, 1],  [0, 2],
+      [1, -2],  [1, -1],  [1, 0],  [1, 1],  [1, 2],
+      [2, -2],  [2, -1],  [2, 0],  [2, 1],  [2, 2],
+    ];
+
+    addAt(1000, cross1);
+    addAt(2000, square3);
+    addAt(3000, cross2);
+    addAt(4000, cross3);
+    addAt(5000, full);
   }
 
   private onSoupUpdate(_time: number, _delta: number) {
