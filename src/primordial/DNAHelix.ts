@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { log } from "../utilities/GameUtils";
 
 type DNAHelixConfig = {
   height?: number;
@@ -21,6 +22,8 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
   private strandWidth: number;
   private stepsPx: number;
 
+  private revealed: { r: number; g: number; b: number; w: number }[] = [];
+
   private phase = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: DNAHelixConfig = {}) {
@@ -42,6 +45,22 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       scene.events.off(Phaser.Scenes.Events.UPDATE, this.onUpdate, this);
     });
+  }
+
+  public addRevealColour(rgb: { r: number; g: number; b: number }, weight = 1) {
+    const close = (a: any, b: any) =>
+      Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) < 30;
+
+    const found = this.revealed.find(c => close(c, rgb));
+    if (found) {
+      found.w += weight;
+    } else {
+      this.revealed.push({ r: rgb.r, g: rgb.g, b: rgb.b, w: weight });
+    }
+  }
+
+  public clearReveal() {
+    this.revealed = [];
   }
 
   private onUpdate = (_t: number, dt: number) => {
@@ -68,13 +87,29 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
       return this.centerGap / 2 + s * this.amp;
     };
 
-    const colorAtY = (y: number): number => {
+    const colorAtY = (y: number) => {
       const t = Phaser.Math.Clamp((y - topY) / (botY - topY), 0, 1);
-
       const hue01 = Phaser.Math.Linear(0, 0.75, t);
-      const c = Phaser.Display.Color.HSVToRGB(hue01, 1, 1) as Phaser.Types.Display.ColorObject;
+      return Phaser.Display.Color.HSVToRGB(hue01, 1, 1) as Phaser.Types.Display.ColorObject;
+    };
 
-      return Phaser.Display.Color.GetColor(c.r, c.g, c.b);
+    const revealAlphaAtY = (y: number) => {
+      if (this.revealed.length === 0) return 0;
+
+      const c = colorAtY(y);
+      let best = 0;
+
+      for (const s of this.revealed) {
+        const dr = (c.r - s.r) / 255;
+        const dg = (c.g - s.g) / 255;
+        const db = (c.b - s.b) / 255;
+
+        const d = Math.sqrt(dr * dr + dg * dg + db * db);
+        const sim = Phaser.Math.Clamp(1 - d / 0.75, 0, 1);
+        best = Math.max(best, sim * Phaser.Math.Clamp(s.w / 6, 0.25, 1));
+      }
+
+      return Phaser.Math.Clamp(Math.pow(best, 1.6), 0, 1);
     };
 
     const alphaStrandAtY = (y: number) => {
@@ -125,9 +160,13 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
       const left2 = mid2 - innerW / 2;
       const right2 = mid2 + innerW / 2;
 
-      const col = colorAtY((y + y2) / 2);
+      const c = colorAtY((y + y2) / 2);
+      const packed = Phaser.Display.Color.GetColor(c.r, c.g, c.b);
 
-      g.fillStyle(col, 1);
+      const reveal = revealAlphaAtY((y + y2) / 2);
+      if (reveal <= 0.001) continue;
+
+      g.fillStyle(packed, 0.05 + 0.95 * reveal);
       g.beginPath();
       g.moveTo(left1, y);
       g.lineTo(right1, y);

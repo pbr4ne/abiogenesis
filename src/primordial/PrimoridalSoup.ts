@@ -11,21 +11,19 @@ export default class PrimordialSoup extends PhaseScene {
   }
 
   protected createPhase() {
-    this.planet = new Planet(this, 960, 540);
-    this.add.existing(this.planet);
-    this.bgCam.ignore(this.planet);
-
     const planetHeight = 768;
 
     const helixX = 960 + 384 + 220;
     const helixY = 540;
 
-    const helix = new DNAHelix(this, helixX, helixY, {
-      height: planetHeight
-    });
-
+    const helix = new DNAHelix(this, helixX, helixY, { height: planetHeight });
     this.add.existing(helix);
+    
     this.bgCam.ignore(helix);
+
+    this.planet = new Planet(this, 960, 540, {}, helix);
+    this.add.existing(this.planet);
+    this.bgCam.ignore(this.planet);
 
     this.planet.startSoup();
 

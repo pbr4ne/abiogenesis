@@ -5,6 +5,8 @@ import CellLayerField from "./CellLayerField";
 import SoupSpawner from "./SoupSpawner";
 import { PaletteColourSource, RandomHSVColourSource } from "./ColourSource";
 import { stepBloom5x5 } from "./BloomPattern";
+import SoupProgress from "./SoupProgress";
+import DNAHelix from "./DNAHelix";
 
 export default class PrimordialSoupPlanet extends PlanetBase {
   private spawnEvent?: Phaser.Time.TimerEvent;
@@ -15,9 +17,13 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   private colours = new PaletteColourSource(["#1080F0", "#80F0FF", "#F0FF10", "#FF1080"]);
   private useRandom = false;
 
-  constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}) {
+  private progress = new SoupProgress();
+  private helix?: DNAHelix;
+
+  constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}, helix?: DNAHelix) {
     super(scene, x, y, cfg);
 
+    this.helix = helix;
     this.field = new CellLayerField(this.divisions);
     this.spawner = new SoupSpawner(this.divisions, this.r, this.rotate);
 
@@ -35,10 +41,14 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   }
 
   public startSoup() {
+    this.rescheduleSpawner();
+  }
+
+  private rescheduleSpawner() {
     this.spawnEvent?.remove(false);
 
     this.spawnEvent = this.scene.time.addEvent({
-      delay: 50,
+      delay: this.progress.spawnDelayMs(),
       loop: true,
       callback: () => this.spawnOne()
     });
@@ -50,15 +60,22 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     const now = this.scene.time.now;
 
-    const source = this.useRandom ? new RandomHSVColourSource() : this.colours;
-    const rgb = source.next();
+    const baseSource = this.useRandom ? new RandomHSVColourSource() : this.colours;
+    const rgb = this.progress.pickColour(() => baseSource.next());
 
     this.field.addSeed(pos.row, pos.col, rgb, now, 5000, true);
 
-    this.field.applyBloomFromSeed(pos.row, pos.col, now, stepBloom5x5, true);
+    if (Math.random() < this.progress.autoBloomChance01()) {
+      this.field.applyBloomFromSeed(pos.row, pos.col, now, stepBloom5x5, true);
+    }
 
     this.gridData.setCell(pos.row, pos.col, { r: rgb.r, g: rgb.g, b: rgb.b, a: 1 });
     this.redrawTiles();
+
+    const targetDelay = this.progress.spawnDelayMs();
+    if (this.spawnEvent && this.spawnEvent.delay !== targetDelay) {
+      this.rescheduleSpawner();
+    }
   }
 
   private onPlanetDown = (pointer: Phaser.Input.Pointer) => {
@@ -71,7 +88,15 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const now = this.scene.time.now;
     if (!this.field.isClickableAt(picked.row, picked.col, now)) return;
 
+    const cell = this.gridData.getCell(picked.row, picked.col);
+
+    if (cell && cell.a > 0) {
+      this.helix?.addRevealColour({ r: cell.r, g: cell.g, b: cell.b }, 1);
+      this.rescheduleSpawner();
+    }
+
     this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true);
+    const cellAfter = this.gridData.getCell(picked.row, picked.col);
   };
 
   private onPlanetMove = (pointer: Phaser.Input.Pointer) => {
@@ -99,8 +124,6 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.gridData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
     });
 
-    if (changed) {
-      this.redrawTiles();
-    }
+    if (changed) this.redrawTiles();
   }
 }
