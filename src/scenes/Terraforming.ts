@@ -1,4 +1,4 @@
-import Planet from "../prefabs/Planet";
+import Planet from "../prefabs/TerraformPlanet";
 import Atmosphere from "../prefabs/Atmosphere";
 import Magnetosphere from "../prefabs/Magnetosphere";
 import PhaseScene from "./PhaseScene";

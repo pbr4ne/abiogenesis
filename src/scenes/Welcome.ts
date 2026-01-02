@@ -51,7 +51,7 @@ export default class Welcome extends BaseScene {
     onKeydown_ENTER.eventEmitter = "scene.input.keyboard";
     startGame_ENTER.targetAction = startGameAction;
 
-    startGameAction.sceneKey = "Terraforming";
+    startGameAction.sceneKey = "PrimordialSoup";
 
     this.layout();
     this.scale.on("resize", this.layout, this);
