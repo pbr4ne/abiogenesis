@@ -157,6 +157,11 @@ export default class Planet extends Phaser.GameObjects.Container {
     this.hitZone.setInteractive(new Phaser.Geom.Circle(this.r, this.r, this.r), Phaser.Geom.Circle.Contains);
     this.add(this.hitZone);
 
+    this.scene.events.on(Phaser.Scenes.Events.WAKE, this.clearHotspotHover, this);
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      this.scene.events.off(Phaser.Scenes.Events.WAKE, this.clearHotspotHover, this);
+    });
+
     this.hitZone.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
@@ -209,6 +214,7 @@ export default class Planet extends Phaser.GameObjects.Container {
 
       for (const g of this.hotspotGroups) {
         if (g.cellSet.has(k)) {
+          this.clearHotspotHover();
           this.scene.events.emit(g.event);
           return;
         }
@@ -243,11 +249,22 @@ export default class Planet extends Phaser.GameObjects.Container {
     return true;
   }
 
-  public getAverageColour() {
-    return this.gridData.averageRGBWeightedByAlpha();
-  }
-
   public getGridData() {
     return this.gridData;
+  }
+
+  private clearHotspotHover() {
+    if (!this.hotspotGroups?.length) return;
+
+    this.hoveredGroupKey = null;
+
+    for (const g of this.hotspotGroups) {
+      for (const c of g.cells) {
+        this.gridData.setHex(c.row, c.col, g.colourHex, g.baseA);
+      }
+    }
+
+    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
+    this.scene.input.setDefaultCursor("default");
   }
 }
