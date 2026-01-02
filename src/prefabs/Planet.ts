@@ -74,12 +74,14 @@ export default class Planet extends Phaser.GameObjects.Container {
       { row: 16, col: 7 },
       { row: 17, col: 7 },
       { row: 18, col: 7 },
+      { row: 19, col: 7 },
       { row: 15, col: 8 },
       { row: 16, col: 8 },
       { row: 17, col: 8 },
       { row: 18, col: 8 },
       { row: 19, col: 8 },
       { row: 20, col: 8 },
+      { row: 21, col: 8 },
       { row: 15, col: 9 },
       { row: 16, col: 9 },
       { row: 17, col: 9 },
@@ -87,10 +89,13 @@ export default class Planet extends Phaser.GameObjects.Container {
       { row: 19, col: 9 },
       { row: 20, col: 9 },
       { row: 21, col: 9 },
+      { row: 15, col: 10 },
       { row: 16, col: 10 },
       { row: 17, col: 10 },
       { row: 18, col: 10 },
-      { row: 19, col: 10 }
+      { row: 19, col: 10 },
+      { row: 20, col: 10 },
+      { row: 21, col: 10 },
     ];
 
     this.hotspotGroups = [
