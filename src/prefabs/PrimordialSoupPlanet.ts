@@ -11,6 +11,7 @@ type ActiveCell = {
   g: number;
   b: number;
   baseA: number;
+  clickable: boolean;
 };
 
 export default class PrimordialSoupPlanet extends PlanetBase {
@@ -24,11 +25,14 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     super(scene, x, y, cfg);
 
     this.onPlanetPointerDown(this.onPlanetDown);
+    this.onPlanetPointerMove(this.onPlanetMove);
 
     this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onSoupUpdate, this);
 
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.onSoupUpdate, this);
+      this.scene.input.setDefaultCursor("default");
+
       this.spawnEvent?.remove(false);
       this.spawnEvent = undefined;
       this.activeCells.clear();
@@ -77,7 +81,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
         r: c.red,
         g: c.green,
         b: c.blue,
-        baseA: 1
+        baseA: 1,
+        clickable: true
       });
 
       this.gridData.setCell(row, col, { r: c.red, g: c.green, b: c.blue, a: 1 });
@@ -96,12 +101,37 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const key = `${picked.row},${picked.col}`;
     const seed = this.activeCells.get(key);
     if (!seed) return;
+    if (!seed.clickable) return;
 
     this.triggerStepBloom(seed);
   };
 
+  private onPlanetMove = (pointer: Phaser.Input.Pointer) => {
+    const dx = pointer.worldX - this.x;
+    const dy = pointer.worldY - this.y;
+
+    const picked = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+
+    if (!picked) {
+      this.scene.input.setDefaultCursor("default");
+      return;
+    }
+
+    const key = `${picked.row},${picked.col}`;
+    const cell = this.activeCells.get(key);
+
+    if (cell?.clickable) {
+      this.scene.input.setDefaultCursor("pointer");
+    } else {
+      this.scene.input.setDefaultCursor("default");
+    }
+  };
+
   private triggerStepBloom(seed: ActiveCell) {
     const now = this.scene.time.now;
+
+    seed.clickable = false;
+    this.scene.input.setDefaultCursor("default");
 
     const seedEndAt = seed.startAt + seed.lifeMs;
 
@@ -128,7 +158,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
         r: seed.r,
         g: seed.g,
         b: seed.b,
-        baseA
+        baseA,
+        clickable: false
       });
     };
 
