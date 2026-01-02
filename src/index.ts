@@ -9,7 +9,7 @@ const game = new Phaser.Game({
   height: 1080,
   backgroundColor: "#0f0f0f",
   scale: {
-    mode: Phaser.Scale.ScaleModes.RESIZE,
+    mode: Phaser.Scale.ScaleModes.FIT,
     autoCenter: Phaser.Scale.Center.CENTER_BOTH,
   },
   physics: {
