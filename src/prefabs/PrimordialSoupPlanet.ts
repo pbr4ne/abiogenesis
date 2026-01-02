@@ -18,7 +18,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
   private activeCells = new Map<string, ActiveCell>();
 
-  private coloursHex = ["#ff00ff", "#00ffff", "#00ffff", "#ffff00"];
+  private coloursHex = ["#ff00ff", "#00ffff", "#00ff00", "#ffff00"];
 
   constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}) {
     super(scene, x, y, cfg);
