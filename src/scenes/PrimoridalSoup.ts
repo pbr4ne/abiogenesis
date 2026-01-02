@@ -3,19 +3,19 @@ import Planet from "../prefabs/PrimordialSoupPlanet";
 import { log } from "../utilities/GameUtils";
 
 export default class PrimordialSoup extends PhaseScene {
-	private planet!: Planet;
+  private planet!: Planet;
 
-	constructor() {
-		super("PrimordialSoup");
-	}
+  constructor() {
+    super("PrimordialSoup");
+  }
 
-	protected createPhase() {
-		this.planet = new Planet(this, 960, 540);
-		this.add.existing(this.planet);
-		this.bgCam.ignore(this.planet);
+  protected createPhase() {
+    this.planet = new Planet(this, 960, 540);
+    this.add.existing(this.planet);
+    this.bgCam.ignore(this.planet);
 
-		this.planet.startSoup();
+    this.planet.startSoup();
 
-		log("PrimordialSoup scene created");
-	}
+    log("PrimordialSoup scene created");
+  }
 }
