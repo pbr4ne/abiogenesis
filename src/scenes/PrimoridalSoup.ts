@@ -11,10 +11,11 @@ export default class PrimordialSoup extends PhaseScene {
 
 	protected createPhase() {
 		this.planet = new Planet(this, 960, 540);
-    this.add.existing(this.planet);
-    this.bgCam.ignore(this.planet);
+		this.add.existing(this.planet);
+		this.bgCam.ignore(this.planet);
 
+		this.planet.startSoup();
 
-    log('PrimordialSoup scene created');
+		log("PrimordialSoup scene created");
 	}
 }
