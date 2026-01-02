@@ -1,5 +1,5 @@
-import PhaseScene from "./PhaseScene";
-import Planet from "../prefabs/PrimordialSoupPlanet";
+import PhaseScene from "../scenes/PhaseScene";
+import Planet from "./PrimordialSoupPlanet";
 import { log } from "../utilities/GameUtils";
 
 export default class PrimordialSoup extends PhaseScene {

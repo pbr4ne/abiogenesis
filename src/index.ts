@@ -3,7 +3,7 @@ import Preload from "./scenes/Preload";
 import Welcome from "./scenes/Welcome";
 import Init from "./scenes/Init";
 import Terraforming from "./scenes/Terraforming";
-import PrimordialSoup from "./scenes/PrimoridalSoup";
+import PrimordialSoup from "./primordial/PrimoridalSoup";
 import Evolution from "./scenes/Evolution";
 import GalaxyMap from "./scenes/GalaxyMap";
 
