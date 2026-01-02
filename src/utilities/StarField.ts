@@ -16,6 +16,8 @@ export type Starfield = {
 
 const createStarLayer = (
   scene: Phaser.Scene,
+  width: number,
+  height: number,
   count: number,
   minR: number,
   maxR: number,
@@ -26,15 +28,12 @@ const createStarLayer = (
   g.setDepth(depth);
   g.setScrollFactor(0);
 
-  const w = scene.scale.width;
-  const h = scene.scale.height;
+  g.fillStyle(0xffffff, alpha);
 
   for (let i = 0; i < count; i++) {
-    const x = Phaser.Math.FloatBetween(0, w);
-    const y = Phaser.Math.FloatBetween(0, h);
+    const x = Phaser.Math.FloatBetween(0, width);
+    const y = Phaser.Math.FloatBetween(0, height);
     const r = Phaser.Math.FloatBetween(minR, maxR);
-
-    g.fillStyle(0xffffff, alpha);
     g.fillCircle(x, y, r);
   }
 
@@ -63,7 +62,12 @@ export const createStarfield = (
   const rebuild = () => {
     destroy();
 
-    layers = specs.map(s => createStarLayer(scene, s.count, s.minR, s.maxR, s.alpha, s.depth));
+    const w = gameCam.width;
+    const h = gameCam.height;
+
+    layers = specs.map(s =>
+      createStarLayer(scene, w, h, s.count, s.minR, s.maxR, s.alpha, s.depth)
+    );
 
     for (const layer of layers) {
       gameCam.ignore(layer);
