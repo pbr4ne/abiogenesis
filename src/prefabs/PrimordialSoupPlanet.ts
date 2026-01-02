@@ -2,9 +2,7 @@ import Phaser from "phaser";
 import PlanetBase, { PlanetBaseConfig } from "./PlanetBase";
 import { projectLatLon, latForIndex, lonForIndex, pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
 
-type ActiveCell = {
-  row: number;
-  col: number;
+type CellLayer = {
   startAt: number;
   lifeMs: number;
   r: number;
@@ -12,6 +10,12 @@ type ActiveCell = {
   b: number;
   baseA: number;
   clickable: boolean;
+};
+
+type ActiveCell = {
+  row: number;
+  col: number;
+  layers: CellLayer[];
 };
 
 export default class PrimordialSoupPlanet extends PlanetBase {
@@ -43,7 +47,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     this.spawnEvent?.remove(false);
 
     this.spawnEvent = this.scene.time.addEvent({
-      delay: 2000,
+      delay: 100,
       loop: true,
       callback: () => this.spawnOne()
     });
@@ -76,19 +80,35 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.activeCells.set(key, {
         row,
         col,
-        startAt: now,
-        lifeMs: 5000,
-        r: c.red,
-        g: c.green,
-        b: c.blue,
-        baseA: 1,
-        clickable: true
+        layers: [{
+          startAt: now,
+          lifeMs: 5000,
+          r: c.red,
+          g: c.green,
+          b: c.blue,
+          baseA: 1,
+          clickable: true
+        }]
       });
+
 
       this.gridData.setCell(row, col, { r: c.red, g: c.green, b: c.blue, a: 1 });
       this.redrawTiles();
       return;
     }
+  }
+
+  private isClickableNow(cell: ActiveCell, now: number) {
+    for (const layer of cell.layers) {
+      if (!layer.clickable) continue;
+
+      const dt = now - layer.startAt;
+      if (dt < 0) continue;
+      if (dt >= layer.lifeMs) continue;
+
+      return true;
+    }
+    return false;
   }
 
   private onPlanetDown = (pointer: Phaser.Input.Pointer) => {
@@ -99,11 +119,13 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     if (!picked) return;
 
     const key = `${picked.row},${picked.col}`;
-    const seed = this.activeCells.get(key);
-    if (!seed) return;
-    if (!seed.clickable) return;
+    const cell = this.activeCells.get(key);
+    if (!cell) return;
 
-    this.triggerStepBloom(seed);
+    const now = this.scene.time.now;
+    if (!this.isClickableNow(cell, now)) return;
+
+    this.triggerStepBloom(cell);
   };
 
   private onPlanetMove = (pointer: Phaser.Input.Pointer) => {
@@ -120,27 +142,33 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const key = `${picked.row},${picked.col}`;
     const cell = this.activeCells.get(key);
 
-    if (cell?.clickable) {
+    const now = this.scene.time.now;
+    if (cell && this.isClickableNow(cell, now)) {
       this.scene.input.setDefaultCursor("pointer");
     } else {
       this.scene.input.setDefaultCursor("default");
     }
   };
 
-  private triggerStepBloom(seed: ActiveCell) {
+  private triggerStepBloom(seedCell: ActiveCell) {
     const now = this.scene.time.now;
 
-    seed.clickable = false;
-    this.scene.input.setDefaultCursor("default");
+    const touched = new Set<string>();
+    const offKey = (dr: number, dc: number) => `${dr},${dc}`;
 
-    const seedEndAt = seed.startAt + seed.lifeMs;
+    for (const layer of seedCell.layers) {
+      layer.clickable = false;
+    }
+
+    const seedLayer = seedCell.layers[0];
+    const seedEndAt = seedLayer.startAt + seedLayer.lifeMs;
 
     const baseAAt = (timeMs: number) => {
-      const t = (timeMs - seed.startAt) / seed.lifeMs;
+      const t = (timeMs - seedLayer.startAt) / seedLayer.lifeMs;
       return Phaser.Math.Clamp(1 - Phaser.Math.Clamp(t, 0, 1), 0, 1);
     };
 
-    const ensureBloomCell = (row: number, col: number, startAt: number) => {
+    const addLayerAt = (row: number, col: number, startAt: number) => {
       const lifeMs = seedEndAt - startAt;
       if (lifeMs <= 0) return;
 
@@ -148,18 +176,27 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       if (baseA <= 0) return;
 
       const key = `${row},${col}`;
-      if (this.activeCells.has(key)) return;
+      const existing = this.activeCells.get(key);
+
+      const newLayer: CellLayer = {
+        startAt,
+        lifeMs,
+        r: seedLayer.r,
+        g: seedLayer.g,
+        b: seedLayer.b,
+        baseA,
+        clickable: false
+      };
+
+      if (existing) {
+        existing.layers.push(newLayer);
+        return;
+      }
 
       this.activeCells.set(key, {
         row,
         col,
-        startAt,
-        lifeMs,
-        r: seed.r,
-        g: seed.g,
-        b: seed.b,
-        baseA,
-        clickable: false
+        layers: [newLayer]
       });
     };
 
@@ -167,9 +204,14 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       const startAt = now + delayMs;
 
       for (const [dr, dc] of offsets) {
-        const row = Phaser.Math.Wrap(seed.row + dr, 0, this.divisions);
-        const col = Phaser.Math.Wrap(seed.col + dc, 0, this.divisions);
-        ensureBloomCell(row, col, startAt);
+        const k = offKey(dr, dc);
+        if (touched.has(k)) continue;
+        touched.add(k);
+
+        const row = Phaser.Math.Wrap(seedCell.row + dr, 0, this.divisions);
+        const col = Phaser.Math.Wrap(seedCell.col + dc, 0, this.divisions);
+
+        addLayerAt(row, col, startAt);
       }
     };
 
@@ -214,21 +256,59 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     let changed = false;
 
     for (const [key, cell] of this.activeCells) {
-      const dt = now - cell.startAt;
+      let rSum = 0;
+      let gSum = 0;
+      let bSum = 0;
+      let aSum = 0;
 
-      if (dt < 0) continue;
+      const nextLayers: CellLayer[] = [];
 
-      const t = dt / cell.lifeMs;
+      for (const layer of cell.layers) {
+        const dt = now - layer.startAt;
 
-      if (t >= 1) {
-        this.gridData.setCell(cell.row, cell.col, { r: cell.r, g: cell.g, b: cell.b, a: 0 });
+        if (dt < 0) {
+          nextLayers.push(layer);
+          continue;
+        }
+
+        const t = dt / layer.lifeMs;
+        if (t >= 1) {
+          continue;
+        }
+
+        const a = layer.baseA * (1 - Phaser.Math.Clamp(t, 0, 1));
+        if (a <= 0) continue;
+
+        aSum += a;
+        rSum += layer.r * a;
+        gSum += layer.g * a;
+        bSum += layer.b * a;
+
+        nextLayers.push(layer);
+      }
+
+      cell.layers = nextLayers;
+
+      if (cell.layers.length === 0) {
+        this.gridData.setCell(cell.row, cell.col, { r: 0, g: 0, b: 0, a: 0 });
         this.activeCells.delete(key);
         changed = true;
         continue;
       }
 
-      const a = Phaser.Math.Clamp(cell.baseA * (1 - Phaser.Math.Clamp(t, 0, 1)), 0, 1);
-      this.gridData.setCell(cell.row, cell.col, { r: cell.r, g: cell.g, b: cell.b, a });
+      const aOut = Phaser.Math.Clamp(aSum, 0, 1);
+
+      if (aOut <= 0) {
+        this.gridData.setCell(cell.row, cell.col, { r: 0, g: 0, b: 0, a: 0 });
+        changed = true;
+        continue;
+      }
+
+      const r = Math.round(rSum / aSum);
+      const g = Math.round(gSum / aSum);
+      const b = Math.round(bSum / aSum);
+
+      this.gridData.setCell(cell.row, cell.col, { r, g, b, a: aOut });
       changed = true;
     }
 
