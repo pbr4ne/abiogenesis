@@ -1,21 +1,22 @@
 import Phaser from "phaser";
 
+type SlotTransform = {
+  x: number;
+  y: number;
+  rotation: number;
+};
+
 type DeviceSlotsCfg = {
   scene: Phaser.Scene;
   world: Phaser.GameObjects.Container;
 
-  atmoCount: number;
-  arcStartDeg: number;
-  arcEndDeg: number;
-
-  radius: () => number;
-
-  flipWorldY: boolean;
-  worldCenterLocalY: () => number;
+  slotCount: number;
 
   deviceKeys: readonly [string, string, string];
 
   getSlots: () => (0 | 1 | 2 | null)[];
+  getSlotTransform: (slotIndex: number) => SlotTransform;
+
   onPlace: (slotIndex: number) => void;
 };
 
@@ -23,18 +24,13 @@ export default class DeviceSlots {
   private scene: Phaser.Scene;
   private world: Phaser.GameObjects.Container;
 
-  private atmoCount: number;
-  private arcStartDeg: number;
-  private arcEndDeg: number;
-
-  private radiusFn: () => number;
-
-  private flipWorldY: boolean;
-  private worldCenterLocalYFn: () => number;
+  private slotCount: number;
 
   private deviceKeys: readonly [string, string, string];
 
   private getSlots: () => (0 | 1 | 2 | null)[];
+  private getSlotTransform: (slotIndex: number) => SlotTransform;
+
   private onPlace: (slotIndex: number) => void;
 
   private slotMarkers: Phaser.GameObjects.Container[] = [];
@@ -44,18 +40,13 @@ export default class DeviceSlots {
     this.scene = cfg.scene;
     this.world = cfg.world;
 
-    this.atmoCount = cfg.atmoCount;
-    this.arcStartDeg = cfg.arcStartDeg;
-    this.arcEndDeg = cfg.arcEndDeg;
-
-    this.radiusFn = cfg.radius;
-
-    this.flipWorldY = cfg.flipWorldY;
-    this.worldCenterLocalYFn = cfg.worldCenterLocalY;
+    this.slotCount = cfg.slotCount;
 
     this.deviceKeys = cfg.deviceKeys;
 
     this.getSlots = cfg.getSlots;
+    this.getSlotTransform = cfg.getSlotTransform;
+
     this.onPlace = cfg.onPlace;
   }
 
@@ -69,29 +60,12 @@ export default class DeviceSlots {
 
     const slots = this.getSlots();
 
-    const localCenterX = 0;
-    const localCenterY = this.worldCenterLocalYFn();
-
-    const arcStart = Phaser.Math.DegToRad(this.arcStartDeg);
-    const arcEnd = Phaser.Math.DegToRad(this.arcEndDeg);
-
-    const radius = this.radiusFn();
-
-    for (let i = 0; i < this.atmoCount; i++) {
+    for (let i = 0; i < this.slotCount; i++) {
       if (slots[i] !== null) continue;
 
-      const t = this.atmoCount === 1 ? 0.5 : i / (this.atmoCount - 1);
-      const ang = Phaser.Math.Linear(arcStart, arcEnd, t);
+      const tr = this.getSlotTransform(i);
+      const marker = this.makeEmptySlotMarker(tr.x, tr.y, i);
 
-      const x = localCenterX + Math.cos(ang) * radius;
-      let y = localCenterY + Math.sin(ang) * radius;
-
-      if (this.flipWorldY) {
-        y *= -1;
-        y += 1360;
-      }
-
-      const marker = this.makeEmptySlotMarker(x, y, i);
       this.world.add(marker);
       this.slotMarkers.push(marker);
     }
@@ -136,37 +110,15 @@ export default class DeviceSlots {
 
     const slots = this.getSlots();
 
-    const localCenterX = 0;
-    const localCenterY = this.worldCenterLocalYFn();
-
-    const arcStart = Phaser.Math.DegToRad(this.arcStartDeg);
-    const arcEnd = Phaser.Math.DegToRad(this.arcEndDeg);
-
-    const radius = this.radiusFn();
-
-    for (let i = 0; i < this.atmoCount; i++) {
+    for (let i = 0; i < this.slotCount; i++) {
       const slot = slots[i];
       if (slot === null) continue;
 
-      const t = this.atmoCount === 1 ? 0.5 : i / (this.atmoCount - 1);
-      const ang = Phaser.Math.Linear(arcStart, arcEnd, t);
+      const tr = this.getSlotTransform(i);
 
       const key = this.deviceKeys[slot];
-      const x = localCenterX + Math.cos(ang) * radius;
-      let y = localCenterY + Math.sin(ang) * radius;
-
-      if (this.flipWorldY) {
-        y *= -1;
-        y += 1360;
-      }
-
-      const img = this.scene.add.image(x, y, key);
-
-      let rotation = ang + Math.PI / 2;
-      if (this.flipWorldY) rotation = -rotation;
-      img.setRotation(rotation);
-
-      if (this.flipWorldY) img.setScale(1, -1);
+      const img = this.scene.add.image(tr.x, tr.y, key);
+      img.setRotation(tr.rotation);
 
       this.world.add(img);
       this.sprites.push(img);

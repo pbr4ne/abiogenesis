@@ -20,6 +20,8 @@ export type TerraformingViewConfig = {
   worldCenterLocalY?: number;
   renderPlanetEdge?: boolean;
 
+  slotCount?: number;
+
   buttonRowLocalY: number;
   backButtonLocalX: number;
   backButtonLocalY: number;
@@ -102,8 +104,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.arcEndDeg = cfg.arcEndDeg;
 
     this.radiusOffset = cfg.radiusOffset;
-    this.atmoCount = 20;
 
+    this.atmoCount = cfg.slotCount ?? 20;
     this.deviceSlots = Array(this.atmoCount).fill(null);
 
     this.deviceKeys = cfg.deviceKeys;
@@ -166,18 +168,13 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       scene: this.scene,
       world: this.world,
 
-      atmoCount: this.atmoCount,
-      arcStartDeg: this.arcStartDeg,
-      arcEndDeg: this.arcEndDeg,
-
-      radius: () => this.r + this.radiusOffset,
-
-      flipWorldY: this.flipWorldY,
-      worldCenterLocalY: () => this.worldCenterLocalY,
+      slotCount: this.atmoCount,
 
       deviceKeys: this.deviceKeys,
 
       getSlots: () => this.deviceSlots,
+      getSlotTransform: (i: number) => this.getSlotTransform(i),
+
       onPlace: (slotIndex: number) => this.placeSelectedDevice(slotIndex)
     });
 
@@ -188,7 +185,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       imageKeys: this.deviceKeys,
       costs: this.deviceCosts,
       getPoints: () => this.atmospherePoints,
-      onSelect: (d) => this.selectDevice(d)
+      onSelect: (d: 0 | 1 | 2) => this.selectDevice(d)
     });
 
     this.backBtn = new PlanetButton(this.scene, this.ui, {
@@ -231,6 +228,32 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       this.palette?.destroy();
       this.placement?.destroy();
     });
+  }
+
+  protected getSlotTransform(slotIndex: number) {
+    const localCenterX = 0;
+    const localCenterY = this.worldCenterLocalY;
+
+    const arcStart = Phaser.Math.DegToRad(this.arcStartDeg);
+    const arcEnd = Phaser.Math.DegToRad(this.arcEndDeg);
+
+    const radius = this.r + this.radiusOffset;
+
+    const t = this.atmoCount === 1 ? 0.5 : slotIndex / (this.atmoCount - 1);
+    const ang = Phaser.Math.Linear(arcStart, arcEnd, t);
+
+    const x = localCenterX + Math.cos(ang) * radius;
+    let y = localCenterY + Math.sin(ang) * radius;
+
+    let rotation = ang + Math.PI / 2;
+
+    if (this.flipWorldY) {
+      y *= -1;
+      y += 1360;
+      rotation = -rotation;
+    }
+
+    return { x, y, rotation };
   }
 
   protected drawGridLines() {
