@@ -21,6 +21,7 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
   protected rotate: ReturnType<typeof makeRotator>;
   protected hitZone!: Phaser.GameObjects.Zone;
 
+  protected behind!: Phaser.GameObjects.Container;
   protected base!: Phaser.GameObjects.Graphics;
   protected tiles!: Phaser.GameObjects.Graphics;
   protected grid!: Phaser.GameObjects.Graphics;
@@ -51,6 +52,9 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.gridData = new PlanetGrid(this.divisions);
 
     this.lastRevealAt = this.scene.time.now;
+
+    this.behind = scene.add.container(0, 0);
+		this.add(this.behind);
 
     this.base = scene.add.graphics();
     this.tiles = scene.add.graphics();

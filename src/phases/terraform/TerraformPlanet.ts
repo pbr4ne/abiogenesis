@@ -249,7 +249,7 @@ export default class TerraformPlanet extends PlanetBase {
 
   private applyMagnetosphere(strength01: number) {
     if (!this.magField) {
-      this.magField = new MagneticField(this.scene, this, {
+      this.magField = new MagneticField(this.scene, this.behind, {
         r: this.r,
         centerX: 0,
         centerY: 0,
@@ -262,6 +262,8 @@ export default class TerraformPlanet extends PlanetBase {
         strengthOverride01: 1
       });
     }
+
+    this.magField.setStrength01(strength01);
   }
 
   private applyHydrosphere(waterLevel: number) {
