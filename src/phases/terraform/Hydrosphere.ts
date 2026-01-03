@@ -1,7 +1,15 @@
-import TerraformingView from "./TerraformingView";
 import Phaser from "phaser";
+import TerraformingView from "./TerraformingView";
+import HydrosphereMap from "./HydrosphereMap";
 
 export default class Hydrosphere extends TerraformingView {
+  private map: HydrosphereMap;
+
+  private cols = 32;
+  private rows = 18;
+
+  private waterTimer?: Phaser.Time.TimerEvent;
+
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, {
       diameter: 1600,
@@ -33,6 +41,32 @@ export default class Hydrosphere extends TerraformingView {
 
       onBackEvent: "ui:goToPlanet"
     });
+
+    this.map = new HydrosphereMap(this.cols, this.rows);
+
+    this.startWaterRise();
+    this.drawGridLines();
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      this.waterTimer?.remove(false);
+    });
+  }
+
+  private startWaterRise() {
+    const target = Phaser.Math.Clamp(this.map.waterLevel + 5, 0, 7);
+
+    this.waterTimer = this.scene.time.addEvent({
+      delay: 2000,
+      loop: true,
+      callback: () => {
+        if (this.map.waterLevel >= target) {
+          this.waterTimer?.remove(false);
+          return;
+        }
+        this.map.waterLevel++;
+        this.drawGridLines();
+      }
+    });
   }
 
   protected override drawGridLines() {
@@ -46,25 +80,59 @@ export default class Hydrosphere extends TerraformingView {
     const left = -w / 2;
     const top = -h / 2;
 
+    const stepX = w / this.cols;
+    const stepY = h / this.rows;
+
     g.fillStyle(0x0b0f18, 1);
     g.fillRect(left, top, w, h);
 
-    const cellsX = 32;
-    const cellsY = 18;
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        const alt = this.map.getAltitude(r, c);
+        const x = left + c * stepX;
+        const y = top + r * stepY;
 
-    const stepX = w / cellsX;
-    const stepY = h / cellsY;
+        const landCol = this.lerpColour(0x3a2f23, 0xc2a46a, alt / 7);
+        g.fillStyle(landCol, 1);
+        g.fillRect(x, y, stepX + 1, stepY + 1);
 
-    g.lineStyle(2, 0xffffff, 0.10);
+        if (alt < this.map.waterLevel) {
+          const depth = this.map.waterLevel - alt;
+          const t = Phaser.Math.Clamp((depth - 1) / 6, 0, 1);
+          const waterCol = this.lerpColour(0x6fe6ff, 0x000f4a, t);
 
-    for (let i = 0; i <= cellsX; i++) {
+          g.fillStyle(waterCol, 1);
+          g.fillRect(x, y, stepX + 1, stepY + 1);
+        }
+      }
+    }
+
+    g.lineStyle(2, 0x0f0f0f, 0.50);
+
+    for (let i = 0; i <= this.cols; i++) {
       const x = left + i * stepX;
       g.lineBetween(x, top, x, top + h);
     }
 
-    for (let j = 0; j <= cellsY; j++) {
+    for (let j = 0; j <= this.rows; j++) {
       const y = top + j * stepY;
       g.lineBetween(left, y, left + w, y);
     }
+  }
+
+  private lerpColour(a: number, b: number, t: number) {
+    const ar = (a >> 16) & 0xff;
+    const ag = (a >> 8) & 0xff;
+    const ab = a & 0xff;
+
+    const br = (b >> 16) & 0xff;
+    const bg = (b >> 8) & 0xff;
+    const bb = b & 0xff;
+
+    return (
+      (Math.round(Phaser.Math.Linear(ar, br, t)) << 16) |
+      (Math.round(Phaser.Math.Linear(ag, bg, t)) << 8) |
+      Math.round(Phaser.Math.Linear(ab, bb, t))
+    );
   }
 }
