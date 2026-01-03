@@ -169,13 +169,14 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       world: this.world,
 
       slotCount: this.atmoCount,
-
       deviceKeys: this.deviceKeys,
 
       getSlots: () => this.deviceSlots,
-      getSlotTransform: (i: number) => this.getSlotTransform(i),
+      getSlotTransform: (i) => this.getSlotTransform(i),
 
-      onPlace: (slotIndex: number) => this.placeSelectedDevice(slotIndex)
+      getCellSize: () => this.getSlotCellSize(),
+
+      onPlace: (i) => this.placeSelectedDevice(i)
     });
 
     this.placement.rebuildSprites();
@@ -322,5 +323,9 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.magField?.setStrength01(ratio);
   }
 
-  protected onPointsChanged() {}
+  protected onPointsChanged() { }
+
+  protected getSlotCellSize(): number {
+    return 100;
+  }
 }

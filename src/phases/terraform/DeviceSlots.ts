@@ -18,6 +18,8 @@ type DeviceSlotsCfg = {
   getSlotTransform: (slotIndex: number) => SlotTransform;
 
   onPlace: (slotIndex: number) => void;
+
+  getCellSize: () => number;
 };
 
 export default class DeviceSlots {
@@ -36,6 +38,8 @@ export default class DeviceSlots {
   private slotMarkers: Phaser.GameObjects.Container[] = [];
   private sprites: Phaser.GameObjects.Image[] = [];
 
+  private getCellSize: () => number;
+
   constructor(cfg: DeviceSlotsCfg) {
     this.scene = cfg.scene;
     this.world = cfg.world;
@@ -48,6 +52,8 @@ export default class DeviceSlots {
     this.getSlotTransform = cfg.getSlotTransform;
 
     this.onPlace = cfg.onPlace;
+
+    this.getCellSize = cfg.getCellSize;
   }
 
   public clearMarkers() {
@@ -118,6 +124,16 @@ export default class DeviceSlots {
 
       const key = this.deviceKeys[slot];
       const img = this.scene.add.image(tr.x, tr.y, key);
+
+      const cellSize = this.getCellSize();
+      const targetSize = cellSize * 0.75;
+
+      const scale = Math.min(
+        targetSize / img.width,
+        targetSize / img.height
+      );
+
+      img.setScale(scale);
       img.setRotation(tr.rotation);
 
       this.world.add(img);

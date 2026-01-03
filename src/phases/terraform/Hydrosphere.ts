@@ -199,4 +199,14 @@ export default class Hydrosphere extends TerraformingView {
       Math.round(Phaser.Math.Linear(ab, bb, t))
     );
   }
+
+  protected override getSlotCellSize(): number {
+    const w = this.scene.scale.width;
+    const h = this.scene.scale.height;
+
+    const stepX = w / this.cols;
+    const stepY = h / this.rows;
+
+    return Math.min(stepX, stepY);
+  }
 }
