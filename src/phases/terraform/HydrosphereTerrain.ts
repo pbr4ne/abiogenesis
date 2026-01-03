@@ -2,9 +2,9 @@ import Phaser from "phaser";
 
 export type AltGrid = number[][];
 
-export const generateAltGrid = (rows: number, cols: number): AltGrid => {
+export const generateAltGrid = (rows: number, cols: number, rng: Phaser.Math.RandomDataGenerator): AltGrid => {
   const noise = Array.from({ length: rows }, () =>
-    Array.from({ length: cols }, () => Math.random())
+    Array.from({ length: cols }, () => rng.frac())
   );
 
   const passes = 4;

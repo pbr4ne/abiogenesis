@@ -5,13 +5,15 @@ import MagnetosphereRenderer from "./MagnetosphereRenderer";
 import TerraformingState from "./TerraformingState";
 import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { log } from "../../utilities/GameUtils";
-import { generateAltGrid, terrainColour, toHex } from "./HydrosphereTerrain";
+import PlanetRunState from "../../planet/PlanetRunState";
+import { paintHydrosphere } from "./HydrosphereMap";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere";
 type Mask = Partial<Record<Key, boolean>>;
 
 export default class TerraformPlanet extends PlanetBase {
   private progress: TerraformingState;
+  private run: PlanetRunState;
 
   private enabledEffects: Required<Record<Key, boolean>>;
   private enabledHotspots: Required<Record<Key, boolean>>;
@@ -30,32 +32,28 @@ export default class TerraformPlanet extends PlanetBase {
 
   private magnetosphereRenderer?: MagnetosphereRenderer;
   private atmosphereGlow?: Phaser.GameObjects.Graphics;
-  private hydroAlt?: number[][];
-  private hydroInit = false;
 
   constructor(
     scene: Phaser.Scene,
     x = 960,
     y = 540,
-    progress: TerraformingState,
-    enabledEffects: Mask = {},
-    enabledHotspots?: Mask
+    progress: TerraformingState
   ) {
     super(scene, x, y);
 
     this.progress = progress;
+    this.run = scene.registry.get("run") as PlanetRunState;
 
     this.enabledEffects = {
-      atmosphere: enabledEffects.atmosphere ?? true,
-      magnetosphere: enabledEffects.magnetosphere ?? true,
-      hydrosphere: enabledEffects.hydrosphere ?? true
+      atmosphere: true,
+      magnetosphere: true,
+      hydrosphere: true
     };
 
-    const hs = enabledHotspots ?? enabledEffects;
     this.enabledHotspots = {
-      atmosphere: hs.atmosphere ?? true,
-      magnetosphere: hs.magnetosphere ?? true,
-      hydrosphere: hs.hydrosphere ?? true
+      atmosphere: true,
+      magnetosphere: true,
+      hydrosphere: true
     };
 
     this.buildHotspots();
@@ -71,12 +69,6 @@ export default class TerraformPlanet extends PlanetBase {
     });
 
     this.applyAllEffects();
-  }
-
-  private ensureHydroAlt() {
-    if (this.hydroInit) return;
-    this.hydroInit = true;
-    this.hydroAlt = generateAltGrid(this.divisions, this.divisions);
   }
 
   private buildHotspots() {
@@ -128,7 +120,7 @@ export default class TerraformPlanet extends PlanetBase {
           { row: 8, col: 10 }, { row: 9, col: 10 }, { row: 10, col: 10 }, { row: 11, col: 10 },
           { row: 8, col: 11 }, { row: 9, col: 11 }, { row: 10, col: 11 }, { row: 11, col: 11 },
           { row: 8, col: 12 }, { row: 9, col: 12 }, { row: 10, col: 12 }, { row: 11, col: 12 },
-          { row: 8, col: 13 }, { row: 9, col: 13 }, { row: 10, col: 13 }, { row: 11, col: 13 },          
+          { row: 8, col: 13 }, { row: 9, col: 13 }, { row: 10, col: 13 }, { row: 11, col: 13 },
         ],
         cellSet: new Set<string>()
       }
@@ -249,7 +241,12 @@ export default class TerraformPlanet extends PlanetBase {
     }
 
     //this.applyHydrosphere(this.progress.waterLevel);
-    this.applyHydrosphere(5);
+    if (k === "hydrosphere") {
+      const hydrosphereLevel = this.progress.hydrosphereLevel;
+      this.run.waterLevel = hydrosphereLevel;
+      this.applyHydrosphere(hydrosphereLevel);
+      return;
+    }
   }
 
   private disableEffect(k: Key) {
@@ -301,20 +298,7 @@ export default class TerraformPlanet extends PlanetBase {
   }
 
   private applyHydrosphere(waterLevel: number) {
-    this.ensureHydroAlt();
-    if (!this.hydroAlt) return;
-
-    const rows = this.divisions;
-    const cols = this.divisions;
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const alt = this.hydroAlt[r][c];
-
-        const col = terrainColour(alt, waterLevel);
-        this.gridData.setHex(r, c, toHex(col), 1);
-      }
-    }
+    paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
 
     for (const g of this.hotspotGroups) {
       for (const cell of g.cells) {

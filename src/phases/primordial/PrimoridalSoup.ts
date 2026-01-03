@@ -22,7 +22,7 @@ export default class PrimordialSoup extends PhaseScene {
     
     this.bgCam.ignore(helix);
 
-    this.planet = new Planet(this, 960, 540, {}, helix);
+    this.planet = new Planet(this, 960, 540);
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);
 

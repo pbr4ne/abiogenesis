@@ -14,10 +14,7 @@ export default class Terraforming extends PhaseScene {
   }
 
   protected createPhase() {
-    this.planet = new TerraformPlanet(this, 960, 540, getTerraformingState(this),
-      { atmosphere: true, magnetosphere: true, hydrosphere: true },
-      { atmosphere: true, magnetosphere: true, hydrosphere: true }
-    );
+    this.planet = new TerraformPlanet(this, 960, 540, getTerraformingState(this));
 
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);

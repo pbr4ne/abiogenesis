@@ -5,17 +5,20 @@ import CellLayerField from "./CellLayerField";
 import SoupSpawner from "./SoupSpawner";
 import { stepBloom5x5 } from "./BloomPattern";
 import SoupProgress from "./SoupProgress";
-import DNAHelix from "./DNAHelix";
+import { paintHydrosphere } from "../terraform/HydrosphereMap";
+import PlanetRunState from "../../planet/PlanetRunState";
 
 export default class PrimordialSoupPlanet extends PlanetBase {
   private spawnEvent?: Phaser.Time.TimerEvent;
   private field: CellLayerField;
   private spawner: SoupSpawner;
   private progress = new SoupProgress();
+  private run: PlanetRunState;
 
-  constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}, helix?: DNAHelix) {
-    super(scene, x, y, cfg);
+  constructor(scene: Phaser.Scene, x = 960, y = 540) {
+    super(scene, x, y);
 
+    this.run = scene.registry.get("run") as PlanetRunState;
     this.field = new CellLayerField(this.divisions);
     this.spawner = new SoupSpawner(this.divisions, this.r, this.rotate);
 
@@ -30,6 +33,9 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.spawnEvent?.remove(false);
       this.spawnEvent = undefined;
     });
+
+    paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
+    this.redrawTiles();
   }
 
   public startSoup() {

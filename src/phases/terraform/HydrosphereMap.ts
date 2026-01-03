@@ -1,4 +1,6 @@
 import { generateAltGrid } from "./HydrosphereTerrain";
+import { terrainColour, toHex } from "./HydrosphereTerrain";
+import PlanetGrid from "../../planet/PlanetGrid";
 
 export type HydrosphereCell = {
   a: number;
@@ -16,7 +18,8 @@ export default class HydrosphereMap {
   constructor(cols: number, rows: number) {
     this.cols = cols;
     this.rows = rows;
-    this.alt = generateAltGrid(rows, cols);
+    const rng = new Phaser.Math.RandomDataGenerator();
+    this.alt = generateAltGrid(rows, cols, rng);
 
     this.cells = Array.from({ length: rows }, (_, r) =>
       Array.from({ length: cols }, (_, c) => ({ a: this.alt[r][c] }))
@@ -65,3 +68,15 @@ export default class HydrosphereMap {
     }
   }
 }
+
+export const paintHydrosphere = (gridData: PlanetGrid, altGrid: number[][], waterLevel: number) => {
+  const rows = altGrid.length;
+  const cols = altGrid[0].length;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const col = terrainColour(altGrid[r][c], waterLevel);
+      gridData.setHex(r, c, toHex(col), 1);
+    }
+  }
+};
