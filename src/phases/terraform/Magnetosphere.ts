@@ -1,4 +1,6 @@
 import TerraformingView from "./TerraformingView";
+import { getTerraformingState } from "./TerraformingState";
+import MagneticField from "./MagneticField";
 
 type MagnetosphereConfig = {
   diameter: number;
@@ -9,6 +11,8 @@ type MagnetosphereConfig = {
 };
 
 export default class Magnetosphere extends TerraformingView {
+  private magField?: MagneticField;
+
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: MagnetosphereConfig) {
     super(scene, x, y, {
       ...cfg,
@@ -36,8 +40,37 @@ export default class Magnetosphere extends TerraformingView {
     this.onPointsChanged();
   }
 
-  protected onPointsChanged() {
-    const ratio = Phaser.Math.Clamp(this.atmospherePoints / this.thermometerMax, 0, 1);
-    this.scene.events.emit("ui:magnetosphereStrength", ratio);
+  protected override createBehindWorldOverlays() {
+    this.magField = new MagneticField(this.scene, this.behindWorld, {
+      r: this.r,
+      centerX: 0,
+      centerY: this.worldCenterLocalY,
+
+      lineAlpha: 0.18,
+      lineWidth: 2,
+
+      perSideLines: 5,
+
+      loopCenterOffsetMul: 0.62,
+      innerRadiusMul: 0.55,
+      outerRadiusMul: 1.85,
+
+      strengthOverride01: null
+    });
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      this.magField?.destroy();
+      this.magField = undefined;
+    });
+  }
+
+  protected override onTick() {
+    const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
+    this.magField?.setStrength01(ratio);
+  }
+
+  protected override onPointsChanged() {
+    const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
+    getTerraformingState(this.scene).setMagnetosphere01(ratio);
   }
 }

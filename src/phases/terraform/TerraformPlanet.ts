@@ -1,13 +1,20 @@
 import Phaser from "phaser";
 import PlanetBase from "../../planet/PlanetBase";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
-import { drawTiles } from "../../planet/PlanetRenderer";
 import MagneticField from "./MagneticField";
+import TerraformingState from "./TerraformingState";
+
+type Key = "atmosphere" | "magnetosphere" | "hydrosphere";
+type Mask = Partial<Record<Key, boolean>>;
 
 export default class TerraformPlanet extends PlanetBase {
+  private progress: TerraformingState;
+
+  private enabledEffects: Required<Record<Key, boolean>>;
+  private enabledHotspots: Required<Record<Key, boolean>>;
 
   private hotspotGroups: {
-    key: string;
+    key: Key;
     event: string;
     baseA: number;
     hoverA: number;
@@ -16,13 +23,51 @@ export default class TerraformPlanet extends PlanetBase {
     cellSet: Set<string>;
   }[] = [];
 
-  private hoveredGroupKey: string | null = null;
+  private hoveredGroupKey: Key | null = null;
 
   private magField?: MagneticField;
 
-  constructor(scene: Phaser.Scene, x = 960, y = 540) {
+  constructor(
+    scene: Phaser.Scene,
+    x = 960,
+    y = 540,
+    progress: TerraformingState,
+    enabledEffects: Mask = {},
+    enabledHotspots?: Mask
+  ) {
     super(scene, x, y);
 
+    this.progress = progress;
+
+    this.enabledEffects = {
+      atmosphere: enabledEffects.atmosphere ?? true,
+      magnetosphere: enabledEffects.magnetosphere ?? true,
+      hydrosphere: enabledEffects.hydrosphere ?? true
+    };
+
+    const hs = enabledHotspots ?? enabledEffects;
+    this.enabledHotspots = {
+      atmosphere: hs.atmosphere ?? true,
+      magnetosphere: hs.magnetosphere ?? true,
+      hydrosphere: hs.hydrosphere ?? true
+    };
+
+    this.buildHotspots();
+    this.wireHotspotInput();
+
+    const onChange = (k: any) => this.applyEffect(k);
+    this.progress.on("change", onChange);
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      this.progress.off("change", onChange);
+      this.magField?.destroy();
+      this.magField = undefined;
+    });
+
+    this.applyAllEffects();
+  }
+
+  private buildHotspots() {
     const keyOf = (row: number, col: number) => `${row},${col}`;
 
     const atmosphereCells = () => {
@@ -42,7 +87,7 @@ export default class TerraformPlanet extends PlanetBase {
       { row: 15, col: 10 }, { row: 16, col: 10 }, { row: 17, col: 10 }, { row: 18, col: 10 }, { row: 19, col: 10 }, { row: 20, col: 10 }, { row: 21, col: 10 }
     ];
 
-    this.hotspotGroups = [
+    const allGroups: TerraformPlanet["hotspotGroups"] = [
       {
         key: "atmosphere",
         event: "ui:goToAtmosphere",
@@ -78,6 +123,8 @@ export default class TerraformPlanet extends PlanetBase {
       }
     ];
 
+    this.hotspotGroups = allGroups.filter(g => this.enabledHotspots[g.key]);
+
     for (const g of this.hotspotGroups) {
       for (const c of g.cells) {
         g.cellSet.add(keyOf(c.row, c.col));
@@ -86,21 +133,12 @@ export default class TerraformPlanet extends PlanetBase {
     }
 
     this.lastRevealAt = this.scene.time.now;
+    this.redrawTiles();
+  }
 
-    this.magField = new MagneticField(scene, this, {
-      r: this.r,
-      centerX: 0,
-      centerY: 0,
-      lineAlpha: 0.2,
-      lineWidth: 2,
-      perSideLines: 5,
-      loopCenterOffsetMul: 1,
-      innerRadiusMul: 0.15,
-      outerRadiusMul: 1.35,
-      strengthOverride01: 1
-    });
-
+  private wireHotspotInput() {
     this.scene.events.on(Phaser.Scenes.Events.WAKE, this.clearHotspotHover, this);
+
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.scene.events.off(Phaser.Scenes.Events.WAKE, this.clearHotspotHover, this);
     });
@@ -111,7 +149,7 @@ export default class TerraformPlanet extends PlanetBase {
 
       const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
 
-      let nextKey: string | null = null;
+      let nextKey: Key | null = null;
 
       if (cell) {
         const k = `${cell.row},${cell.col}`;
@@ -172,5 +210,60 @@ export default class TerraformPlanet extends PlanetBase {
 
     this.redrawTiles();
     this.scene.input.setDefaultCursor("default");
+  }
+
+  private applyAllEffects() {
+    this.applyEffect("atmosphere");
+    this.applyEffect("magnetosphere");
+    this.applyEffect("hydrosphere");
+  }
+
+  private applyEffect(k: Key) {
+    if (!this.enabledEffects[k]) {
+      this.disableEffect(k);
+      return;
+    }
+
+    if (k === "atmosphere") {
+      this.applyAtmosphere(this.progress.atmosphere01);
+      return;
+    }
+
+    if (k === "magnetosphere") {
+      this.applyMagnetosphere(this.progress.magnetosphere01);
+      return;
+    }
+
+    this.applyHydrosphere(this.progress.waterLevel);
+  }
+
+  private disableEffect(k: Key) {
+    if (k === "magnetosphere") {
+      this.magField?.destroy();
+      this.magField = undefined;
+    }
+  }
+
+  private applyAtmosphere(strength01: number) {
+  }
+
+  private applyMagnetosphere(strength01: number) {
+    if (!this.magField) {
+      this.magField = new MagneticField(this.scene, this, {
+        r: this.r,
+        centerX: 0,
+        centerY: 0,
+        lineAlpha: 0.2,
+        lineWidth: 2,
+        perSideLines: 5,
+        loopCenterOffsetMul: 1,
+        innerRadiusMul: 0.15,
+        outerRadiusMul: 1.35,
+        strengthOverride01: 1
+      });
+    }
+  }
+
+  private applyHydrosphere(waterLevel: number) {
   }
 }

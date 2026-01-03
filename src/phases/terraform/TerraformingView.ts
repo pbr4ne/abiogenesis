@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 import PlanetEdge from "./PlanetEdge";
-import MagneticField from "./MagneticField";
 import { makeRotator } from "../../planet/PlanetMath";
 import { drawWireGrid } from "../../planet/PlanetRenderer";
 import { log } from "../../utilities/GameUtils";
@@ -60,7 +59,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected deviceSlots: (0 | 1 | 2 | null)[] = [];
   protected selectedDevice: 0 | 1 | 2 | null = null;
 
-  protected atmospherePoints = 5;
+  protected points = 5;
   protected thermometerMax = 1000;
 
   protected readonly deviceKeys: readonly [string, string, string];
@@ -84,9 +83,6 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
   protected worldCenterLocalY: number;
   protected renderPlanetEdge: boolean;
-
-  protected magField?: MagneticField;
-  protected debugForceFieldMax = true;
 
   protected thermometer!: TerraformProgress;
   protected backBtn?: PlanetButton;
@@ -145,22 +141,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       this.world.setScale(1, -1);
     }
 
-    this.magField = new MagneticField(scene, this.behindWorld, {
-      r: this.r,
-      centerX: 0,
-      centerY: this.worldCenterLocalY,
-
-      lineAlpha: 0.18,
-      lineWidth: 2,
-
-      perSideLines: 5,
-
-      loopCenterOffsetMul: 0.62,
-      innerRadiusMul: 0.55,
-      outerRadiusMul: 1.85,
-
-      strengthOverride01: this.debugForceFieldMax ? 1 : null
-    });
+    this.createBehindWorldOverlays();
 
     this.drawGridLines();
 
@@ -185,7 +166,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       y: this.buttonRowLocalY,
       imageKeys: this.deviceKeys,
       costs: this.deviceCosts,
-      getPoints: () => this.atmospherePoints,
+      getPoints: () => this.points,
       onSelect: (d: 0 | 1 | 2) => this.selectDevice(d)
     });
 
@@ -203,22 +184,21 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       max: this.thermometerMax
     });
 
-    this.thermometer.setValue(this.atmospherePoints);
+    this.thermometer.setValue(this.points);
     this.palette.updateEnabled();
-    this.updateMagFieldStrength();
 
     this.pointsTimer = this.scene.time.addEvent({
       delay: 1000,
       loop: true,
       callback: () => {
-        this.atmospherePoints += this.getPointsPerSecond();
-        log(`Points: ${this.atmospherePoints}`);
+        this.points += this.getPointsPerSecond();
+        log(`Points: ${this.points}`);
 
-        this.thermometer.setValue(this.atmospherePoints);
+        this.thermometer.setValue(this.points);
         this.palette.updateEnabled();
 
         this.onPointsChanged();
-        this.updateMagFieldStrength();
+        this.onTick();
       }
     });
 
@@ -284,7 +264,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
   protected selectDevice(device: 0 | 1 | 2) {
     const cost = this.deviceCosts[device];
-    if (this.atmospherePoints < cost) return;
+    if (this.points < cost) return;
 
     if (this.selectedDevice === device) {
       this.selectedDevice = null;
@@ -303,9 +283,9 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     if (this.deviceSlots[slotIndex] !== null) return;
 
     const cost = this.deviceCosts[this.selectedDevice];
-    if (this.atmospherePoints < cost) return;
+    if (this.points < cost) return;
 
-    this.atmospherePoints -= cost;
+    this.points -= cost;
     this.deviceSlots[slotIndex] = this.selectedDevice;
 
     this.placement.rebuildSprites();
@@ -313,15 +293,15 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.selectedDevice = null;
     this.placement.clearMarkers();
 
-    this.thermometer.setValue(this.atmospherePoints);
+    this.thermometer.setValue(this.points);
     this.palette.updateEnabled();
-    this.updateMagFieldStrength();
+
+    this.onTick();
   }
 
-  protected updateMagFieldStrength() {
-    const ratio = Phaser.Math.Clamp(this.atmospherePoints / this.thermometerMax, 0, 1);
-    this.magField?.setStrength01(ratio);
-  }
+  protected createBehindWorldOverlays() { }
+
+  protected onTick() { }
 
   protected onPointsChanged() { }
 

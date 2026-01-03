@@ -1,4 +1,5 @@
 import TerraformingView from "./TerraformingView";
+import { getTerraformingState } from "./TerraformingState";
 
 type AtmosphereConfig = {
   diameter: number;
@@ -32,5 +33,10 @@ export default class Atmosphere extends TerraformingView {
 
       onBackEvent: "ui:goToPlanet"
     });
+  }
+
+  protected onPointsChanged() {
+    const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
+    getTerraformingState(this.scene).setMagnetosphere01(ratio);
   }
 }

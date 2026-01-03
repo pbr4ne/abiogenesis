@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import TerraformingView from "./TerraformingView";
 import HydrosphereMap from "./HydrosphereMap";
+import { getTerraformingState } from "./TerraformingState";
 
 export default class Hydrosphere extends TerraformingView {
   private map: HydrosphereMap;
@@ -31,6 +32,9 @@ export default class Hydrosphere extends TerraformingView {
     const col0End = Hydrosphere.SLOT_COL_END_1 - 1;
 
     const preMap = new HydrosphereMap(cols, rows);
+
+    const progress = getTerraformingState(scene);
+    preMap.waterLevel = progress.waterLevel;
 
     preMap.ensureAtLeastLowCellsInRect(
       row0Start,
@@ -115,6 +119,7 @@ export default class Hydrosphere extends TerraformingView {
   }
 
   private startWaterRise() {
+    const progress = getTerraformingState(this.scene);
     const target = Phaser.Math.Clamp(this.map.waterLevel + 5, 0, 7);
 
     this.waterTimer = this.scene.time.addEvent({
@@ -126,6 +131,7 @@ export default class Hydrosphere extends TerraformingView {
           return;
         }
         this.map.waterLevel++;
+        progress.setWaterLevel(this.map.waterLevel);
         this.drawGridLines();
       }
     });

@@ -3,6 +3,8 @@ import Atmosphere from "./Atmosphere";
 import Magnetosphere from "./Magnetosphere";
 import PhaseScene from "../../scenes/PhaseScene";
 import Hydrosphere from "./Hydrosphere";
+import { getTerraformingState } from "./TerraformingState";
+import TerraformPlanet from "./TerraformPlanet";
 
 export default class Terraforming extends PhaseScene {
   public planet!: Planet;
@@ -12,7 +14,11 @@ export default class Terraforming extends PhaseScene {
   }
 
   protected createPhase() {
-    this.planet = new Planet(this, 960, 540);
+    this.planet = new TerraformPlanet(this, 960, 540, getTerraformingState(this),
+      { atmosphere: true, magnetosphere: true, hydrosphere: true },
+      { atmosphere: true, magnetosphere: true, hydrosphere: true }
+    );
+
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);
 
