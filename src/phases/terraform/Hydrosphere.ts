@@ -10,14 +10,15 @@ export default class Hydrosphere extends TerraformingView {
 
   private waterTimer?: Phaser.Time.TimerEvent;
 
-  private static readonly SLOT_COL_START = 4;
-  private static readonly SLOT_COL_END = 13;
-  private static readonly SLOT_ROWS = 4;
+  private static readonly SLOT_ROW_START_1 = 2;
+  private static readonly SLOT_ROW_END_1 = 13;
+
+  private static readonly SLOT_COL_START_1 = 4;
+  private static readonly SLOT_COL_END_1 = 27;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    const slotCols = (Hydrosphere.SLOT_COL_END - Hydrosphere.SLOT_COL_START + 1);
-    const slotCount = slotCols * Hydrosphere.SLOT_ROWS;
-
+    const slotCount = Hydrosphere.slotRowsCount() * Hydrosphere.slotColsCount();
+  
     super(scene, x, y, {
       diameter: 1600,
       offsetRatio: 0.5,
@@ -71,16 +72,16 @@ export default class Hydrosphere extends TerraformingView {
     const stepX = w / this.cols;
     const stepY = h / this.rows;
 
-    const slotCols = (Hydrosphere.SLOT_COL_END - Hydrosphere.SLOT_COL_START + 1);
+    const colCount = Hydrosphere.slotColsCount();
 
-    const rowOffset = Math.floor(slotIndex / slotCols);
-    const colOffset = slotIndex % slotCols;
+    const rowOffset = Math.floor(slotIndex / colCount);
+    const colOffset = slotIndex % colCount;
 
-    const row = (this.rows - Hydrosphere.SLOT_ROWS) + rowOffset;
-    const col = Hydrosphere.SLOT_COL_START + colOffset;
+    const row0 = Hydrosphere.slotRowStart0() + rowOffset;
+    const col0 = Hydrosphere.slotColStart0() + colOffset;
 
-    const x = left + (col + 0.5) * stepX;
-    const y = top + (row + 0.5) * stepY;
+    const x = left + (col0 + 0.5) * stepX;
+    const y = top + (row0 + 0.5) * stepY;
 
     return { x, y, rotation: 0 };
   }
@@ -169,5 +170,18 @@ export default class Hydrosphere extends TerraformingView {
       (Math.round(Phaser.Math.Linear(ag, bg, t)) << 8) |
       Math.round(Phaser.Math.Linear(ab, bb, t))
     );
+  }
+
+  private static slotRowStart0() { return Hydrosphere.SLOT_ROW_START_1 - 1; }
+  private static slotRowEnd0() { return Hydrosphere.SLOT_ROW_END_1 - 1; }
+  private static slotColStart0() { return Hydrosphere.SLOT_COL_START_1 - 1; }
+  private static slotColEnd0() { return Hydrosphere.SLOT_COL_END_1 - 1; }
+
+  private static slotRowsCount() {
+    return Hydrosphere.slotRowEnd0() - Hydrosphere.slotRowStart0() + 1;
+  }
+
+  private static slotColsCount() {
+    return Hydrosphere.slotColEnd0() - Hydrosphere.slotColStart0() + 1;
   }
 }
