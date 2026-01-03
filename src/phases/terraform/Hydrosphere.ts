@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import TerraformingView from "./TerraformingView";
 import HydrosphereMap from "./HydrosphereMap";
 import { getTerraformingState } from "./TerraformingState";
+import { terrainColour } from "./HydrosphereTerrain";
 
 export default class Hydrosphere extends TerraformingView {
   private map: HydrosphereMap;
@@ -135,20 +136,9 @@ export default class Hydrosphere extends TerraformingView {
         const x = left + c * stepX;
         const y = top + r * stepY;
 
-        const landCol = this.lerpColour(0x3a2f23, 0xc2a46a, alt / 7);
-        g.fillStyle(landCol, 1);
+        const col = terrainColour(alt, this.map.waterLevel);
+        g.fillStyle(col, 1);
         g.fillRect(x, y, stepX + 1, stepY + 1);
-
-        if (alt < this.map.waterLevel) {
-          const depth = this.map.waterLevel - alt;
-          const t = Phaser.Math.Clamp((depth - 1) / 6, 0, 1);
-          const tt = t * t * t;
-
-          const waterCol = this.lerpColour(0x6fe6ff, 0x000f4a, tt);
-
-          g.fillStyle(waterCol, 1);
-          g.fillRect(x, y, stepX + 1, stepY + 1);
-        }
       }
     }
 
@@ -163,22 +153,6 @@ export default class Hydrosphere extends TerraformingView {
       const y = top + j * stepY;
       g.lineBetween(left, y, left + w, y);
     }
-  }
-
-  private lerpColour(a: number, b: number, t: number) {
-    const ar = (a >> 16) & 0xff;
-    const ag = (a >> 8) & 0xff;
-    const ab = a & 0xff;
-
-    const br = (b >> 16) & 0xff;
-    const bg = (b >> 8) & 0xff;
-    const bb = b & 0xff;
-
-    return (
-      (Math.round(Phaser.Math.Linear(ar, br, t)) << 16) |
-      (Math.round(Phaser.Math.Linear(ag, bg, t)) << 8) |
-      Math.round(Phaser.Math.Linear(ab, bb, t))
-    );
   }
 
   protected override getSlotCellSize(): number {

@@ -5,6 +5,7 @@ import MagnetosphereRenderer from "./MagnetosphereRenderer";
 import TerraformingState from "./TerraformingState";
 import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { log } from "../../utilities/GameUtils";
+import { generateAltGrid, terrainColour, toHex } from "./HydrosphereTerrain";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere";
 type Mask = Partial<Record<Key, boolean>>;
@@ -29,6 +30,8 @@ export default class TerraformPlanet extends PlanetBase {
 
   private magnetosphereRenderer?: MagnetosphereRenderer;
   private atmosphereGlow?: Phaser.GameObjects.Graphics;
+  private hydroAlt?: number[][];
+  private hydroInit = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -68,6 +71,12 @@ export default class TerraformPlanet extends PlanetBase {
     });
 
     this.applyAllEffects();
+  }
+
+  private ensureHydroAlt() {
+    if (this.hydroInit) return;
+    this.hydroInit = true;
+    this.hydroAlt = generateAltGrid(this.divisions, this.divisions);
   }
 
   private buildHotspots() {
@@ -291,5 +300,28 @@ export default class TerraformPlanet extends PlanetBase {
   }
 
   private applyHydrosphere(waterLevel: number) {
+    this.ensureHydroAlt();
+    if (!this.hydroAlt) return;
+
+    const rows = this.divisions;
+    const cols = this.divisions;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const alt = this.hydroAlt[r][c];
+
+        const col = terrainColour(alt, waterLevel);
+        this.gridData.setHex(r, c, toHex(col), 1);
+      }
+    }
+
+    for (const g of this.hotspotGroups) {
+      for (const cell of g.cells) {
+        const a = (this.hoveredGroupKey === g.key) ? g.hoverA : g.baseA;
+        this.gridData.setHex(cell.row, cell.col, g.colourHex, a);
+      }
+    }
+
+    this.redrawTiles();
   }
 }
