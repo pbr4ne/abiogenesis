@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { drawBaseGradient } from "../../planet/PlanetRenderer";
-import { drawAtmosphereGlow } from "../../planet/AtmosphereRenderer";
+import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 
 type PlanetEdgeConfig = {
   diameter?: number;

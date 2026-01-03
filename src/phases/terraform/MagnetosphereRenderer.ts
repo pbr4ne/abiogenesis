@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-export type MagneticFieldConfig = {
+export type MagnetosphereRendererConfig = {
   r: number;
   centerX?: number;
   centerY?: number;
@@ -17,7 +17,7 @@ export type MagneticFieldConfig = {
   strengthOverride01?: number | null;
 };
 
-export default class MagneticField {
+export default class MagnetosphereRenderer {
   private g: Phaser.GameObjects.Graphics;
 
   private r: number;
@@ -36,7 +36,7 @@ export default class MagneticField {
   private strength01 = 0;
   private strengthOverride01: number | null;
 
-  constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: MagneticFieldConfig) {
+  constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: MagnetosphereRendererConfig) {
     this.r = cfg.r;
     this.cx = cfg.centerX ?? 0;
     this.cy = cfg.centerY ?? 0;

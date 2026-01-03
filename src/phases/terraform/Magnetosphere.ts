@@ -1,6 +1,6 @@
 import TerraformingView from "./TerraformingView";
 import { getTerraformingState } from "./TerraformingState";
-import MagneticField from "./MagneticField";
+import MagnetosphereRenderer from "./MagnetosphereRenderer";
 
 type MagnetosphereConfig = {
   diameter: number;
@@ -11,7 +11,7 @@ type MagnetosphereConfig = {
 };
 
 export default class Magnetosphere extends TerraformingView {
-  private magField?: MagneticField;
+  private magField?: MagnetosphereRenderer;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: MagnetosphereConfig) {
     super(scene, x, y, {
@@ -41,7 +41,7 @@ export default class Magnetosphere extends TerraformingView {
   }
 
   protected override createBehindWorldOverlays() {
-    this.magField = new MagneticField(this.scene, this.behindWorld, {
+    this.magField = new MagnetosphereRenderer(this.scene, this.behindWorld, {
       r: this.r,
       centerX: 0,
       centerY: this.worldCenterLocalY,

@@ -1,9 +1,9 @@
 import Phaser from "phaser";
 import PlanetBase from "../../planet/PlanetBase";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
-import MagneticField from "./MagneticField";
+import MagnetosphereRenderer from "./MagnetosphereRenderer";
 import TerraformingState from "./TerraformingState";
-import { drawAtmosphereGlow } from "../../planet/AtmosphereRenderer";
+import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { log } from "../../utilities/GameUtils";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere";
@@ -27,7 +27,7 @@ export default class TerraformPlanet extends PlanetBase {
 
   private hoveredGroupKey: Key | null = null;
 
-  private magField?: MagneticField;
+  private magnetosphereRenderer?: MagnetosphereRenderer;
   private atmosphereGlow?: Phaser.GameObjects.Graphics;
 
   constructor(
@@ -63,8 +63,8 @@ export default class TerraformPlanet extends PlanetBase {
 
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.progress.off("change", onChange);
-      this.magField?.destroy();
-      this.magField = undefined;
+      this.magnetosphereRenderer?.destroy();
+      this.magnetosphereRenderer = undefined;
     });
 
     this.applyAllEffects();
@@ -244,8 +244,8 @@ export default class TerraformPlanet extends PlanetBase {
 
   private disableEffect(k: Key) {
     if (k === "magnetosphere") {
-      this.magField?.destroy();
-      this.magField = undefined;
+      this.magnetosphereRenderer?.destroy();
+      this.magnetosphereRenderer = undefined;
     }
   }
 
@@ -272,8 +272,8 @@ export default class TerraformPlanet extends PlanetBase {
   }
 
   private applyMagnetosphere(strength01: number) {
-    if (!this.magField) {
-      this.magField = new MagneticField(this.scene, this.behind, {
+    if (!this.magnetosphereRenderer) {
+      this.magnetosphereRenderer = new MagnetosphereRenderer(this.scene, this.behind, {
         r: this.r,
         centerX: 0,
         centerY: 0,
@@ -287,7 +287,7 @@ export default class TerraformPlanet extends PlanetBase {
       });
     }
 
-    this.magField.setStrength01(strength01);
+    this.magnetosphereRenderer.setStrength01(strength01);
   }
 
   private applyHydrosphere(waterLevel: number) {
