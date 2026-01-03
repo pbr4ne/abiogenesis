@@ -89,10 +89,16 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.rescheduleSpawner();
     }
 
-    if (this.field.isClickableAt(picked.row, picked.col, now)) {
-      this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true);
-    }
-  }
+    if (!this.field.isClickableAt(picked.row, picked.col, now)) return;
+
+    this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true, true);
+
+    const changed = this.field.tick(now, (row, col, rgba) => {
+      this.gridData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
+    });
+
+    if (changed) this.redrawTiles();
+  };
 
   private onPlanetMove = (pointer: Phaser.Input.Pointer) => {
     const dx = pointer.worldX - this.x;

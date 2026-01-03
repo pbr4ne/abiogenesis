@@ -63,7 +63,14 @@ export default class CellLayerField {
     }
   }
 
-  public applyBloomFromSeed(row: number, col: number, now: number, steps: BloomStep[], lockSeed: boolean) {
+  public applyBloomFromSeed(
+    row: number,
+    col: number,
+    now: number,
+    steps: BloomStep[],
+    lockSeed: boolean,
+    instantFirstStep = false
+  ) {
     const seedCell = this.active.get(this.keyOf(row, col));
     if (!seedCell) return;
 
@@ -114,8 +121,13 @@ export default class CellLayerField {
       this.active.set(key, { row: absRow, col: absCol, layers: [newLayer] });
     };
 
-    for (const step of steps) {
-      const startAt = now + step.delayMs;
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+
+      const startAt =
+        instantFirstStep && i === 0
+          ? now
+          : now + step.delayMs;
 
       for (const [dr, dc] of step.offsets) {
         const k = offKey(dr, dc);
