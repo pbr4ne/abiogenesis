@@ -33,7 +33,7 @@ export default class DNAHelix extends Phaser.GameObjects.Container {
   private unlockedHues: { h: number; w: number }[] = [];
   private phase = 0;
   private debugText?: Phaser.GameObjects.Text;
-  private debugEnabled = true;
+  private debugEnabled = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: DNAHelixConfig = {}) {
     super(scene, x, y);
