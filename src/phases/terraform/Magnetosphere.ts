@@ -71,6 +71,6 @@ export default class Magnetosphere extends TerraformingView {
 
   protected override onPointsChanged() {
     const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
-    getTerraformingState(this.scene).setMagnetosphere01(ratio);
+    getTerraformingState(this.scene).setMagnetosphereLevel(ratio);
   }
 }

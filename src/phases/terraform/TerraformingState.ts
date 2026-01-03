@@ -3,32 +3,32 @@ import Phaser from "phaser";
 export type TerraformKey = "atmosphere" | "magnetosphere" | "hydrosphere";
 
 export default class TerraformingState extends Phaser.Events.EventEmitter {
-  private _atmosphere01 = 0;
-  private _magnetosphere01 = 0;
-  private _waterLevel = 0;
+  private _atmosphereLevel = 0;
+  private _magnetosphereLevel = 0;
+  private _hydrosphereLevel = 0;
 
-  get atmosphere01() { return this._atmosphere01; }
-  get magnetosphere01() { return this._magnetosphere01; }
-  get waterLevel() { return this._waterLevel; }
+  get atmosphereLevel() { return this._atmosphereLevel; }
+  get magnetosphereLevel() { return this._magnetosphereLevel; }
+  get hydrosphereLevel() { return this._hydrosphereLevel; }
 
-  setAtmosphere01(v: number) {
+  setAtmosphereLevel(v: number) {
     const next = Phaser.Math.Clamp(v, 0, 1);
-    if (next === this._atmosphere01) return;
-    this._atmosphere01 = next;
+    if (next === this._atmosphereLevel) return;
+    this._atmosphereLevel = next;
     this.emit("change", "atmosphere", next);
   }
 
-  setMagnetosphere01(v: number) {
+  setMagnetosphereLevel(v: number) {
     const next = Phaser.Math.Clamp(v, 0, 1);
-    if (next === this._magnetosphere01) return;
-    this._magnetosphere01 = next;
+    if (next === this._magnetosphereLevel) return;
+    this._magnetosphereLevel = next;
     this.emit("change", "magnetosphere", next);
   }
 
-  setWaterLevel(v: number) {
+  setHydrosphereLevel(v: number) {
     const next = Phaser.Math.Clamp(Math.round(v), 0, 7);
-    if (next === this._waterLevel) return;
-    this._waterLevel = next;
+    if (next === this._hydrosphereLevel) return;
+    this._hydrosphereLevel = next;
     this.emit("change", "hydrosphere", next);
   }
 }

@@ -37,6 +37,6 @@ export default class Atmosphere extends TerraformingView {
 
   protected onPointsChanged() {
     const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
-    getTerraformingState(this.scene).setMagnetosphere01(ratio);
+    getTerraformingState(this.scene).setAtmosphereLevel(ratio);
   }
 }

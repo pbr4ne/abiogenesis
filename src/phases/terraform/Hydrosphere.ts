@@ -33,7 +33,7 @@ export default class Hydrosphere extends TerraformingView {
     const preMap = new HydrosphereMap(cols, rows);
 
     const progress = getTerraformingState(scene);
-    preMap.waterLevel = progress.waterLevel;
+    preMap.waterLevel = progress.hydrosphereLevel;
 
     preMap.ensureAtLeastLowCellsInRect(
       row0Start,
@@ -174,7 +174,7 @@ export default class Hydrosphere extends TerraformingView {
     if (waterLevel === this.map.waterLevel) return;
 
     this.map.waterLevel = waterLevel;
-    state.setWaterLevel(waterLevel);
+    state.setHydrosphereLevel(waterLevel);
 
     this.drawGridLines();
   }
