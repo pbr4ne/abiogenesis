@@ -26,10 +26,6 @@ export default class SoupProgress {
     return (this.fill.A + this.fill.G + this.fill.T + this.fill.C) / 4;
   }
 
-  public spawnDelayMs() {
-    return Math.round(Phaser.Math.Linear(1000, 50, this.getTotal01()));
-  }
-
   public autoBloomChance01() {
     return Phaser.Math.Linear(0.01, 0.35, this.getTotal01());
   }
@@ -37,31 +33,6 @@ export default class SoupProgress {
   public onClickColour(rgb: RGB) {
     const base = this.pickNearestBase(rgb);
     this.fill[base] = clamp01(this.fill[base] + 0.05);
-  }
-
-  public pickSpawnRGB() {
-    const wA = 0.25 + this.fill.A * 1.25;
-    const wG = 0.25 + this.fill.G * 1.25;
-    const wT = 0.25 + this.fill.T * 1.25;
-    const wC = 0.25 + this.fill.C * 1.25;
-
-    const total = wA + wG + wT + wC;
-    let r = Math.random() * total;
-
-    let base: BaseKey = "A";
-    if ((r -= wA) <= 0) base = "A";
-    else if ((r -= wG) <= 0) base = "G";
-    else if ((r -= wT) <= 0) base = "T";
-    else base = "C";
-
-    const b = BASES.find(x => x.key === base)!.rgb;
-
-    const spread = Phaser.Math.Linear(0, 40, this.fill[base]);
-    return {
-      r: Phaser.Math.Clamp(Math.round(b.r + Phaser.Math.FloatBetween(-spread, spread)), 0, 255),
-      g: Phaser.Math.Clamp(Math.round(b.g + Phaser.Math.FloatBetween(-spread, spread)), 0, 255),
-      b: Phaser.Math.Clamp(Math.round(b.b + Phaser.Math.FloatBetween(-spread, spread)), 0, 255)
-    };
   }
 
   public computeHelixBinsFromGrid(getCells: () => Iterable<RGB>) {
@@ -104,7 +75,15 @@ export default class SoupProgress {
   public helixAlphaForHue01(h01: number) {
     const idx = Math.floor(Phaser.Math.Wrap(h01, 0, 1) * (this.helixBins.length - 1));
     const a = this.helixBins[idx] ?? 0;
-    return Phaser.Math.Clamp(Math.pow(a, 0.55), 0, 1);
+
+    if (a < 0.002) return 0;
+
+    const k = 80;
+    const boosted01 = Math.log1p(k * a) / Math.log1p(k);
+
+    const maxDynamic = 0.92;
+
+    return Phaser.Math.Clamp(boosted01 * maxDynamic, 0, maxDynamic);
   }
 
   private pickNearestBase(rgb: RGB): BaseKey {
@@ -124,5 +103,97 @@ export default class SoupProgress {
     }
 
     return best;
+  }
+
+  public get avg01() {
+    return (this.fill.A + this.fill.G + this.fill.T + this.fill.C) / 4;
+  }
+
+  public get min01() {
+    return Math.min(this.fill.A, this.fill.G, this.fill.T, this.fill.C);
+  }
+
+  public spawnDelayMs() {
+    return Math.round(Phaser.Math.Linear(1000, 50, this.avg01));
+  }
+
+  public spawnBloomChance01() {
+    return Phaser.Math.Clamp(this.avg01, 0, 1);
+  }
+
+  private baseWeights() {
+    return {
+      A: 0.25 + this.fill.A * 1.0,
+      G: 0.25 + this.fill.G * 1.0,
+      T: 0.25 + this.fill.T * 1.0,
+      C: 0.25 + this.fill.C * 1.0
+    };
+  }
+
+  private pickBaseKey(): "A" | "G" | "T" | "C" {
+    const w = this.baseWeights();
+    const total = w.A + w.G + w.T + w.C;
+    let r = Math.random() * total;
+
+    if ((r -= w.A) <= 0) return "A";
+    if ((r -= w.G) <= 0) return "G";
+    if ((r -= w.T) <= 0) return "T";
+    return "C";
+  }
+
+  private baseRGBFor(key: "A" | "G" | "T" | "C") {
+    if (key === "A") return { r: 255, g: 0, b: 255 };
+    if (key === "G") return { r: 255, g: 255, b: 0 };
+    if (key === "T") return { r: 0, g: 255, b: 0 };
+    return { r: 0, g: 255, b: 255 };
+  }
+
+  public pickSpawnRGB() {
+    const rainbowChance = Phaser.Math.Clamp(this.min01, 0, 1);
+
+    if (Math.random() < rainbowChance) {
+      const h = Math.random();
+      const s = 1;
+      const v = 1;
+      const c = Phaser.Display.Color.HSVToRGB(h, s, v) as Phaser.Types.Display.ColorObject;
+      return { r: c.r, g: c.g, b: c.b };
+    }
+
+    const key = this.pickBaseKey();
+    const base = this.baseRGBFor(key);
+    const baseFill = this.fill[key];
+
+    const spread = Phaser.Math.Linear(0, 80, baseFill);
+
+    const r = Phaser.Math.Clamp(Math.round(base.r + Phaser.Math.FloatBetween(-spread, spread)), 0, 255);
+    const g = Phaser.Math.Clamp(Math.round(base.g + Phaser.Math.FloatBetween(-spread, spread)), 0, 255);
+    const b = Phaser.Math.Clamp(Math.round(base.b + Phaser.Math.FloatBetween(-spread, spread)), 0, 255);
+
+    return { r, g, b };
+  }
+
+  public setAllFill01(v01: number) {
+    const v = Phaser.Math.Clamp(v01, 0, 1);
+    this.fill.A = v;
+    this.fill.G = v;
+    this.fill.T = v;
+    this.fill.C = v;
+  }
+
+  public isAllZero() {
+    return this.fill.A <= 0 && this.fill.G <= 0 && this.fill.T <= 0 && this.fill.C <= 0;
+  }
+
+  public isEffectivelyComplete() {
+    return this.avg01 >= 0.99;
+  }
+
+  public getGATC01() {
+    return {
+      A: this.fill.A,
+      G: this.fill.G,
+      T: this.fill.T,
+      C: this.fill.C
+    };
   }
 }

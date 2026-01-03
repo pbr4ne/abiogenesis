@@ -3,7 +3,6 @@ import PlanetBase, { PlanetBaseConfig } from "../prefabs/PlanetBase";
 import { pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
 import CellLayerField from "./CellLayerField";
 import SoupSpawner from "./SoupSpawner";
-import { PaletteColourSource, RandomHSVColourSource } from "./ColourSource";
 import { stepBloom5x5 } from "./BloomPattern";
 import SoupProgress from "./SoupProgress";
 import DNAHelix from "./DNAHelix";
@@ -34,6 +33,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   }
 
   public startSoup() {
+    this.progress.setAllFill01(0);
     this.rescheduleSpawner();
   }
 
@@ -57,7 +57,10 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     this.field.addSeed(pos.row, pos.col, rgb, now, 5000, true);
 
-    if (Math.random() < this.progress.autoBloomChance01()) {
+    const delay = this.progress.spawnDelayMs();
+    const bloomP = (delay <= 60) ? 1 : this.progress.spawnBloomChance01();
+
+    if (Math.random() < bloomP) {
       this.field.applyBloomFromSeed(pos.row, pos.col, now, stepBloom5x5, true);
     }
 
@@ -78,7 +81,6 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     if (!picked) return;
 
     const now = this.scene.time.now;
-    if (!this.field.isClickableAt(picked.row, picked.col, now)) return;
 
     const cell = this.gridData.getCell(picked.row, picked.col);
 
@@ -87,8 +89,10 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.rescheduleSpawner();
     }
 
-    this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true);
-  };
+    if (this.field.isClickableAt(picked.row, picked.col, now)) {
+      this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true);
+    }
+  }
 
   private onPlanetMove = (pointer: Phaser.Input.Pointer) => {
     const dx = pointer.worldX - this.x;
@@ -101,12 +105,13 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     }
 
     const now = this.scene.time.now;
-    if (this.field.isClickableAt(picked.row, picked.col, now)) {
+    const cell = this.gridData.getCell(picked.row, picked.col);
+    if ((cell && cell.a > 0) || this.field.isClickableAt(picked.row, picked.col, now)) {
       this.scene.input.setDefaultCursor("pointer");
     } else {
       this.scene.input.setDefaultCursor("default");
     }
-  };
+  }
 
   private onSoupUpdate(_time: number, _delta: number) {
     const now = this.scene.time.now;
