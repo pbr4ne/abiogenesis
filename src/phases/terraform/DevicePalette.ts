@@ -1,0 +1,153 @@
+import Phaser from "phaser";
+
+type DeviceButtonsCfg = {
+  y: number;
+  radius?: number;
+  xPositions?: [number, number, number];
+  imageKeys: readonly [string, string, string];
+  costs: Record<0 | 1 | 2, number>;
+  getPoints: () => number;
+  onSelect: (device: 0 | 1 | 2) => void;
+};
+
+export default class DeviceButtons {
+  public readonly buttons = new Map<0 | 1 | 2, Phaser.GameObjects.Container>();
+
+  private scene: Phaser.Scene;
+  private parent: Phaser.GameObjects.Container;
+
+  private y: number;
+  private radius: number;
+  private xPositions: [number, number, number];
+
+  private imageKeys: readonly [string, string, string];
+  private costs: Record<0 | 1 | 2, number>;
+
+  private getPoints: () => number;
+  private onSelect: (device: 0 | 1 | 2) => void;
+
+  constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: DeviceButtonsCfg) {
+    this.scene = scene;
+    this.parent = parent;
+
+    this.y = cfg.y;
+    this.radius = cfg.radius ?? 100;
+    this.xPositions = cfg.xPositions ?? [-360, 0, 360];
+
+    this.imageKeys = cfg.imageKeys;
+    this.costs = cfg.costs;
+
+    this.getPoints = cfg.getPoints;
+    this.onSelect = cfg.onSelect;
+
+    this.rebuild();
+  }
+
+  private rebuild() {
+    this.buttons.clear();
+
+    for (let i = 0; i < 3; i++) {
+      const device = i as 0 | 1 | 2;
+      const btn = this.makeCircleImageButton(this.xPositions[i], this.y, this.radius, this.imageKeys[i], device);
+      this.parent.add(btn);
+      this.buttons.set(device, btn);
+    }
+
+    this.updateEnabled();
+  }
+
+  public updateEnabled() {
+    for (const [device, btn] of this.buttons) {
+      const cost = this.costs[device];
+      const affordable = this.getPoints() >= cost;
+
+      btn.setAlpha(affordable ? 1 : 0.4);
+
+      const hit = btn.list[btn.list.length - 1] as Phaser.GameObjects.Zone;
+      if (affordable) {
+        hit.setInteractive(new Phaser.Geom.Circle(this.radius, this.radius, this.radius), Phaser.Geom.Circle.Contains);
+      } else {
+        hit.disableInteractive();
+      }
+    }
+  }
+
+  private drawButtonGlow(g: Phaser.GameObjects.Graphics, radius: number, color = 0x9fd6ff) {
+    g.clear();
+
+    const layers = 18;
+    const inner = radius * 1.02;
+    const outer = radius * 1.20;
+
+    for (let i = 0; i < layers; i++) {
+      const t = i / (layers - 1);
+      const rad = Phaser.Math.Linear(inner, outer, t);
+      const a = 0.22 * Math.pow(1 - t, 2.0);
+
+      g.lineStyle(10, color, a);
+      g.strokeCircle(0, 0, rad);
+    }
+  }
+
+  private makeCircleImageButton(localX: number, localY: number, radius: number, imageKey: string, deviceIndex: 0 | 1 | 2) {
+    const btn = this.scene.add.container(localX, localY);
+
+    const bg = this.scene.add.graphics();
+
+    const draw = (strokeColor: number) => {
+      bg.clear();
+      bg.fillStyle(0x20202c, 1);
+      bg.fillCircle(0, 0, radius);
+      bg.lineStyle(6, strokeColor, 1);
+      bg.strokeCircle(0, 0, radius);
+    };
+
+    draw(0x494949);
+
+    const glow = this.scene.add.graphics();
+    this.drawButtonGlow(glow, radius);
+
+    const img = this.scene.add.image(0, 0, imageKey);
+
+    const pad = 28;
+    const max = radius * 2 - pad * 2;
+    const scale = Math.min(max / img.width, max / img.height);
+    img.setScale(scale);
+
+    const diameter = radius * 2;
+    const hit = this.scene.add.zone(0, 0, diameter, diameter).setOrigin(0.5, 0.5);
+    hit.setInteractive(new Phaser.Geom.Circle(radius, radius, radius), Phaser.Geom.Circle.Contains);
+
+    hit.on("pointerover", () => {
+      if (!hit.input?.enabled) return;
+      this.scene.input.setDefaultCursor("pointer");
+      draw(0xffd84d);
+      btn.setScale(1.03);
+    });
+
+    hit.on("pointerout", () => {
+      this.scene.input.setDefaultCursor("default");
+      draw(0x494949);
+      btn.setScale(1.0);
+    });
+
+    hit.on("pointerdown", () => {
+      if (!hit.input?.enabled) return;
+      this.onSelect(deviceIndex);
+    });
+
+    btn.add(glow);
+    btn.add(bg);
+    btn.add(img);
+    btn.add(hit);
+
+    return btn;
+  }
+
+  public destroy() {
+    for (const btn of this.buttons.values()) {
+      btn.destroy();
+    }
+    this.buttons.clear();
+  }
+}

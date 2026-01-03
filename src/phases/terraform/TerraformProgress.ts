@@ -1,0 +1,93 @@
+import Phaser from "phaser";
+
+type TerraformProgressCfg = {
+  x: number;
+  topY: number;
+  w: number;
+  h: number;
+  max: number;
+};
+
+export default class TerraformProgress {
+  private scene: Phaser.Scene;
+  private bg: Phaser.GameObjects.Graphics;
+  private fill: Phaser.GameObjects.Graphics;
+
+  private x: number;
+  private topY: number;
+  private w: number;
+  private h: number;
+
+  private max: number;
+  private value = 0;
+
+  constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: TerraformProgressCfg) {
+    this.scene = scene;
+
+    this.x = cfg.x;
+    this.topY = cfg.topY;
+    this.w = cfg.w;
+    this.h = cfg.h;
+    this.max = cfg.max;
+
+    this.bg = scene.add.graphics();
+    this.fill = scene.add.graphics();
+
+    parent.add(this.bg);
+    parent.add(this.fill);
+
+    this.drawFrame();
+    this.redrawFill();
+  }
+
+  public setMax(max: number) {
+    this.max = Math.max(1, max);
+    this.redrawFill();
+  }
+
+  public setValue(value: number) {
+    this.value = value;
+    this.redrawFill();
+  }
+
+  private drawFrame() {
+    const x = this.x;
+    const y = this.topY;
+    const w = this.w;
+    const h = this.h;
+
+    this.bg.clear();
+    this.bg.fillStyle(0x11111a, 0.65);
+    this.bg.fillRect(x - w / 2, y, w, h);
+
+    this.bg.lineStyle(4, 0xffffff, 0.55);
+    this.bg.strokeRect(x - w / 2, y, w, h);
+  }
+
+  private redrawFill() {
+    const ratio = Phaser.Math.Clamp(this.value / this.max, 0, 1);
+
+    const x = this.x;
+    const y = this.topY;
+    const w = this.w;
+    const h = this.h;
+
+    const inset = 4;
+    const iw = w - inset * 2;
+    const ih = h - inset * 2;
+
+    const fillH = Math.floor(ih * ratio);
+    const fillY = y + inset + (ih - fillH);
+
+    this.fill.clear();
+    if (fillH <= 0) return;
+
+    this.fill.fillStyle(0xff0000, 0.85);
+    this.fill.fillRect(x - iw / 2, fillY, iw, fillH);
+  }
+
+  public destroy() {
+    this.bg.destroy();
+    this.fill.destroy();
+  }
+}
