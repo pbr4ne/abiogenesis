@@ -10,15 +10,48 @@ export default class Hydrosphere extends TerraformingView {
 
   private waterTimer?: Phaser.Time.TimerEvent;
 
+  private slotCells: { r: number; c: number }[] = [];
+
   private static readonly SLOT_ROW_START_1 = 2;
   private static readonly SLOT_ROW_END_1 = 13;
 
   private static readonly SLOT_COL_START_1 = 4;
   private static readonly SLOT_COL_END_1 = 27;
 
+  private static readonly LOW_ALT_MAX = 3;
+  private static readonly SLOT_COUNT = 20;
+
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    const slotCount = Hydrosphere.slotRowsCount() * Hydrosphere.slotColsCount();
-  
+    const cols = 32;
+    const rows = 18;
+
+    const row0Start = Hydrosphere.SLOT_ROW_START_1 - 1;
+    const row0End = Hydrosphere.SLOT_ROW_END_1 - 1;
+    const col0Start = Hydrosphere.SLOT_COL_START_1 - 1;
+    const col0End = Hydrosphere.SLOT_COL_END_1 - 1;
+
+    const preMap = new HydrosphereMap(cols, rows);
+
+    preMap.ensureAtLeastLowCellsInRect(
+      row0Start,
+      row0End,
+      col0Start,
+      col0End,
+      Hydrosphere.LOW_ALT_MAX,
+      Hydrosphere.SLOT_COUNT
+    );
+
+    const lowCells = preMap.getLowCellsInRect(
+      row0Start,
+      row0End,
+      col0Start,
+      col0End,
+      Hydrosphere.LOW_ALT_MAX
+    );
+
+    Phaser.Utils.Array.Shuffle(lowCells);
+    const slotCells = lowCells.slice(0, Hydrosphere.SLOT_COUNT);
+
     super(scene, x, y, {
       diameter: 1600,
       offsetRatio: 0.5,
@@ -49,10 +82,11 @@ export default class Hydrosphere extends TerraformingView {
 
       onBackEvent: "ui:goToPlanet",
 
-      slotCount
+      slotCount: Hydrosphere.SLOT_COUNT
     });
 
-    this.map = new HydrosphereMap(this.cols, this.rows);
+    this.map = preMap;
+    this.slotCells = slotCells;
 
     this.startWaterRise();
     this.drawGridLines();
@@ -63,6 +97,8 @@ export default class Hydrosphere extends TerraformingView {
   }
 
   protected override getSlotTransform(slotIndex: number) {
+    const cell = this.slotCells[slotIndex] ?? this.slotCells[this.slotCells.length - 1];
+
     const w = this.scene.scale.width;
     const h = this.scene.scale.height;
 
@@ -72,16 +108,8 @@ export default class Hydrosphere extends TerraformingView {
     const stepX = w / this.cols;
     const stepY = h / this.rows;
 
-    const colCount = Hydrosphere.slotColsCount();
-
-    const rowOffset = Math.floor(slotIndex / colCount);
-    const colOffset = slotIndex % colCount;
-
-    const row0 = Hydrosphere.slotRowStart0() + rowOffset;
-    const col0 = Hydrosphere.slotColStart0() + colOffset;
-
-    const x = left + (col0 + 0.5) * stepX;
-    const y = top + (row0 + 0.5) * stepY;
+    const x = left + (cell.c + 0.5) * stepX;
+    const y = top + (cell.r + 0.5) * stepY;
 
     return { x, y, rotation: 0 };
   }
@@ -170,18 +198,5 @@ export default class Hydrosphere extends TerraformingView {
       (Math.round(Phaser.Math.Linear(ag, bg, t)) << 8) |
       Math.round(Phaser.Math.Linear(ab, bb, t))
     );
-  }
-
-  private static slotRowStart0() { return Hydrosphere.SLOT_ROW_START_1 - 1; }
-  private static slotRowEnd0() { return Hydrosphere.SLOT_ROW_END_1 - 1; }
-  private static slotColStart0() { return Hydrosphere.SLOT_COL_START_1 - 1; }
-  private static slotColEnd0() { return Hydrosphere.SLOT_COL_END_1 - 1; }
-
-  private static slotRowsCount() {
-    return Hydrosphere.slotRowEnd0() - Hydrosphere.slotRowStart0() + 1;
-  }
-
-  private static slotColsCount() {
-    return Hydrosphere.slotColEnd0() - Hydrosphere.slotColStart0() + 1;
   }
 }
