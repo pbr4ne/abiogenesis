@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import PlanetBase, { PlanetBaseConfig } from "../prefabs/PlanetBase";
-import { pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
+import PlanetBase, { PlanetBaseConfig } from "../../planet/PlanetBase";
+import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
 import CellLayerField from "./CellLayerField";
 import SoupSpawner from "./SoupSpawner";
 import { stepBloom5x5 } from "./BloomPattern";

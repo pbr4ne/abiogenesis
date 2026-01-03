@@ -1,4 +1,4 @@
-import PhaseScene from "./PhaseScene";
+import PhaseScene from "../../scenes/PhaseScene";
 
 export default class Evolution extends PhaseScene {
   constructor() {

@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import PlanetEdge from "./PlanetEdge";
-import { makeRotator } from "../planet/PlanetMath";
-import { drawWireGrid } from "../planet/PlanetRenderer";
-import { log } from "../utilities/GameUtils";
+import { makeRotator } from "../../planet/PlanetMath";
+import { drawWireGrid } from "../../planet/PlanetRenderer";
+import { log } from "../../utilities/GameUtils";
 import MagneticField from "./MagneticField";
 
 export type TerraformingViewConfig = {

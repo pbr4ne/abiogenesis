@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import PlanetBase from "./PlanetBase";
-import { pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
-import { drawTiles } from "../planet/PlanetRenderer";
+import PlanetBase from "../../planet/PlanetBase";
+import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
+import { drawTiles } from "../../planet/PlanetRenderer";
 import MagneticField from "./MagneticField";
 
 export default class TerraformPlanet extends PlanetBase {

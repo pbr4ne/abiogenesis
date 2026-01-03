@@ -2,10 +2,10 @@ import Phaser from "phaser";
 import Preload from "./scenes/Preload";
 import Welcome from "./scenes/Welcome";
 import Init from "./scenes/Init";
-import Terraforming from "./scenes/Terraforming";
-import PrimordialSoup from "./primordial/PrimoridalSoup";
-import Evolution from "./scenes/Evolution";
-import GalaxyMap from "./scenes/GalaxyMap";
+import Terraforming from "./phases/terraform/Terraforming";
+import PrimordialSoup from "./phases/primordial/PrimoridalSoup";
+import Evolution from "./phases/evolution/Evolution";
+import GalaxyMap from "./phases/galaxy/GalaxyMap";
 
 const game = new Phaser.Game({
   width: 1920,

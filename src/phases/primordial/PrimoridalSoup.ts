@@ -1,7 +1,7 @@
-import PhaseScene from "../scenes/PhaseScene";
+import PhaseScene from "../../scenes/PhaseScene";
 import Planet from "./PrimordialSoupPlanet";
-import { log } from "../utilities/GameUtils";
-import DNAHelix from "../primordial/DNAHelix";
+import { log } from "../../utilities/GameUtils";
+import DNAHelix from "./DNAHelix";
 import Nucleotides from "./Nucleotides";
 
 export default class PrimordialSoup extends PhaseScene {

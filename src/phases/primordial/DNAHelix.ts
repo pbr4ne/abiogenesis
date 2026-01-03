@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { log } from "../utilities/GameUtils";
+import { log } from "../../utilities/GameUtils";
 import SoupProgress from "./SoupProgress";
 
 type DNAHelixConfig = {

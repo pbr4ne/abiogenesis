@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { projectLatLon, latForIndex, lonForIndex } from "../planet/PlanetMath";
+import { projectLatLon, latForIndex, lonForIndex } from "../../planet/PlanetMath";
 
 export default class SoupSpawner {
   private divisions: number;

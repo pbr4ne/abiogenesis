@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { makeRotator, pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
-import { drawBaseGradient, drawTiles, drawWireGrid } from "../planet/PlanetRenderer";
-import PlanetGrid from "../planet/PlanetGrid";
+import { makeRotator, pickCellByNearestProjectedCenter } from "./PlanetMath";
+import { drawBaseGradient, drawTiles, drawWireGrid } from "./PlanetRenderer";
+import PlanetGrid from "./PlanetGrid";
 
 export type PlanetBaseConfig = {
   divisions?: number;

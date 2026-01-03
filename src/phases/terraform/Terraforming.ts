@@ -1,7 +1,7 @@
-import Planet from "../prefabs/TerraformPlanet";
-import Atmosphere from "../prefabs/Atmosphere";
-import Magnetosphere from "../prefabs/Magnetosphere";
-import PhaseScene from "./PhaseScene";
+import Planet from "./TerraformPlanet";
+import Atmosphere from "./Atmosphere";
+import Magnetosphere from "./Magnetosphere";
+import PhaseScene from "../../scenes/PhaseScene";
 
 export default class Terraforming extends PhaseScene {
   public planet!: Planet;
