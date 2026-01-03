@@ -84,7 +84,7 @@ export default class TerraformPlanet extends PlanetBase {
 
     const atmosphereCells = () => {
       const out: { row: number; col: number }[] = [];
-      for (let row = 0; row <= 4; row++) {
+      for (let row = 0; row <= 3; row++) {
         for (let col = 0; col <= this.divisions - 1; col++) {
           out.push({ row, col });
         }
@@ -93,10 +93,10 @@ export default class TerraformPlanet extends PlanetBase {
     };
 
     const magnetosphereCells: { row: number; col: number }[] = [
-      { row: 15, col: 7 }, { row: 16, col: 7 }, { row: 17, col: 7 }, { row: 18, col: 7 }, { row: 19, col: 7 },
-      { row: 15, col: 8 }, { row: 16, col: 8 }, { row: 17, col: 8 }, { row: 18, col: 8 }, { row: 19, col: 8 }, { row: 20, col: 8 }, { row: 21, col: 8 },
-      { row: 15, col: 9 }, { row: 16, col: 9 }, { row: 17, col: 9 }, { row: 18, col: 9 }, { row: 19, col: 9 }, { row: 20, col: 9 }, { row: 21, col: 9 },
-      { row: 15, col: 10 }, { row: 16, col: 10 }, { row: 17, col: 10 }, { row: 18, col: 10 }, { row: 19, col: 10 }, { row: 20, col: 10 }, { row: 21, col: 10 }
+      { row: 16, col: 7 }, { row: 17, col: 7 }, { row: 18, col: 7 }, { row: 19, col: 7 },
+      { row: 16, col: 8 }, { row: 17, col: 8 }, { row: 18, col: 8 }, { row: 19, col: 8 }, { row: 20, col: 8 }, { row: 21, col: 8 },
+      { row: 16, col: 9 }, { row: 17, col: 9 }, { row: 18, col: 9 }, { row: 19, col: 9 }, { row: 20, col: 9 }, { row: 21, col: 9 },
+      { row: 16, col: 10 }, { row: 17, col: 10 }, { row: 18, col: 10 }, { row: 19, col: 10 }, { row: 20, col: 10 }, { row: 21, col: 10 }
     ];
 
     const allGroups: TerraformPlanet["hotspotGroups"] = [
@@ -105,7 +105,7 @@ export default class TerraformPlanet extends PlanetBase {
         event: "ui:goToAtmosphere",
         baseA: 0.45,
         hoverA: 0.85,
-        colourHex: "#ffd84d",
+        colourHex: "#ff00ff",
         cells: atmosphereCells(),
         cellSet: new Set<string>()
       },
@@ -114,7 +114,7 @@ export default class TerraformPlanet extends PlanetBase {
         event: "ui:goToMagnetosphere",
         baseA: 0.45,
         hoverA: 0.85,
-        colourHex: "#9dff4d",
+        colourHex: "#ff0000",
         cells: magnetosphereCells,
         cellSet: new Set<string>()
       },
@@ -123,13 +123,12 @@ export default class TerraformPlanet extends PlanetBase {
         event: "ui:goToHydrosphere",
         baseA: 0.45,
         hoverA: 0.85,
-        colourHex: "#4dffff",
+        colourHex: "#9a4dff",
         cells: [
-          { row: 10, col: 15 }, { row: 11, col: 15 }, { row: 12, col: 15 }, { row: 13, col: 15 }, { row: 14, col: 15 }, { row: 15, col: 15 },
-          { row: 10, col: 16 }, { row: 11, col: 16 }, { row: 12, col: 16 }, { row: 13, col: 16 }, { row: 14, col: 16 }, { row: 15, col: 16 },
-          { row: 10, col: 17 }, { row: 11, col: 17 }, { row: 12, col: 17 }, { row: 13, col: 17 }, { row: 14, col: 17 }, { row: 15, col: 17 },
-          { row: 10, col: 18 }, { row: 11, col: 18 }, { row: 12, col: 18 }, { row: 13, col: 18 }, { row: 14, col: 18 }, { row: 15, col: 18 },
-          { row: 10, col: 19 }, { row: 11, col: 19 }, { row: 12, col: 19 }, { row: 13, col: 19 }, { row: 14, col: 19 }, { row: 15, col: 19 }
+          { row: 8, col: 10 }, { row: 9, col: 10 }, { row: 10, col: 10 }, { row: 11, col: 10 },
+          { row: 8, col: 11 }, { row: 9, col: 11 }, { row: 10, col: 11 }, { row: 11, col: 11 },
+          { row: 8, col: 12 }, { row: 9, col: 12 }, { row: 10, col: 12 }, { row: 11, col: 12 },
+          { row: 8, col: 13 }, { row: 9, col: 13 }, { row: 10, col: 13 }, { row: 11, col: 13 },          
         ],
         cellSet: new Set<string>()
       }
