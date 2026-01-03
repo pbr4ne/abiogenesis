@@ -57,7 +57,8 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
   ) {
     const isPurine = key === "A" || key === "G";
 
-    const tintA = Phaser.Math.Linear(0.04, 0.80, fill01);
+    const tintA = fill01 <= 0 ? 0 : Phaser.Math.Linear(0.04, 0.80, fill01);
+
     const baseA = 0.10;
 
     const blackW = 12;
