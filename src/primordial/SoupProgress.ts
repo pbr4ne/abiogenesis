@@ -14,6 +14,8 @@ const BASES: { key: BaseKey; rgb: RGB }[] = [
 ];
 
 export default class SoupProgress {
+  private clickedCellToken = new Map<string, number>();
+
   private fill: Record<BaseKey, number> = { A: 0, G: 0, T: 0, C: 0 };
 
   private helixBins: number[] = Array.from({ length: 120 }, () => 0);
@@ -195,5 +197,19 @@ export default class SoupProgress {
       T: this.fill.T,
       C: this.fill.C
     };
+  }
+
+  private keyOf(row: number, col: number) {
+    return `${row},${col}`;
+  }
+
+  public tryConsumeCellClick(row: number, col: number, token: number) {
+    const k = this.keyOf(row, col);
+    const last = this.clickedCellToken.get(k);
+
+    if (last === token) return false;
+
+    this.clickedCellToken.set(k, token);
+    return true;
   }
 }

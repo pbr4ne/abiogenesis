@@ -223,4 +223,16 @@ export default class CellLayerField {
     }
     return null;
   }
+
+  public getCellClickToken(row: number, col: number): number | null {
+    const cell = this.active.get(this.keyOf(row, col));
+    if (!cell || cell.layers.length === 0) return null;
+
+    let latest = -Infinity;
+    for (const layer of cell.layers) {
+      if (layer.startAt > latest) latest = layer.startAt;
+    }
+
+    return Number.isFinite(latest) ? latest : null;
+  }
 }

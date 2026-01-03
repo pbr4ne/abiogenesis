@@ -85,8 +85,12 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const cell = this.gridData.getCell(picked.row, picked.col);
 
     if (cell && cell.a > 0) {
-      this.progress.onClickColour({ r: cell.r, g: cell.g, b: cell.b });
-      this.rescheduleSpawner();
+      const token = this.field.getCellClickToken(picked.row, picked.col);
+
+      if (token !== null && this.progress.tryConsumeCellClick(picked.row, picked.col, token)) {
+        this.progress.onClickColour({ r: cell.r, g: cell.g, b: cell.b });
+        this.rescheduleSpawner();
+      }
     }
 
     if (!this.field.isClickableAt(picked.row, picked.col, now)) return;
