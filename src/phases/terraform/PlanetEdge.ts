@@ -32,7 +32,7 @@ export default class PlanetEdge extends Phaser.GameObjects.Container {
     const centerY = this.r * this.capRatio;
 
     drawBaseGradient(this.base, this.r, centerY);
-    drawAtmosphereGlow(this.glow, this.r, centerY);
+    drawAtmosphereGlow(this.glow, this.r, centerY, 1);
 
     scene.add.existing(this);
   }

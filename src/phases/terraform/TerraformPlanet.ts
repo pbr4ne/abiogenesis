@@ -3,6 +3,8 @@ import PlanetBase from "../../planet/PlanetBase";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
 import MagneticField from "./MagneticField";
 import TerraformingState from "./TerraformingState";
+import { drawAtmosphereGlow } from "../../planet/AtmosphereRenderer";
+import { log } from "../../utilities/GameUtils";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere";
 type Mask = Partial<Record<Key, boolean>>;
@@ -26,6 +28,7 @@ export default class TerraformPlanet extends PlanetBase {
   private hoveredGroupKey: Key | null = null;
 
   private magField?: MagneticField;
+  private atmosphereGlow?: Phaser.GameObjects.Graphics;
 
   constructor(
     scene: Phaser.Scene,
@@ -225,7 +228,9 @@ export default class TerraformPlanet extends PlanetBase {
     }
 
     if (k === "atmosphere") {
-      this.applyAtmosphere(this.progress.atmosphere01);
+      log("TerraformPlanet: applyEffect atmosphere");
+      //this.applyAtmosphere(this.progress.atmosphere01);
+      this.applyAtmosphere(5);
       return;
     }
 
@@ -245,6 +250,25 @@ export default class TerraformPlanet extends PlanetBase {
   }
 
   private applyAtmosphere(strength01: number) {
+    if (strength01 <= 0) {
+      this.atmosphereGlow?.clear();
+      return;
+    }
+
+    if (!this.atmosphereGlow) {
+      this.atmosphereGlow = this.scene.add.graphics();
+
+      this.add(this.atmosphereGlow);
+
+      this.atmosphereGlow.setBlendMode(Phaser.BlendModes.ADD);
+    }
+
+    drawAtmosphereGlow(
+      this.atmosphereGlow,
+      this.r,
+      0,
+      strength01
+    );
   }
 
   private applyMagnetosphere(strength01: number) {
