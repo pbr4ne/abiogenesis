@@ -244,11 +244,13 @@ export default class TerraformPlanet extends PlanetBase {
     }
 
     if (k === "magnetosphere") {
-      this.applyMagnetosphere(this.progress.magnetosphere01);
+      //this.applyMagnetosphere(this.progress.magnetosphere01);
+      this.applyMagnetosphere(5);
       return;
     }
 
-    this.applyHydrosphere(this.progress.waterLevel);
+    //this.applyHydrosphere(this.progress.waterLevel);
+    this.applyHydrosphere(5);
   }
 
   private disableEffect(k: Key) {

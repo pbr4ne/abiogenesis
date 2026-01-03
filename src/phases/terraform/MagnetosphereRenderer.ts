@@ -34,7 +34,6 @@ export default class MagnetosphereRenderer {
   private outerRadiusMul: number;
 
   private strength01 = 0;
-  private strengthOverride01: number | null;
 
   constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: MagnetosphereRendererConfig) {
     this.r = cfg.r;
@@ -49,8 +48,6 @@ export default class MagnetosphereRenderer {
     this.loopCenterOffsetMul = cfg.loopCenterOffsetMul;
     this.innerRadiusMul = cfg.innerRadiusMul;
     this.outerRadiusMul = cfg.outerRadiusMul;
-
-    this.strengthOverride01 = cfg.strengthOverride01 ?? null;
 
     this.g = scene.add.graphics();
     parent.add(this.g);
@@ -67,13 +64,8 @@ export default class MagnetosphereRenderer {
     this.draw();
   }
 
-  public setStrengthOverride01(v: number | null) {
-    this.strengthOverride01 = v === null ? null : Phaser.Math.Clamp(v, 0, 1);
-    this.draw();
-  }
-
   private draw() {
-    const strength = this.strengthOverride01 ?? this.strength01;
+    const strength = this.strength01;
 
     this.g.clear();
     if (strength <= 0.001) return;
