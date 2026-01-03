@@ -60,6 +60,21 @@ export default class TerraformPlanet extends PlanetBase {
         colourHex: "#9dff4d",
         cells: magnetosphereCells,
         cellSet: new Set<string>()
+      },
+      {
+        key: "hydrosphere",
+        event: "ui:goToHydrosphere",
+        baseA: 0.45,
+        hoverA: 0.85,
+        colourHex: "#4dffff",
+        cells: [
+          { row: 10, col: 15 }, { row: 11, col: 15 }, { row: 12, col: 15 }, { row: 13, col: 15 }, { row: 14, col: 15 }, { row: 15, col: 15 },
+          { row: 10, col: 16 }, { row: 11, col: 16 }, { row: 12, col: 16 }, { row: 13, col: 16 }, { row: 14, col: 16 }, { row: 15, col: 16 },
+          { row: 10, col: 17 }, { row: 11, col: 17 }, { row: 12, col: 17 }, { row: 13, col: 17 }, { row: 14, col: 17 }, { row: 15, col: 17 },
+          { row: 10, col: 18 }, { row: 11, col: 18 }, { row: 12, col: 18 }, { row: 13, col: 18 }, { row: 14, col: 18 }, { row: 15, col: 18 },
+          { row: 10, col: 19 }, { row: 11, col: 19 }, { row: 12, col: 19 }, { row: 13, col: 19 }, { row: 14, col: 19 }, { row: 15, col: 19 }
+        ],
+        cellSet: new Set<string>()
       }
     ];
 

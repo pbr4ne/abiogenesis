@@ -17,6 +17,21 @@
                 "key": "atmosphereDevice3"
             },
             {
+                "url": "assets/images/hydrosphereDevice1.png",
+                "type": "image",
+                "key": "hydrosphereDevice1"
+            },
+            {
+                "url": "assets/images/hydrosphereDevice2.png",
+                "type": "image",
+                "key": "hydrosphereDevice2"
+            },
+            {
+                "url": "assets/images/hydrosphereDevice3.png",
+                "type": "image",
+                "key": "hydrosphereDevice3"
+            },
+            {
                 "url": "assets/images/magnetosphereDevice1.png",
                 "type": "image",
                 "key": "magnetosphereDevice1"

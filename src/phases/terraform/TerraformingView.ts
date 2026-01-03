@@ -12,6 +12,9 @@ export type TerraformingViewConfig = {
   arcEndDeg: number;
   radiusOffset: number;
 
+  worldCenterLocalY?: number;
+  renderPlanetEdge?: boolean;
+
   buttonRowLocalY: number;
   backButtonLocalX: number;
   backButtonLocalY: number;
@@ -86,6 +89,9 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected debugForceFieldMax = true;
   protected behindWorld = new Phaser.GameObjects.Container(this.scene, 0, 0);
 
+  protected worldCenterLocalY: number;
+  protected renderPlanetEdge: boolean;
+
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: TerraformingViewConfig) {
     super(scene, x, y);
 
@@ -118,6 +124,9 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.flipWorldY = cfg.flipWorldY === true;
     this.onBackEvent = cfg.onBackEvent;
 
+    this.worldCenterLocalY = cfg.worldCenterLocalY ?? (this.r * this.offsetRatio);
+    this.renderPlanetEdge = cfg.renderPlanetEdge !== false;
+
     this.add(this.world);
     this.add(this.ui);
 
@@ -125,7 +134,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.magField = new MagneticField(scene, this.behindWorld, {
       r: this.r,
       centerX: 0,
-      centerY: this.r * this.offsetRatio,
+      centerY: this.worldCenterLocalY,
       lineAlpha: 0.18,
       lineWidth: 2,
       perSideLines: 5,
@@ -135,8 +144,11 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       strengthOverride01: 1
     });
 
-    this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.offsetRatio });
-    this.world.add(this.planetEdge);
+    if (this.renderPlanetEdge) {
+      this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.offsetRatio });
+      this.world.add(this.planetEdge);
+    }
+
 
     this.grid = scene.add.graphics();
     this.world.add(this.grid);
@@ -145,23 +157,19 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       this.world.setScale(1, -1);
     }
 
-    const centerY = this.r * this.offsetRatio;
+    const centerY = this.worldCenterLocalY;
 
-    this.magField = new MagneticField(scene, this.world, {
+    this.magField = new MagneticField(scene, this.behindWorld, {
       r: this.r,
       centerX: 0,
-      centerY,
-
+      centerY: this.worldCenterLocalY,
       lineAlpha: 0.18,
       lineWidth: 2,
-
       perSideLines: 5,
-
       loopCenterOffsetMul: 0.62,
       innerRadiusMul: 0.55,
       outerRadiusMul: 1.85,
-
-      strengthOverride01: this.debugForceFieldMax ? 1 : null
+      strengthOverride01: 1
     });
 
     this.drawGridLines();
@@ -195,9 +203,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   }
 
   protected drawGridLines() {
-    const centerY = this.r * this.offsetRatio;
-
-    this.grid.setPosition(0, centerY);
+    this.grid.setPosition(0, this.worldCenterLocalY);
 
     const rotate = makeRotator(0, 0);
 
@@ -561,12 +567,12 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
       const img = this.scene.add.image(x, y, key);
       let rotation = ang + Math.PI / 2;
-      if(this.flipWorldY) {
+      if (this.flipWorldY) {
         rotation = -rotation;
       }
       img.setRotation(rotation);
 
-      if(this.flipWorldY) {
+      if (this.flipWorldY) {
         img.setScale(1, -1);
       }
 
@@ -575,7 +581,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     }
   }
 
-  protected onPointsChanged() {}
+  protected onPointsChanged() { }
 
 
   protected updateDeviceButtonStates() {

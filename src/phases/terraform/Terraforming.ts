@@ -2,6 +2,7 @@ import Planet from "./TerraformPlanet";
 import Atmosphere from "./Atmosphere";
 import Magnetosphere from "./Magnetosphere";
 import PhaseScene from "../../scenes/PhaseScene";
+import Hydrosphere from "./Hydrosphere";
 
 export default class Terraforming extends PhaseScene {
   public planet!: Planet;
@@ -35,36 +36,53 @@ export default class Terraforming extends PhaseScene {
     this.add.existing(magnetosphere);
     this.bgCam.ignore(magnetosphere);
 
+    const hydrosphere = new Hydrosphere(this, 960, 540);
+    this.add.existing(hydrosphere);
+    this.bgCam.ignore(hydrosphere);
+
     atmosphere.setVisible(false);
     magnetosphere.setVisible(false);
+    hydrosphere.setVisible(false);
     this.planet.setVisible(true);
 
     const onGoToPlanet = () => {
       atmosphere.setVisible(false);
       magnetosphere.setVisible(false);
+      hydrosphere.setVisible(false);
       this.planet.setVisible(true);
     };
 
     const onGoToAtmosphere = () => {
       this.planet.setVisible(false);
       magnetosphere.setVisible(false);
+      hydrosphere.setVisible(false);
       atmosphere.setVisible(true);
     };
 
     const onGoToMagnetosphere = () => {
       this.planet.setVisible(false);
       atmosphere.setVisible(false);
+      hydrosphere.setVisible(false);
       magnetosphere.setVisible(true);
     };
+
+    const onGoToHydrosphere = () => {
+      this.planet.setVisible(false);
+      atmosphere.setVisible(false);
+      magnetosphere.setVisible(false);
+      hydrosphere.setVisible(true);
+    }
 
     this.events.on("ui:goToPlanet", onGoToPlanet);
     this.events.on("ui:goToAtmosphere", onGoToAtmosphere);
     this.events.on("ui:goToMagnetosphere", onGoToMagnetosphere);
+    this.events.on("ui:goToHydrosphere", onGoToHydrosphere);
 
     this.onShutdown(() => {
       this.events.off("ui:goToPlanet", onGoToPlanet);
       this.events.off("ui:goToAtmosphere", onGoToAtmosphere);
       this.events.off("ui:goToMagnetosphere", onGoToMagnetosphere);
+      this.events.off("ui:goToHydrosphere", onGoToHydrosphere);
     });
   }
 }
