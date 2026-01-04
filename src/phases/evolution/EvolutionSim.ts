@@ -175,9 +175,9 @@ export default class EvolutionSim {
         const to = mutations.get(lf.id);
         if (!to) continue;
         lf.type = to;
-        lf.mutationRate = 0;
-        lf.reproductionRate = 0;
-        lf.survivalRate = 0;
+        lf.mutationRate = 1;
+        lf.reproductionRate = 1;
+        lf.survivalRate = 1;
       }
     }
 
@@ -186,9 +186,9 @@ export default class EvolutionSim {
         this.run.lifeForms.push({
           id: this.run.makeLifeId(),
           type: b.type,
-          mutationRate: 0,
-          reproductionRate: 0,
-          survivalRate: 0,
+          mutationRate: 1,
+          reproductionRate: 1,
+          survivalRate: 1,
           row: b.row,
           col: b.col
         });

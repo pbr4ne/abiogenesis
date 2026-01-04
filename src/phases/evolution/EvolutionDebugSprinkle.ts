@@ -63,9 +63,9 @@ export const sprinkleLifeFormsDebug = (
       const lf: LifeFormInstance = {
         id: run.makeLifeId(),
         type,
-        mutationRate: 0,
-        reproductionRate: 0,
-        survivalRate: 0,
+        mutationRate: 1,
+        reproductionRate: 1,
+        survivalRate: 1,
         row: s.row,
         col: s.col
       };
