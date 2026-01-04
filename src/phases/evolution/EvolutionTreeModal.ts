@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { LifeFormDef, LifeFormInstance, LifeFormType } from "./EvolutionTypes";
 import { LIFEFORMS } from "./LifeForms";
+import { log } from "../../utilities/GameUtils";
 
 const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
 
@@ -10,7 +11,13 @@ type EdgeCfg = { from: LifeFormType; to: LifeFormType };
 type NodeObj = {
   cfg: NodeCfg;
   def: LifeFormDef;
-  bg: Phaser.GameObjects.Arc;
+
+  bgBase: Phaser.GameObjects.Arc;
+  bgProg: Phaser.GameObjects.Arc;
+
+  progMaskG: Phaser.GameObjects.Graphics;
+  progMask: Phaser.Display.Masks.GeometryMask;
+
   icon: Phaser.GameObjects.Image;
   ring: Phaser.GameObjects.Arc;
   countText: Phaser.GameObjects.Text;
@@ -180,7 +187,18 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       const def = LIFEFORMS[cfg.type];
       const tint = rgbToHex(def.colour.r, def.colour.g, def.colour.b);
 
-      const bg = this.scene.add.circle(cfg.x, cfg.y, cfg.size * 0.62, 0x0b0b0b, 1) as Phaser.GameObjects.Arc;
+      const radius = cfg.size * 0.62;
+
+      const bgBase = this.scene.add.circle(cfg.x, cfg.y, radius, 0x0b0b0b, 1) as Phaser.GameObjects.Arc;
+
+      const bgProg = this.scene.add.circle(cfg.x, cfg.y, radius, tint, 0) as Phaser.GameObjects.Arc;
+
+      const progMaskG = this.scene.add.graphics();
+      progMaskG.setPosition(cfg.x, cfg.y);
+      progMaskG.setVisible(false);
+
+      const progMask = new Phaser.Display.Masks.GeometryMask(this.scene, progMaskG);
+      bgProg.setMask(progMask);
 
       const icon = this.scene.add.image(cfg.x, cfg.y, def.type).setDisplaySize(cfg.size, cfg.size);
       icon.setTintFill(tint);
@@ -203,24 +221,25 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       this.basePos.set(cfg.type, { x: cfg.x, y: cfg.y });
 
       icon.setInteractive({ useHandCursor: true });
-      bg.setInteractive({ useHandCursor: true });
+      bgBase.setInteractive({ useHandCursor: true });
 
       icon.on("pointerover", () => this.emitTreeHoverAt(cfg.type));
-      bg.on("pointerover", () => this.emitTreeHoverAt(cfg.type));
+      bgBase.on("pointerover", () => this.emitTreeHoverAt(cfg.type));
 
       icon.on("pointerout", () => this.scene.events.emit("life:hoverAt", null));
-      bg.on("pointerout", () => this.scene.events.emit("life:hoverAt", null));
+      bgBase.on("pointerout", () => this.scene.events.emit("life:hoverAt", null));
 
-      const obj: NodeObj = { cfg, def, bg, icon, ring, countText, deathMark };
+      const obj: NodeObj = { cfg, def, bgBase, bgProg, progMaskG, progMask, icon, ring, countText, deathMark };
       this.nodes.set(cfg.type, obj);
 
-      bg.setDepth(0);
-      ring.setDepth(1);
-      icon.setDepth(2);
-      countText.setDepth(3);
-      deathMark.setDepth(4);
+      bgBase.setDepth(0);
+      bgProg.setDepth(1);
+      ring.setDepth(2);
+      icon.setDepth(3);
+      countText.setDepth(4);
+      deathMark.setDepth(5);
 
-      this.add([bg, ring, icon, countText, deathMark]);
+      this.add([bgBase, bgProg, ring, icon, countText, deathMark]);
     }
   }
 
@@ -263,14 +282,18 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       const isAlive = aliveCount > 0;
 
       const tint = rgbToHex(node.def.colour.r, node.def.colour.g, node.def.colour.b);
+      const score100 = this.score100ByType.get(type) ?? 0;
 
-      node.bg.setVisible(isUnlocked);
+      node.bgBase.setVisible(isUnlocked);
+      node.bgProg.setVisible(isUnlocked);
       node.ring.setVisible(isUnlocked);
       node.icon.setVisible(isUnlocked);
       node.countText.setVisible(false);
       node.deathMark.setVisible(isUnlocked);
 
       if (!isUnlocked) continue;
+
+      this.applyProgressFill(node, tint, score100, isAlive);
 
       if (isAlive) {
         node.icon.setTintFill(tint);
@@ -320,15 +343,27 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
   }
 
   private scoreByType100(lifeForms: LifeFormInstance[]) {
-    const m = new Map<LifeFormType, number>();
+    const PERFECT_LF_FOR_100 = 12;
+    const TARGET_POINTS = PERFECT_LF_FOR_100 * 15;
+
+    const sumByType = new Map<LifeFormType, number>();
+
     for (const lf of lifeForms) {
-      const add = (lf.mutationRate ?? 0) + (lf.reproductionRate ?? 0) + (lf.survivalRate ?? 0);
-      m.set(lf.type, (m.get(lf.type) ?? 0) + add);
+      const sum15 =
+        (lf.mutationRate ?? 0) +
+        (lf.reproductionRate ?? 0) +
+        (lf.survivalRate ?? 0);
+
+      sumByType.set(lf.type, (sumByType.get(lf.type) ?? 0) + sum15);
     }
-    for (const [k, v] of m) {
-      m.set(k, Phaser.Math.Clamp(Math.round(v), 0, 100));
+
+    const out = new Map<LifeFormType, number>();
+    for (const [type, total] of sumByType) {
+      const score100 = Phaser.Math.Clamp(Math.round((total / TARGET_POINTS) * 100), 0, 100);
+      out.set(type, score100);
     }
-    return m;
+
+    return out;
   }
 
   private centerVisibleSubtreeUnlocked(unlocked: Set<LifeFormType>) {
@@ -367,7 +402,10 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       node.cfg.x = x;
       node.cfg.y = y;
 
-      node.bg.setPosition(x, y);
+      node.bgBase.setPosition(x, y);
+      node.bgProg.setPosition(x, y);
+      node.progMaskG.setPosition(x, y);
+
       node.icon.setPosition(x, y);
       node.ring.setPosition(x, y);
       node.countText.setPosition(x, y + node.cfg.size * 0.62);
@@ -422,5 +460,30 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       this.g.closePath();
       this.g.fillPath();
     }
+  }
+
+  private applyProgressFill(node: NodeObj, tint: number, score100: number, isAlive: boolean) {
+    if (!isAlive) {
+      node.bgProg.setFillStyle(tint, 0);
+      node.progMaskG.clear();
+      return;
+    }
+
+    const p01 = Phaser.Math.Clamp(score100 / 100, 0, 1);
+
+    const maxA = 0.62;
+    const a = maxA * Math.pow(p01, 0.85);
+
+    node.bgProg.setFillStyle(tint, a);
+
+    const radius = node.cfg.size * 0.62;
+    const fullH = radius * 2;
+    const fillH = fullH * p01;
+
+    const topY = radius - fillH;
+
+    node.progMaskG.clear();
+    node.progMaskG.fillStyle(0xffffff, 1);
+    node.progMaskG.fillRect(-radius, topY, radius * 2, fillH);
   }
 }
