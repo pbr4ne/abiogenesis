@@ -51,7 +51,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     iconKey: "lf_mollusk",
     habitats: ["sea"],
     rarity: 1,
-    mutatesTo: ["fish", "octopus"],
+    mutatesTo: ["fish", "octopus", "insect"],
     colour: { r: 0, g: 227, b: 255 }
   },
 
