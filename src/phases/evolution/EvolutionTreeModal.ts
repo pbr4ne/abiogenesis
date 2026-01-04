@@ -35,7 +35,8 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
   private basePos = new Map<LifeFormType, { x: number; y: number }>();
 
   private lifeForms: LifeFormInstance[] = [];
-  private firstByType = new Map<LifeFormType, LifeFormInstance>();
+  private aliveCounts = new Map<LifeFormType, number>();
+  private score100ByType = new Map<LifeFormType, number>();
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -181,12 +182,6 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
 
       const bg = this.scene.add.circle(cfg.x, cfg.y, cfg.size * 0.62, 0x0b0b0b, 1) as Phaser.GameObjects.Arc;
 
-      const deathMark = this.scene.add.image(cfg.x, cfg.y, "death")
-        .setDisplaySize(cfg.size * 0.9, cfg.size * 0.9);
-      deathMark.setOrigin(0.5, 0.55);
-      deathMark.setTintFill(0xffffff);
-      deathMark.setAlpha(0);
-
       const icon = this.scene.add.image(cfg.x, cfg.y, def.type).setDisplaySize(cfg.size, cfg.size);
       icon.setTintFill(tint);
 
@@ -199,19 +194,32 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
         color: "#ffffff"
       }).setOrigin(0.5, 0.5);
 
+      const deathMark = this.scene.add.image(cfg.x, cfg.y, "death")
+        .setDisplaySize(cfg.size * 0.9, cfg.size * 0.9);
+      deathMark.setOrigin(0.5, 0.55);
+      deathMark.setTintFill(0xffffff);
+      deathMark.setAlpha(0);
+
       this.basePos.set(cfg.type, { x: cfg.x, y: cfg.y });
 
       icon.setInteractive({ useHandCursor: true });
+      bg.setInteractive({ useHandCursor: true });
+
       icon.on("pointerover", () => this.emitTreeHoverAt(cfg.type));
       bg.on("pointerover", () => this.emitTreeHoverAt(cfg.type));
 
-      bg.setInteractive({ useHandCursor: true });
       icon.on("pointerout", () => this.scene.events.emit("life:hoverAt", null));
       bg.on("pointerout", () => this.scene.events.emit("life:hoverAt", null));
 
-
       const obj: NodeObj = { cfg, def, bg, icon, ring, countText, deathMark };
       this.nodes.set(cfg.type, obj);
+
+      bg.setDepth(0);
+      ring.setDepth(1);
+      icon.setDepth(2);
+      countText.setDepth(3);
+      deathMark.setDepth(4);
+
       this.add([bg, ring, icon, countText, deathMark]);
     }
   }
@@ -223,36 +231,34 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       return;
     }
 
-    const lf = this.firstByType.get(type);
     const x = node.icon.x;
     const y = node.icon.y;
     const size = node.cfg.size;
 
-    if (!lf) {
-      this.scene.events.emit("life:hoverAt", { payload: { lf: null, def: node.def }, x, y, size, extinct: true });
-      return;
-    }
+    const aliveCount = this.aliveCounts.get(type) ?? 0;
+    const extinct = aliveCount <= 0;
 
-    this.scene.events.emit("life:hoverAt", { payload: { lf, def: node.def }, x, y, size });
+    const score100 = this.score100ByType.get(type) ?? 0;
+
+    this.scene.events.emit("life:hoverAt", {
+      payload: { lf: null, def: node.def, mode: "summary", score100, extinct },
+      x,
+      y,
+      size
+    });
   }
 
   public show(lifeForms: LifeFormInstance[]) {
     this.lifeForms = lifeForms;
 
-    this.firstByType.clear();
-    for (const lf of lifeForms) {
-      if (!this.firstByType.has(lf.type)) this.firstByType.set(lf.type, lf);
-    }
-
-    const counts = this.countByType(lifeForms);
+    this.aliveCounts = this.countByType(lifeForms);
+    this.score100ByType = this.scoreByType100(lifeForms);
 
     const run = this.scene.registry.get("run") as any;
-    const unlocked: Set<LifeFormType> =
-      run.unlockedLifeTypes ??
-      new Set<LifeFormType>(Array.from(counts.keys()));
+    const unlocked = this.resolveUnlocked(run?.unlockedLifeTypes, this.aliveCounts);
 
     for (const [type, node] of this.nodes) {
-      const aliveCount = counts.get(type) ?? 0;
+      const aliveCount = this.aliveCounts.get(type) ?? 0;
       const isUnlocked = unlocked.has(type);
       const isAlive = aliveCount > 0;
 
@@ -262,6 +268,7 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       node.ring.setVisible(isUnlocked);
       node.icon.setVisible(isUnlocked);
       node.countText.setVisible(false);
+      node.deathMark.setVisible(isUnlocked);
 
       if (!isUnlocked) continue;
 
@@ -289,6 +296,12 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     this.setVisible(true);
   }
 
+  private resolveUnlocked(val: unknown, counts: Map<LifeFormType, number>) {
+    if (val instanceof Set) return val as Set<LifeFormType>;
+    if (Array.isArray(val)) return new Set<LifeFormType>(val as LifeFormType[]);
+    return new Set<LifeFormType>(Array.from(counts.keys()));
+  }
+
   public hide() {
     this.scene.events.emit("life:hoverAt", null);
     this.setVisible(false);
@@ -302,6 +315,18 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     const m = new Map<LifeFormType, number>();
     for (const lf of lifeForms) {
       m.set(lf.type, (m.get(lf.type) ?? 0) + 1);
+    }
+    return m;
+  }
+
+  private scoreByType100(lifeForms: LifeFormInstance[]) {
+    const m = new Map<LifeFormType, number>();
+    for (const lf of lifeForms) {
+      const add = (lf.mutationRate ?? 0) + (lf.reproductionRate ?? 0) + (lf.survivalRate ?? 0);
+      m.set(lf.type, (m.get(lf.type) ?? 0) + add);
+    }
+    for (const [k, v] of m) {
+      m.set(k, Phaser.Math.Clamp(Math.round(v), 0, 100));
     }
     return m;
   }
@@ -343,10 +368,10 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       node.cfg.y = y;
 
       node.bg.setPosition(x, y);
-      node.deathMark.setPosition(x, y);
       node.icon.setPosition(x, y);
       node.ring.setPosition(x, y);
       node.countText.setPosition(x, y + node.cfg.size * 0.62);
+      node.deathMark.setPosition(x, y);
     }
   }
 
@@ -375,7 +400,7 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
         new Phaser.Math.Vector2(bx, by)
       );
 
-      this.g.lineStyle(6, tint, 0.35);
+      this.g.lineStyle(6, tint, 1);
       curve.draw(this.g);
 
       const pts = curve.getPoints(12);
@@ -389,7 +414,7 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       const left = dir.clone().rotate(Math.PI * 0.75).scale(10);
       const right = dir.clone().rotate(-Math.PI * 0.75).scale(10);
 
-      this.g.fillStyle(tint, 0.45);
+      this.g.fillStyle(tint, 1);
       this.g.beginPath();
       this.g.moveTo(px, py);
       this.g.lineTo(px + left.x, py + left.y);

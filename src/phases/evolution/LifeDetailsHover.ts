@@ -1,7 +1,10 @@
 import Phaser from "phaser";
 import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
 
-export type LifePayload = { lf: LifeFormInstance | null; def: LifeFormDef } | null;
+export type LifePayload =
+  | { lf: LifeFormInstance | null; def: LifeFormDef; mode?: "instance" | "summary"; score100?: number; extinct?: boolean }
+  | null;
+
 type StatKey = "mutation" | "reproduction" | "survival";
 
 type VBar = {
@@ -17,19 +20,22 @@ type VBar = {
   w: number;
 };
 
-
 const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
 
 export default class LifeDetailsHover extends Phaser.GameObjects.Container {
   private bg: Phaser.GameObjects.Rectangle;
   private icon: Phaser.GameObjects.Image;
+  private deathMark: Phaser.GameObjects.Image;
+
+  private intelRing: Phaser.GameObjects.Graphics;
+  private intelIcon: Phaser.GameObjects.Image;
+
   private bars: Record<StatKey, VBar>;
 
   private wi = 420;
   private h = 580;
 
   private dockPadRight = 96;
-  private deathMark: Phaser.GameObjects.Image;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -37,22 +43,29 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.setScrollFactor(0);
     this.setDepth(20001);
 
-    this.bg = scene.add.rectangle(0, 0, this.wi, this.h, 0x0b0b0b, 0.78);
+    this.bg = scene.add.rectangle(0, 0, this.wi, this.h, 0x0b0b0b, 0.98);
     this.bg.setStrokeStyle(3, 0xffffff, 0.25);
 
     const iconSize = 170;
-    this.icon = scene.add.image(0, -this.h / 2 + iconSize / 2 + 32, "prokaryote");
-    this.icon.setDisplaySize(iconSize, iconSize);
+    const iconY = -this.h / 2 + iconSize / 2 + 32;
 
-
-    this.deathMark = scene.add.image(0, -this.h / 2 + iconSize / 2 + 32, "death");
+    this.deathMark = scene.add.image(0, iconY, "death");
     this.deathMark.setOrigin(0.5, 0.55);
     this.deathMark.setDisplaySize(iconSize * 1.05, iconSize * 1.05);
     this.deathMark.setTintFill(0xffffff);
     this.deathMark.setAlpha(0);
 
-    this.icon = scene.add.image(0, -this.h / 2 + iconSize / 2 + 32, "prokaryote");
+    this.icon = scene.add.image(0, iconY, "prokaryote");
     this.icon.setDisplaySize(iconSize, iconSize);
+
+    const intelY = iconY + iconSize / 2 + 92;
+
+    this.intelRing = scene.add.graphics();
+    this.intelRing.setPosition(0, intelY);
+
+    this.intelIcon = scene.add.image(0, intelY, "intelligence");
+    this.intelIcon.setDisplaySize(64, 64);
+    this.intelIcon.setAlpha(0.9);
 
     const barAreaY = this.h / 2 - 240;
     const barH = 150;
@@ -70,7 +83,8 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
       this.bg,
       this.deathMark,
       this.icon,
-
+      this.intelRing,
+      this.intelIcon,
       ...this.flattenBars()
     ]);
 
@@ -123,6 +137,35 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.dockRight();
   }
 
+  private drawIntelRing(tint: number, p01: number, alpha: number) {
+    this.intelRing.clear();
+
+    const radius = 56;
+    const thick = 8;
+
+    this.intelRing.lineStyle(thick, tint, alpha * 0.18);
+    this.intelRing.beginPath();
+    this.intelRing.arc(0, 0, radius, 0, Math.PI * 2);
+    this.intelRing.strokePath();
+
+    const a0 = -Math.PI / 2;
+    const a1 = a0 + Math.PI * 2 * Phaser.Math.Clamp(p01, 0, 1);
+
+    this.intelRing.lineStyle(thick, tint, alpha);
+    this.intelRing.beginPath();
+    this.intelRing.arc(0, 0, radius, a0, a1);
+    this.intelRing.strokePath();
+  }
+
+  private setBarsVisible(visible: boolean) {
+    for (const b of Object.values(this.bars)) {
+      b.bg.setVisible(visible);
+      b.fill.setVisible(visible);
+      b.ticks.setVisible(visible);
+      b.icon.setVisible(visible);
+    }
+  }
+
   private render(payload: LifePayload) {
     if (!payload) {
       this.setVisible(false);
@@ -130,6 +173,7 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     }
 
     const { lf, def } = payload;
+    const mode = payload.mode ?? "instance";
     const tint = rgbToHex(def.colour.r, def.colour.g, def.colour.b);
 
     this.bg.setStrokeStyle(3, tint, 0.95);
@@ -137,9 +181,39 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.icon.setTexture(def.type);
     this.icon.setTintFill(tint);
 
+    if (mode === "summary") {
+      const extinct = payload.extinct === true;
+      const score100 = payload.score100 ?? 0;
+      const p01 = Phaser.Math.Clamp(score100 / 100, 0, 1);
+
+      this.setBarsVisible(false);
+      this.intelRing.setVisible(true);
+      this.intelIcon.setVisible(true);
+
+      this.intelIcon.setTintFill(tint);
+
+      if (extinct) {
+        this.deathMark.setAlpha(0.5);
+        this.icon.setAlpha(0.35);
+        this.drawIntelRing(tint, p01, 0.35);
+      } else {
+        this.deathMark.setAlpha(0);
+        this.icon.setAlpha(1);
+        this.drawIntelRing(tint, p01, 0.85);
+      }
+
+      this.setVisible(true);
+      return;
+    }
+
+    this.intelRing.setVisible(false);
+    this.intelIcon.setVisible(false);
+    this.setBarsVisible(true);
+
+    this.deathMark.setAlpha(0);
+
     if (!lf) {
-      this.deathMark.setAlpha(0.5);
-      this.icon.setAlpha(0.25);
+      this.icon.setAlpha(0.35);
 
       this.applyBar("mutation", 0, tint);
       this.applyBar("reproduction", 0, tint);
@@ -156,7 +230,6 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
       return;
     }
 
-    this.deathMark.setAlpha(0);
     this.icon.setAlpha(1);
     for (const b of Object.values(this.bars)) {
       b.bg.setAlpha(1);
