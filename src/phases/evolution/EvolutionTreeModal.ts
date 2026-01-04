@@ -10,6 +10,7 @@ type EdgeCfg = { from: LifeFormType; to: LifeFormType };
 type NodeObj = {
   cfg: NodeCfg;
   def: LifeFormDef;
+  bg: Phaser.GameObjects.Arc;
   icon: Phaser.GameObjects.Image;
   ring: Phaser.GameObjects.Arc;
   countText: Phaser.GameObjects.Text;
@@ -36,8 +37,8 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     this.backdrop = scene.add.rectangle(0, 0, sw, sh, 0x000000, 0.55).setOrigin(0, 0);
     this.backdrop.setInteractive();
 
-    const w = Math.min(1280, sw - 60);
-    const h = Math.min(780, sh - 60);
+    const w = Math.min(1700, sw - 40);
+    const h = Math.min(900, sh - 40);
 
     const cx = sw / 2;
     const cy = sh / 2;
@@ -77,11 +78,23 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
   }
 
   private buildLayout(panelW: number, panelH: number, cx: number, cy: number, pad: number) {
-    const left = cx - panelW / 2 + pad;
+    const left = cx - panelW / 2 + pad + 100;
     const top = cy - panelH / 2 + pad;
 
-    const col = (i: number) => left + i * 160;
-    const row = (i: number) => top + i * 120;
+    const cols = [
+      left + 0,
+      left + 180,
+      left + 360,
+      left + 590,
+      left + 780,
+      left + 950,
+      left + 1120,
+      left + 1290,
+      left + 1460
+    ];
+
+    const col = (i: number) => cols[i] ?? (left + i * 180);
+    const row = (i: number) => top + i * 150;
 
     const N: NodeCfg[] = [
       { type: "prokaryote", x: col(0), y: row(2), size: 86 },
@@ -154,6 +167,8 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       const def = LIFEFORMS[cfg.type];
       const tint = rgbToHex(def.colour.r, def.colour.g, def.colour.b);
 
+      const bg = this.scene.add.circle(cfg.x, cfg.y, cfg.size * 0.62, 0x0b0b0b, 1) as Phaser.GameObjects.Arc;
+
       const icon = this.scene.add.image(cfg.x, cfg.y, def.type).setDisplaySize(cfg.size, cfg.size);
       icon.setTintFill(tint);
 
@@ -166,9 +181,9 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
         color: "#ffffff"
       }).setOrigin(0.5, 0.5);
 
-      const obj: NodeObj = { cfg, def, icon, ring, countText };
+      const obj: NodeObj = { cfg, def, bg, icon, ring, countText };
       this.nodes.set(cfg.type, obj);
-      this.add([ring, icon, countText]);
+      this.add([bg, ring, icon, countText]);
     }
   }
 
@@ -186,7 +201,8 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       const visible = c > 0;
       node.icon.setVisible(visible);
       node.ring.setVisible(visible);
-      node.countText.setVisible(visible);
+      node.countText.setVisible(false);
+      node.bg.setVisible(visible);
     }
 
     this.redrawEdges(counts);
