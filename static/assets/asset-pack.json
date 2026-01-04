@@ -2,6 +2,26 @@
     "section1": {
         "files": [
             {
+                "url": "assets/images/algae.png",
+                "type": "image",
+                "key": "algae"
+            },
+            {
+                "url": "assets/images/alien.png",
+                "type": "image",
+                "key": "alien"
+            },
+            {
+                "url": "assets/images/amphibian.png",
+                "type": "image",
+                "key": "amphibian"
+            },
+            {
+                "url": "assets/images/ape.png",
+                "type": "image",
+                "key": "ape"
+            },
+            {
                 "url": "assets/images/atmosphereDevice1.png",
                 "type": "image",
                 "key": "atmosphereDevice1"
@@ -15,6 +35,56 @@
                 "url": "assets/images/atmosphereDevice3.png",
                 "type": "image",
                 "key": "atmosphereDevice3"
+            },
+            {
+                "url": "assets/images/bird.png",
+                "type": "image",
+                "key": "bird"
+            },
+            {
+                "url": "assets/images/cat.png",
+                "type": "image",
+                "key": "cat"
+            },
+            {
+                "url": "assets/images/crystal.png",
+                "type": "image",
+                "key": "crystal"
+            },
+            {
+                "url": "assets/images/dnosaur.png",
+                "type": "image",
+                "key": "dnosaur"
+            },
+            {
+                "url": "assets/images/eukaryote.png",
+                "type": "image",
+                "key": "eukaryote"
+            },
+            {
+                "url": "assets/images/evolution_tree.png",
+                "type": "image",
+                "key": "evolution_tree"
+            },
+            {
+                "url": "assets/images/fish.png",
+                "type": "image",
+                "key": "fish"
+            },
+            {
+                "url": "assets/images/flower.png",
+                "type": "image",
+                "key": "flower"
+            },
+            {
+                "url": "assets/images/fungi.png",
+                "type": "image",
+                "key": "fungi"
+            },
+            {
+                "url": "assets/images/human.png",
+                "type": "image",
+                "key": "human"
             },
             {
                 "url": "assets/images/hydrosphereDevice1.png",
@@ -32,6 +102,11 @@
                 "key": "hydrosphereDevice3"
             },
             {
+                "url": "assets/images/insect.png",
+                "type": "image",
+                "key": "insect"
+            },
+            {
                 "url": "assets/images/magnetosphereDevice1.png",
                 "type": "image",
                 "key": "magnetosphereDevice1"
@@ -47,9 +122,49 @@
                 "key": "magnetosphereDevice3"
             },
             {
+                "url": "assets/images/mollusk.png",
+                "type": "image",
+                "key": "mollusk"
+            },
+            {
+                "url": "assets/images/octopus.png",
+                "type": "image",
+                "key": "octopus"
+            },
+            {
                 "url": "assets/images/planet.png",
                 "type": "image",
                 "key": "planet"
+            },
+            {
+                "url": "assets/images/prokaryote.png",
+                "type": "image",
+                "key": "prokaryote"
+            },
+            {
+                "url": "assets/images/reptile.png",
+                "type": "image",
+                "key": "reptile"
+            },
+            {
+                "url": "assets/images/rodent.png",
+                "type": "image",
+                "key": "rodent"
+            },
+            {
+                "url": "assets/images/tree.png",
+                "type": "image",
+                "key": "tree"
+            },
+            {
+                "url": "assets/images/virus.png",
+                "type": "image",
+                "key": "virus"
+            },
+            {
+                "url": "assets/images/whale.png",
+                "type": "image",
+                "key": "whale"
             }
         ]
     },
