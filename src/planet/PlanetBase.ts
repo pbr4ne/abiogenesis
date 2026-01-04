@@ -54,7 +54,7 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.lastRevealAt = this.scene.time.now;
 
     this.behind = scene.add.container(0, 0);
-		this.add(this.behind);
+    this.add(this.behind);
 
     this.base = scene.add.graphics();
     this.tiles = scene.add.graphics();
