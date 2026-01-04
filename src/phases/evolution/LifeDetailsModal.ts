@@ -3,14 +3,33 @@ import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
 
 export type LifeHoverPayload = { lf: LifeFormInstance; def: LifeFormDef } | null;
 
+type StatKey = "mutation" | "reproduction" | "survival";
+
+type StatRow = {
+  left: Phaser.GameObjects.Image;
+  mid: Phaser.GameObjects.Image;
+  right: Phaser.GameObjects.Image;
+  barBg: Phaser.GameObjects.Rectangle;
+  barFill: Phaser.GameObjects.Rectangle;
+  ticks: Phaser.GameObjects.Graphics;
+  plus: Phaser.GameObjects.Image;
+  barW: number;
+  barX: number;
+  barH: number;
+};
+
+const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
+
 export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   private backdrop: Phaser.GameObjects.Rectangle;
   private panel: Phaser.GameObjects.Rectangle;
-  private title: Phaser.GameObjects.Text;
-  private text: Phaser.GameObjects.Text;
-  private icon: Phaser.GameObjects.Image;
   private closeHit: Phaser.GameObjects.Rectangle;
   private closeText: Phaser.GameObjects.Text;
+
+  private bigIcon: Phaser.GameObjects.Image;
+  private bigIconBorder: Phaser.GameObjects.Rectangle;
+
+  private rows: Record<StatKey, StatRow>;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -18,42 +37,24 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const sw = scene.scale.width;
     const sh = scene.scale.height;
 
-    this.backdrop = scene.add.rectangle(0, 0, sw, sh, 0x000000, 0.55);
-    this.backdrop.setOrigin(0, 0);
+    this.backdrop = scene.add.rectangle(0, 0, sw, sh, 0x000000, 0.55).setOrigin(0, 0);
     this.backdrop.setInteractive();
 
-    const w = Math.min(820, sw - 120);
-    const h = Math.min(560, sh - 120);
+    const w = Math.min(1180, sw - 60);
+    const h = Math.min(720, sh - 60);
 
-    const x = sw / 2;
-    const y = sh / 2;
+    const cx = sw / 2;
+    const cy = sh / 2;
 
-    this.panel = scene.add.rectangle(x, y, w, h, 0x0b0b0b, 0.96);
+    this.panel = scene.add.rectangle(cx, cy, w, h, 0x0b0b0b, 0.96);
     this.panel.setStrokeStyle(3, 0xffffff, 0.25);
 
-    const pad = 24;
-
-    this.title = scene.add.text(x - w / 2 + pad, y - h / 2 + pad, "", {
-      fontFamily: "Arial",
-      fontSize: "26px",
-      color: "#ffffff"
-    });
-
-    const iconSize = 96;
-    this.icon = scene.add.image(x - w / 2 + pad + iconSize / 2, y - h / 2 + pad + 56 + iconSize / 2, "prokaryote");
-    this.icon.setDisplaySize(iconSize, iconSize);
-
-    this.text = scene.add.text(x - w / 2 + pad, y - h / 2 + pad + 56 + iconSize + 16, "", {
-      fontFamily: "Arial",
-      fontSize: "20px",
-      color: "#ffffff",
-      wordWrap: { width: w - pad * 2 }
-    });
+    const pad = 28;
 
     const closeW = 44;
     const closeH = 36;
-    const closeX = x + w / 2 - pad - closeW / 2;
-    const closeY = y - h / 2 + pad + closeH / 2 - 4;
+    const closeX = cx + w / 2 - pad - closeW / 2;
+    const closeY = cy - h / 2 + pad + closeH / 2 - 4;
 
     this.closeHit = scene.add.rectangle(closeX, closeY, closeW, closeH, 0x000000, 0);
     this.closeHit.setInteractive({ useHandCursor: true });
@@ -62,15 +63,69 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       fontFamily: "Arial",
       fontSize: "26px",
       color: "#ffffff"
-    });
-    this.closeText.setOrigin(0.5, 0.5);
+    }).setOrigin(0.5, 0.5);
+
+    const leftColX = cx - w / 2 + pad;
+
+    const bigSize = 280;
+    const bigIconOffsetX = 64;
+
+    this.bigIcon = scene.add.image(
+      leftColX + bigSize / 2 + bigIconOffsetX,
+      cy,
+      "prokaryote"
+    );
+
+    this.bigIcon.setDisplaySize(bigSize, bigSize);
+
+    this.bigIconBorder = scene.add.rectangle(this.bigIcon.x, this.bigIcon.y, bigSize + 114, bigSize + 114, 0x000000, 0);
+    this.bigIconBorder.setStrokeStyle(3, 0xffffff, 0.25);
+
+    const rightPad = 34;
+    const rightColX = cx + w / 2 - rightPad - 660;
+
+    const rowH = 112;
+    const rowGap = 28;
+
+    const groupH = rowH * 3 + rowGap * 2;
+    const groupTopY = cy - groupH / 2;
+
+    this.rows = {
+      mutation: this.makeStatRow(scene, rightColX, groupTopY + 0 * (rowH + rowGap), rowH),
+      reproduction: this.makeStatRow(scene, rightColX, groupTopY + 1 * (rowH + rowGap), rowH),
+      survival: this.makeStatRow(scene, rightColX, groupTopY + 2 * (rowH + rowGap), rowH)
+    };
 
     this.add([
       this.backdrop,
       this.panel,
-      this.title,
-      this.icon,
-      this.text,
+      this.bigIconBorder,
+      this.bigIcon,
+
+      this.rows.mutation.left,
+      this.rows.mutation.mid,
+      this.rows.mutation.right,
+      this.rows.mutation.barBg,
+      this.rows.mutation.barFill,
+      this.rows.mutation.ticks,
+      this.rows.mutation.plus,
+
+      this.rows.reproduction.left,
+      this.rows.reproduction.mid,
+      this.rows.reproduction.right,
+      this.rows.reproduction.barBg,
+      this.rows.reproduction.barFill,
+      this.rows.reproduction.ticks,
+      this.rows.reproduction.plus,
+
+      this.rows.survival.left,
+      this.rows.survival.mid,
+      this.rows.survival.right,
+      this.rows.survival.barBg,
+      this.rows.survival.barFill,
+      this.rows.survival.ticks,
+      this.rows.survival.plus,
+
       this.closeHit,
       this.closeText
     ]);
@@ -85,40 +140,52 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
+  private makeStatRow(scene: Phaser.Scene, x: number, topY: number, rowH: number): StatRow {
+    const iconSize = 74;
+    const gap = 20;
+
+    const cy = topY + rowH / 2;
+
+    const left = scene.add.image(x + iconSize / 2, cy, "life_form").setDisplaySize(iconSize, iconSize);
+    const mid = scene.add.image(x + iconSize * 1.5 + gap, cy, "arrow").setDisplaySize(iconSize, iconSize);
+    const right = scene.add.image(x + iconSize * 2.5 + gap * 2, cy, "life_form_mutated").setDisplaySize(iconSize, iconSize);
+
+    let barX = x + iconSize * 3.5 + gap * 3 - 30;
+    const barW = 220;
+    const barH = 25;
+
+    const barBg = scene.add.rectangle(barX + barW / 2, cy, barW, barH, 0x1a1a1a, 1);
+    barBg.setStrokeStyle(2, 0xffffff, 0.2);
+
+
+    const barFill = scene.add.rectangle(barX + 2, cy, 0, barH - 4, 0xffffff, 1);
+    barFill.setOrigin(0, 0.5);
+
+    const ticks = scene.add.graphics();
+
+    const plusSize = 46;
+    const plus = scene.add.image(barX + barW + 24 + plusSize / 2, cy, "plus").setDisplaySize(plusSize, plusSize);
+    plus.setInteractive({ useHandCursor: true });
+
+    return { left, mid, right, barBg, barFill, ticks, plus, barW, barX, barH };
+  }
+
   public show(payload: LifeHoverPayload) {
     if (!payload) return;
 
     const { lf, def } = payload;
 
-    const tint =
-      (def.colour.r << 16) |
-      (def.colour.g << 8) |
-      def.colour.b;
+    const tint = rgbToHex(def.colour.r, def.colour.g, def.colour.b);
 
     this.panel.setStrokeStyle(3, tint, 0.9);
 
-    this.icon.setTexture(def.type);
-    this.icon.setTintFill(tint);
+    this.bigIcon.setTexture(def.type);
+    this.bigIcon.setTintFill(tint);
+    this.bigIconBorder.setStrokeStyle(3, tint, 0.9);
 
-    const habitats = def.habitats.join(", ");
-    const mutates = def.mutatesTo.length ? def.mutatesTo.join(", ") : "none";
-
-    this.title.setText(def.type.toUpperCase());
-
-    this.text.setText(
-      [
-        `Habitat: ${habitats}`,
-        `Rarity: ${def.rarity}`,
-        `Mutates to: ${mutates}`,
-        ``,
-        `Mutation: ${lf.mutationRate}/10`,
-        `Reproduction: ${lf.reproductionRate}/10`,
-        `Survival: ${lf.survivalRate}/10`,
-        ``,
-        `Cell: (${lf.row}, ${lf.col})`,
-        `ID: ${lf.id}`
-      ].join("\n")
-    );
+    this.applyRow("mutation", def, lf, tint);
+    this.applyRow("reproduction", def, lf, tint);
+    this.applyRow("survival", def, lf, tint);
 
     this.setVisible(true);
   }
@@ -129,5 +196,59 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
   public isOpen() {
     return this.visible;
+  }
+
+  private applyRow(key: StatKey, def: LifeFormDef, lf: LifeFormInstance, tint: number) {
+    const row = this.rows[key];
+
+    const v =
+      key === "mutation" ? lf.mutationRate :
+        key === "reproduction" ? lf.reproductionRate :
+          lf.survivalRate;
+
+    const p01 = Phaser.Math.Clamp(v / 10, 0, 1);
+
+    row.left.setTexture("life_form").setTintFill(tint);
+    row.plus.setTintFill(tint);
+
+    if (key === "mutation") {
+      row.mid.setTexture("arrow").setTintFill(tint);
+      row.right.setTexture("life_form_mutated").setTintFill(tint);
+    }
+
+    if (key === "reproduction") {
+      row.mid.setTexture("arrow").setTintFill(tint);
+      row.right.setTexture("life_form_reproduced").setTintFill(tint);
+    }
+
+    if (key === "survival") {
+      row.mid.setTexture("sword").setTintFill(tint);
+      row.right.setTexture("shield").setTintFill(tint);
+    }
+
+    const innerW = row.barW - 4;
+    row.barFill.width = Math.max(0, Math.floor(innerW * p01));
+    row.barFill.setFillStyle(tint, p01 > 0 ? 1 : 0);
+
+    row.ticks.clear();
+    row.ticks.lineStyle(4, tint, 0.35);
+
+    const y0 = row.barBg.y - row.barH / 2 + 2;
+    const y1 = row.barBg.y + row.barH / 2 - 2;
+
+    row.barBg.setStrokeStyle(4, tint, 0.9);
+
+    for (let i = 1; i < 10; i++) {
+      const x = (row.barX + 2) + (innerW * i) / 10;
+      row.ticks.beginPath();
+      row.ticks.moveTo(x, y0);
+      row.ticks.lineTo(x, y1);
+      row.ticks.strokePath();
+    }
+
+    row.plus.off("pointerdown");
+    row.plus.on("pointerdown", () => {
+      this.scene.events.emit("life:upgrade", { id: lf.id, stat: key });
+    });
   }
 }
