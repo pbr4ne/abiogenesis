@@ -1,6 +1,6 @@
 import PhaseScene from "../../scenes/PhaseScene";
 import Planet from "./EvolutionPlanet";
-import LifePanel from "./LifePanel";
+import LifePanel from "./LifeDetailsHover";
 import LifeDetailsModal from "./LifeDetailsModal";
 import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
 

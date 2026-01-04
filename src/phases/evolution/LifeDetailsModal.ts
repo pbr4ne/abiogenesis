@@ -31,6 +31,10 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
   private rows: Record<StatKey, StatRow>;
 
+  private current: LifeHoverPayload = null;
+  private static readonly STAT_MAX = 10;
+  private static readonly PLUS_SIZE = 50;
+
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
 
@@ -140,6 +144,30 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
+  private lightenHex(hex: number, amt01: number) {
+    const r = (hex >> 16) & 0xff;
+    const g = (hex >> 8) & 0xff;
+    const b = hex & 0xff;
+
+    const rr = Phaser.Math.Clamp(Math.round(r + (255 - r) * amt01), 0, 255);
+    const gg = Phaser.Math.Clamp(Math.round(g + (255 - g) * amt01), 0, 255);
+    const bb = Phaser.Math.Clamp(Math.round(b + (255 - b) * amt01), 0, 255);
+
+    return (rr << 16) | (gg << 8) | bb;
+  }
+
+  private getStat(lf: LifeFormInstance, key: StatKey) {
+    return key === "mutation" ? lf.mutationRate :
+      key === "reproduction" ? lf.reproductionRate :
+        lf.survivalRate;
+  }
+
+  private setStat(lf: LifeFormInstance, key: StatKey, v: number) {
+    if (key === "mutation") lf.mutationRate = v;
+    else if (key === "reproduction") lf.reproductionRate = v;
+    else lf.survivalRate = v;
+  }
+
   private makeStatRow(scene: Phaser.Scene, x: number, topY: number, rowH: number): StatRow {
     const iconSize = 74;
     const gap = 20;
@@ -163,8 +191,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     const ticks = scene.add.graphics();
 
-    const plusSize = 46;
-    const plus = scene.add.image(barX + barW + 24 + plusSize / 2, cy, "plus").setDisplaySize(plusSize, plusSize);
+    const plus = scene.add.image(barX + barW + 24 + LifeDetailsModal.PLUS_SIZE / 2, cy, "plus").setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
     plus.setInteractive({ useHandCursor: true });
 
     return { left, mid, right, barBg, barFill, ticks, plus, barW, barX, barH };
@@ -172,6 +199,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
   public show(payload: LifeHoverPayload) {
     if (!payload) return;
+
+    this.current = payload;
 
     const { lf, def } = payload;
 
@@ -191,6 +220,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   }
 
   public hide() {
+    this.current = null;
     this.setVisible(false);
   }
 
@@ -251,8 +281,48 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     }
 
     row.plus.off("pointerdown");
+    row.plus.off("pointerover");
+    row.plus.off("pointerout");
+
+    const canUpgrade = v < LifeDetailsModal.STAT_MAX;
+
+    row.plus.setAlpha(canUpgrade ? 0.9 : 0.25);
+    row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+
+    if (!canUpgrade) {
+      row.plus.disableInteractive();
+      return;
+    }
+
+    row.plus.setInteractive({ useHandCursor: true });
+
+    const basePlusTint = tint;
+    const hoverPlusTint = this.lightenHex(tint, 0.35);
+
+    row.plus.on("pointerover", () => {
+      row.plus.setTintFill(hoverPlusTint);
+      row.plus.setAlpha(1);
+      row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE * 1.1, LifeDetailsModal.PLUS_SIZE * 1.1);
+    });
+
+    row.plus.on("pointerout", () => {
+      row.plus.setTintFill(basePlusTint);
+      row.plus.setAlpha(0.9);
+      row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+    });
+
     row.plus.on("pointerdown", () => {
-      this.scene.events.emit("life:upgrade", { id: lf.id, stat: key });
+      const cur = this.current;
+      if (!cur) return;
+
+      const curV = this.getStat(cur.lf, key);
+      if (curV >= LifeDetailsModal.STAT_MAX) return;
+
+      this.setStat(cur.lf, key, curV + 1);
+
+      this.applyRow(key, cur.def, cur.lf, tint);
+
+      this.scene.events.emit("life:upgrade", { id: cur.lf.id, stat: key });
     });
   }
 }

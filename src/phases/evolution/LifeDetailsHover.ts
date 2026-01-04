@@ -6,14 +6,21 @@ type StatKey = "mutation" | "reproduction" | "survival";
 
 type VBar = {
   bg: Phaser.GameObjects.Rectangle;
-  fill: Phaser.GameObjects.Rectangle;
+  fill: Phaser.GameObjects.Graphics;
   ticks: Phaser.GameObjects.Graphics;
   icon: Phaser.GameObjects.Image;
+
+  topY: number;
+  botY: number;
+  innerH: number;
+  pad: number;
+  w: number;
 };
+
 
 const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
 
-export default class LifeHPanel extends Phaser.GameObjects.Container {
+export default class LifeDetailsHover extends Phaser.GameObjects.Container {
   private bg: Phaser.GameObjects.Rectangle;
   private icon: Phaser.GameObjects.Image;
   private bars: Record<StatKey, VBar>;
@@ -68,28 +75,27 @@ export default class LifeHPanel extends Phaser.GameObjects.Container {
       b.icon
     ]);
   }
+  private makeVBar(scene: Phaser.Scene, x: number, y: number, w: number, h: number, bottomIconKey: string): VBar {
+    const pad = 4;
 
-  private makeVBar(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    bottomIconKey: string
-  ): VBar {
     const bg = scene.add.rectangle(x, y, w, h, 0x1a1a1a, 1);
     bg.setStrokeStyle(3, 0xffffff, 0.18);
 
-    const fill = scene.add.rectangle(x, y + h / 2 - 3, w - 6, 0, 0xffffff, 1);
-    fill.setOrigin(0.5, 1);
+    const topY = y - h / 2 + pad;
+    const botY = y + h / 2 - pad;
+    const innerH = botY - topY;
+
+    const fill = scene.add.graphics();
+    fill.setPosition(0, 0);
 
     const ticks = scene.add.graphics();
+    ticks.setPosition(x, y);
 
     const iconSize = 64;
     const icon = scene.add.image(x, y + h / 2 + 56, bottomIconKey);
     icon.setDisplaySize(iconSize, iconSize);
 
-    return { bg, fill, ticks, icon };
+    return { bg, fill, ticks, icon, topY, botY, innerH, pad, w };
   }
 
   public setLife(payload: LifePayload) {
@@ -120,23 +126,33 @@ export default class LifeHPanel extends Phaser.GameObjects.Container {
     b.icon.setTintFill(tint);
 
     const p01 = Phaser.Math.Clamp(value / 10, 0, 1);
-    const innerH = (b.bg.height as number) - 8;
-    const fillH = Math.floor(innerH * p01);
+    const fillH = Math.floor(b.innerH * p01);
 
-    b.fill.height = fillH;
-    b.fill.setFillStyle(tint, p01 > 0 ? 1 : 0);
+    b.fill.clear();
+
+    if (fillH > 0) {
+      b.fill.fillStyle(tint, 1);
+
+      const x0 = (b.bg.x as number) - (b.w / 2) + b.pad;
+      const y0 = b.botY - fillH;
+      const ww = b.w - 2 * b.pad;
+      const hh = fillH;
+
+      b.fill.fillRect(x0, y0, ww, hh);
+    }
 
     b.ticks.clear();
     b.ticks.lineStyle(2, tint, 0.35);
 
-    const topY = (b.bg.y as number) - (b.bg.height as number) / 2 + 4;
-    const botY = (b.bg.y as number) + (b.bg.height as number) / 2 - 4;
+    const cx = b.bg.x as number;
+    const cy = b.bg.y as number;
 
-    const x0 = (b.bg.x as number) - (b.bg.width as number) / 2 + 2;
-    const x1 = (b.bg.x as number) + (b.bg.width as number) / 2 - 2;
+    const x0 = - (b.bg.width as number) / 2 + 2;
+    const x1 = + (b.bg.width as number) / 2 - 2;
 
     for (let i = 1; i < 10; i++) {
-      const y = botY - ((botY - topY) * i) / 10;
+      const yy = b.botY - (b.innerH * i) / 10;
+      const y = yy - cy;
       b.ticks.beginPath();
       b.ticks.moveTo(x0, y);
       b.ticks.lineTo(x1, y);
