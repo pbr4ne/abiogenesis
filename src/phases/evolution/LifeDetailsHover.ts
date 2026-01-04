@@ -37,11 +37,32 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
 
   private dockPadRight = 96;
 
+  private instanceScale = 1.0;
+  private currentScale = 1.0;
+
+  private baseWi = 420;
+  private baseH = 580;
+
+  private extinctWi = 420;
+  private extinctH = 430;
+
+  private iconSize = 170;
+
+  private intelIconSize = 84;
+  private intelYOffset = 80;
+
+  private summaryIntelRadius = 128;
+  private summaryIntelThick = 14;
+  private summaryIntelIconSize = 164;
+
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
 
     this.setScrollFactor(0);
     this.setDepth(20001);
+
+    this.wi = this.baseWi;
+    this.h = this.baseH;
 
     this.bg = scene.add.rectangle(0, 0, this.wi, this.h, 0x0b0b0b, 0.98);
     this.bg.setStrokeStyle(3, 0xffffff, 0.25);
@@ -58,7 +79,7 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.icon = scene.add.image(0, iconY, "prokaryote");
     this.icon.setDisplaySize(iconSize, iconSize);
 
-    const intelY = iconY + iconSize / 2 + 92;
+    const intelY = iconY + iconSize / 2 + 92 + this.intelYOffset;
 
     this.intelRing = scene.add.graphics();
     this.intelRing.setPosition(0, intelY);
@@ -134,14 +155,13 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
 
   public hide() {
     this.setVisible(false);
+    this.currentScale = this.instanceScale;
+    this.setScale(this.currentScale);
     this.dockRight();
   }
 
-  private drawIntelRing(tint: number, p01: number, alpha: number) {
+  private drawIntelRing(tint: number, p01: number, alpha: number, radius: number, thick: number) {
     this.intelRing.clear();
-
-    const radius = 56;
-    const thick = 8;
 
     this.intelRing.lineStyle(thick, tint, alpha * 0.18);
     this.intelRing.beginPath();
@@ -155,6 +175,34 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.intelRing.beginPath();
     this.intelRing.arc(0, 0, radius, a0, a1);
     this.intelRing.strokePath();
+  }
+
+  private applyLayout(mode: "instance" | "summary", extinct: boolean) {
+    const useExtinctLayout = mode === "summary" && extinct;
+
+    const wi = useExtinctLayout ? this.extinctWi : this.baseWi;
+    const h = useExtinctLayout ? this.extinctH : this.baseH;
+
+    this.wi = wi;
+    this.h = h;
+
+    this.bg.setSize(wi, h);
+
+    const iconY = -h / 2 + this.iconSize / 2 + 32;
+
+    if (useExtinctLayout) {
+      this.icon.setPosition(0, 0);
+      this.deathMark.setPosition(0, 0);
+    } else {
+      this.icon.setPosition(0, iconY);
+      this.deathMark.setPosition(0, iconY);
+    }
+
+    this.deathMark.setDisplaySize(this.iconSize * 1.05, this.iconSize * 1.05);
+
+    const intelY = iconY + this.iconSize / 2 + 92 + this.intelYOffset;
+    this.intelRing.setPosition(0, intelY);
+    this.intelIcon.setPosition(0, intelY);
   }
 
   private setBarsVisible(visible: boolean) {
@@ -174,6 +222,10 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
 
     const { lf, def } = payload;
     const mode = payload.mode ?? "instance";
+    const extinct = payload.extinct === true;
+
+    this.applyLayout(mode, extinct);
+
     const tint = rgbToHex(def.colour.r, def.colour.g, def.colour.b);
 
     this.bg.setStrokeStyle(3, tint, 0.95);
@@ -182,25 +234,32 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.icon.setTintFill(tint);
 
     if (mode === "summary") {
-      const extinct = payload.extinct === true;
+      this.setBarsVisible(false);
+
+      if (extinct) {
+        this.intelRing.setVisible(false);
+        this.intelIcon.setVisible(false);
+
+        this.deathMark.setAlpha(0.25);
+        this.icon.setAlpha(0.45);
+
+        this.setVisible(true);
+        return;
+      }
+
       const score100 = payload.score100 ?? 0;
       const p01 = Phaser.Math.Clamp(score100 / 100, 0, 1);
 
-      this.setBarsVisible(false);
       this.intelRing.setVisible(true);
       this.intelIcon.setVisible(true);
 
       this.intelIcon.setTintFill(tint);
+      this.intelIcon.setDisplaySize(this.summaryIntelIconSize, this.summaryIntelIconSize);
 
-      if (extinct) {
-        this.deathMark.setAlpha(0.5);
-        this.icon.setAlpha(0.35);
-        this.drawIntelRing(tint, p01, 0.35);
-      } else {
-        this.deathMark.setAlpha(0);
-        this.icon.setAlpha(1);
-        this.drawIntelRing(tint, p01, 0.85);
-      }
+      this.deathMark.setAlpha(0);
+      this.icon.setAlpha(1);
+
+      this.drawIntelRing(tint, p01, 0.9, this.summaryIntelRadius, this.summaryIntelThick);
 
       this.setVisible(true);
       return;
@@ -208,6 +267,8 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
 
     this.intelRing.setVisible(false);
     this.intelIcon.setVisible(false);
+    this.intelIcon.setDisplaySize(this.intelIconSize, this.intelIconSize);
+
     this.setBarsVisible(true);
 
     this.deathMark.setAlpha(0);
@@ -251,8 +312,8 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
       return;
     }
 
-    this.dockRight();
     this.render(payload);
+    this.dockRight();
   }
 
   public setLifeAt(payload: LifePayload, anchorX: number, anchorY: number, anchorSize = 70) {
@@ -260,6 +321,8 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
       this.setVisible(false);
       return;
     }
+
+    this.render(payload);
 
     const margin = 14;
     const offX = anchorSize * 0.75 + this.wi / 2 + margin;
@@ -276,7 +339,6 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     y = Phaser.Math.Clamp(y, margin + this.h / 2, sh - margin - this.h / 2);
 
     this.setPosition(x, y);
-    this.render(payload);
   }
 
   private applyBar(key: StatKey, value: number, tint: number) {
