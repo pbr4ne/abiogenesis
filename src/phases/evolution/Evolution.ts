@@ -7,6 +7,7 @@ import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
 import EvolutionTreeModal from "./EvolutionTreeModal";
 import EvolutionTreeButton from "./EvolutionTreeButton";
 import PlanetRunState from "../../planet/PlanetRunState";
+import EvolutionSim from "./EvolutionSim";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -15,6 +16,8 @@ export default class Evolution extends PhaseScene {
   private modal!: LifeDetailsModal;
   private evoModal!: EvolutionTreeModal;
   private evoBtn!: EvolutionTreeButton;
+  private sim!: EvolutionSim;
+  private simTimer?: Phaser.Time.TimerEvent;
 
   constructor() {
     super("Evolution");
@@ -26,6 +29,23 @@ export default class Evolution extends PhaseScene {
     this.bgCam.ignore(this.planet);
 
     this.run = this.registry.get("run") as PlanetRunState;
+
+    this.sim = new EvolutionSim(this.run, 40);
+
+    this.simTimer = this.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        this.sim.tick();
+        this.planet.refreshFromRun();
+        if (this.evoModal.isOpen()) this.evoModal.show(this.run.lifeForms);
+      }
+    });
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.simTimer?.remove(false);
+      this.simTimer = undefined;
+    });
 
     this.hoverPanel = new LifePanel(this);
     this.modal = new LifeDetailsModal(this);

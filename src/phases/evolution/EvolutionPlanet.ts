@@ -41,9 +41,9 @@ export default class EvolutionPlanet extends PlanetBase {
     this.renderLifeBumps();
     this.redrawTiles();
 
-  this.rebuildLifeIndex();
-  this.enableLifeHover();
-  this.enableLifeClick();
+    this.rebuildLifeIndex();
+    this.enableLifeHover();
+    this.enableLifeClick();
   }
 
   private keyOf(row: number, col: number) {
@@ -84,6 +84,13 @@ export default class EvolutionPlanet extends PlanetBase {
         this.emitHover(lf);
       }
     });
+  }
+
+  public refreshFromRun() {
+    paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
+    this.renderLifeForms();
+    this.redrawTiles();
+    this.rebuildLifeIndex();
   }
 
   public enableLifeClick() {
