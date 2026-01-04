@@ -7,6 +7,7 @@ import { drawCellBump } from "../../planet/PlanetRenderer";
 import { LifeFormInstance } from "./EvolutionTypes";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
 import { sprinkleLifeFormsDebug } from "./EvolutionDebugSprinkle";
+import DeathPoof from "./DeathPoof";
 
 const rgbToHexStr = (r: number, g: number, b: number) =>
   "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
@@ -16,10 +17,13 @@ export default class EvolutionPlanet extends PlanetBase {
 
   private lifeByCell = new Map<string, LifeFormInstance>();
   private hoveredLifeId: string | null = null;
+  private deathPoof: DeathPoof;
 
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
     this.run = scene.registry.get("run") as PlanetRunState;
+
+    this.deathPoof = new DeathPoof(scene, { peakPx: 50 });
 
     paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
 
@@ -87,10 +91,51 @@ export default class EvolutionPlanet extends PlanetBase {
   }
 
   public refreshFromRun() {
+    const prevByCell = new Map(this.lifeByCell);
+
     paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
     this.renderLifeForms();
     this.redrawTiles();
+
     this.rebuildLifeIndex();
+    this.playDeathPoofs(prevByCell);
+  }
+
+  private playDeathPoofs(prevByCell: Map<string, LifeFormInstance>) {
+    for (const [cellKey, lf] of prevByCell) {
+      if (!this.lifeByCell.has(cellKey)) {
+        this.spawnDeathPoof(lf.row, lf.col);
+      }
+    }
+  }
+
+  private cellCenterWorld(row: number, col: number) {
+    const v = (row + 0.5) / this.divisions;
+    const lat = (v - 0.5) * Math.PI;
+
+    const u = (col + 0.5) / this.divisions;
+    const lon = (u - 0.5) * Math.PI * 2;
+
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+
+    const x = Math.sin(lon) * cosLat;
+    const y = sinLat;
+    const z = Math.cos(lon) * cosLat;
+
+    const p = this.rotate(x, y, z);
+
+    return {
+      visible: p.z > 0,
+      x: this.x + p.x * this.r,
+      y: this.y + p.y * this.r
+    };
+  }
+
+  private spawnDeathPoof(row: number, col: number) {
+    const p = this.cellCenterWorld(row, col);
+    if (!p.visible) return;
+    this.deathPoof.playAt(p.x, p.y);
   }
 
   public enableLifeClick() {

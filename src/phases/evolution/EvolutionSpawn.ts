@@ -24,7 +24,7 @@ export const ensureStartingProkaryotes = (
 ) => {
   if (run.lifeForms.length > 0) return;
 
-  const spots = pickRandomWaterCells(divisions, isWaterCell, 3);
+  const spots = pickRandomWaterCells(divisions, isWaterCell, 10);
 
   for (const s of spots) {
     const lf: LifeFormInstance = {

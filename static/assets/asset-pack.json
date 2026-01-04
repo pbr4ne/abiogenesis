@@ -57,6 +57,11 @@
                 "key": "crystal"
             },
             {
+                "url": "assets/images/death.png",
+                "type": "image",
+                "key": "death"
+            },
+            {
                 "url": "assets/images/dnosaur.png",
                 "type": "image",
                 "key": "dinosaur"
