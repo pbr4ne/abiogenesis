@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
 
-export type LifePayload = { lf: LifeFormInstance; def: LifeFormDef } | null;
+export type LifePayload = { lf: LifeFormInstance | null; def: LifeFormDef } | null;
 type StatKey = "mutation" | "reproduction" | "survival";
 
 type VBar = {
@@ -29,6 +29,7 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
   private h = 580;
 
   private dockPadRight = 96;
+  private deathMark: Phaser.GameObjects.Image;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -40,6 +41,16 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.bg.setStrokeStyle(3, 0xffffff, 0.25);
 
     const iconSize = 170;
+    this.icon = scene.add.image(0, -this.h / 2 + iconSize / 2 + 32, "prokaryote");
+    this.icon.setDisplaySize(iconSize, iconSize);
+
+
+    this.deathMark = scene.add.image(0, -this.h / 2 + iconSize / 2 + 32, "death");
+    this.deathMark.setOrigin(0.5, 0.55);
+    this.deathMark.setDisplaySize(iconSize * 1.05, iconSize * 1.05);
+    this.deathMark.setTintFill(0xffffff);
+    this.deathMark.setAlpha(0);
+
     this.icon = scene.add.image(0, -this.h / 2 + iconSize / 2 + 32, "prokaryote");
     this.icon.setDisplaySize(iconSize, iconSize);
 
@@ -57,6 +68,7 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
 
     this.add([
       this.bg,
+      this.deathMark,
       this.icon,
 
       ...this.flattenBars()
@@ -124,6 +136,34 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
 
     this.icon.setTexture(def.type);
     this.icon.setTintFill(tint);
+
+    if (!lf) {
+      this.deathMark.setAlpha(0.5);
+      this.icon.setAlpha(0.25);
+
+      this.applyBar("mutation", 0, tint);
+      this.applyBar("reproduction", 0, tint);
+      this.applyBar("survival", 0, tint);
+
+      for (const b of Object.values(this.bars)) {
+        b.bg.setAlpha(0.35);
+        b.icon.setAlpha(0.35);
+        b.fill.setAlpha(0.25);
+        b.ticks.setAlpha(0.25);
+      }
+
+      this.setVisible(true);
+      return;
+    }
+
+    this.deathMark.setAlpha(0);
+    this.icon.setAlpha(1);
+    for (const b of Object.values(this.bars)) {
+      b.bg.setAlpha(1);
+      b.icon.setAlpha(1);
+      b.fill.setAlpha(1);
+      b.ticks.setAlpha(1);
+    }
 
     this.applyBar("mutation", lf.mutationRate, tint);
     this.applyBar("reproduction", lf.reproductionRate, tint);

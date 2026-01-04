@@ -194,6 +194,9 @@ export default class EvolutionSim {
         });
       }
     }
+
+    this.run.unlockedLifeTypes ??= new Set<LifeFormType>();
+    for (const lf of this.run.lifeForms) this.run.unlockedLifeTypes.add(lf.type);
   }
 
   public getTuning() {

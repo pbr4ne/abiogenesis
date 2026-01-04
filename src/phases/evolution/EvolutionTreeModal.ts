@@ -14,6 +14,7 @@ type NodeObj = {
   icon: Phaser.GameObjects.Image;
   ring: Phaser.GameObjects.Arc;
   countText: Phaser.GameObjects.Text;
+  deathMark: Phaser.GameObjects.Image;
 };
 
 export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
@@ -180,6 +181,12 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
 
       const bg = this.scene.add.circle(cfg.x, cfg.y, cfg.size * 0.62, 0x0b0b0b, 1) as Phaser.GameObjects.Arc;
 
+      const deathMark = this.scene.add.image(cfg.x, cfg.y, "death")
+        .setDisplaySize(cfg.size * 0.9, cfg.size * 0.9);
+      deathMark.setOrigin(0.5, 0.55);
+      deathMark.setTintFill(0xffffff);
+      deathMark.setAlpha(0);
+
       const icon = this.scene.add.image(cfg.x, cfg.y, def.type).setDisplaySize(cfg.size, cfg.size);
       icon.setTintFill(tint);
 
@@ -203,9 +210,9 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       bg.on("pointerout", () => this.scene.events.emit("life:hoverAt", null));
 
 
-      const obj: NodeObj = { cfg, def, bg, icon, ring, countText };
+      const obj: NodeObj = { cfg, def, bg, icon, ring, countText, deathMark };
       this.nodes.set(cfg.type, obj);
-      this.add([bg, ring, icon, countText]);
+      this.add([bg, ring, icon, countText, deathMark]);
     }
   }
 
@@ -217,14 +224,14 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     }
 
     const lf = this.firstByType.get(type);
-    if (!lf) {
-      this.scene.events.emit("life:hoverAt", null);
-      return;
-    }
-
     const x = node.icon.x;
     const y = node.icon.y;
     const size = node.cfg.size;
+
+    if (!lf) {
+      this.scene.events.emit("life:hoverAt", { payload: { lf: null, def: node.def }, x, y, size, extinct: true });
+      return;
+    }
 
     this.scene.events.emit("life:hoverAt", { payload: { lf, def: node.def }, x, y, size });
   }
@@ -239,22 +246,46 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
 
     const counts = this.countByType(lifeForms);
 
+    const run = this.scene.registry.get("run") as any;
+    const unlocked: Set<LifeFormType> =
+      run.unlockedLifeTypes ??
+      new Set<LifeFormType>(Array.from(counts.keys()));
+
     for (const [type, node] of this.nodes) {
-      const c = counts.get(type) ?? 0;
+      const aliveCount = counts.get(type) ?? 0;
+      const isUnlocked = unlocked.has(type);
+      const isAlive = aliveCount > 0;
 
       const tint = rgbToHex(node.def.colour.r, node.def.colour.g, node.def.colour.b);
-      node.icon.setTintFill(tint);
-      node.ring.setStrokeStyle(5, tint, 0.85);
 
-      const visible = c > 0;
-      node.icon.setVisible(visible);
-      node.ring.setVisible(visible);
+      node.bg.setVisible(isUnlocked);
+      node.ring.setVisible(isUnlocked);
+      node.icon.setVisible(isUnlocked);
       node.countText.setVisible(false);
-      node.bg.setVisible(visible);
+
+      if (!isUnlocked) continue;
+
+      if (isAlive) {
+        node.icon.setTintFill(tint);
+        node.icon.setAlpha(1);
+
+        node.ring.setStrokeStyle(5, tint, 0.85);
+        node.ring.setAlpha(1);
+
+        node.deathMark.setAlpha(0);
+      } else {
+        node.icon.setTintFill(tint);
+        node.icon.setAlpha(0.25);
+
+        node.ring.setStrokeStyle(5, tint, 0.35);
+        node.ring.setAlpha(1);
+
+        node.deathMark.setAlpha(0.5);
+      }
     }
 
-    this.centerVisibleSubtree(counts);
-    this.redrawEdges(counts);
+    this.centerVisibleSubtreeUnlocked(unlocked);
+    this.redrawEdgesUnlocked(unlocked);
     this.setVisible(true);
   }
 
@@ -275,12 +306,12 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     return m;
   }
 
-  private centerVisibleSubtree(counts: Map<LifeFormType, number>) {
+  private centerVisibleSubtreeUnlocked(unlocked: Set<LifeFormType>) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     let any = false;
 
     for (const [type, node] of this.nodes) {
-      if ((counts.get(type) ?? 0) <= 0) continue;
+      if (!unlocked.has(type)) continue;
 
       const base = this.basePos.get(type);
       if (!base) continue;
@@ -312,25 +343,22 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
       node.cfg.y = y;
 
       node.bg.setPosition(x, y);
+      node.deathMark.setPosition(x, y);
       node.icon.setPosition(x, y);
       node.ring.setPosition(x, y);
-
       node.countText.setPosition(x, y + node.cfg.size * 0.62);
     }
   }
 
-  private redrawEdges(counts: Map<LifeFormType, number>) {
+  private redrawEdgesUnlocked(unlocked: Set<LifeFormType>) {
     this.g.clear();
 
     for (const e of this.edges) {
+      if (!unlocked.has(e.from) || !unlocked.has(e.to)) continue;
+
       const from = this.nodes.get(e.from);
       const to = this.nodes.get(e.to);
       if (!from || !to) continue;
-
-      const fromC = counts.get(e.from) ?? 0;
-      const toC = counts.get(e.to) ?? 0;
-
-      if (fromC <= 0 || toC <= 0) continue;
 
       const tint = rgbToHex(to.def.colour.r, to.def.colour.g, to.def.colour.b);
 
@@ -347,23 +375,21 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
         new Phaser.Math.Vector2(bx, by)
       );
 
-      this.g.lineStyle(6, tint, 0.65);
+      this.g.lineStyle(6, tint, 0.35);
       curve.draw(this.g);
-
 
       const pts = curve.getPoints(12);
       const p0 = pts[pts.length - 2];
       const p1 = pts[pts.length - 1];
 
       const dir = new Phaser.Math.Vector2(p1.x - p0.x, p1.y - p0.y).normalize();
-
       const px = p1.x - dir.x * 10;
       const py = p1.y - dir.y * 10;
 
       const left = dir.clone().rotate(Math.PI * 0.75).scale(10);
       const right = dir.clone().rotate(-Math.PI * 0.75).scale(10);
 
-      this.g.fillStyle(tint, 0.85);
+      this.g.fillStyle(tint, 0.45);
       this.g.beginPath();
       this.g.moveTo(px, py);
       this.g.lineTo(px + left.x, py + left.y);
