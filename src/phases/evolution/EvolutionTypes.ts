@@ -35,7 +35,7 @@ export type LifeFormType =
   | "ape"
   | "human"
   | "alien"
-  | "squid"
+  | "octopus"
   | "insect"
   | "fungi"
   | "crystal"
