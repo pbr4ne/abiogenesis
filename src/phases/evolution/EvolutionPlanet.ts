@@ -6,6 +6,7 @@ import { LIFEFORMS } from "./LifeForms";
 import { drawCellBump } from "../../planet/PlanetRenderer";
 import { LifeFormInstance } from "./EvolutionTypes";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
+import { sprinkleLifeFormsDebug } from "./EvolutionDebugSprinkle";
 
 const rgbToHexStr = (r: number, g: number, b: number) =>
   "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
@@ -22,10 +23,18 @@ export default class EvolutionPlanet extends PlanetBase {
 
     paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
 
-    ensureStartingProkaryotes(
+    // ensureStartingProkaryotes(
+    //   this.run,
+    //   this.divisions,
+    //   (row, col) => this.run.hydroAlt[row][col] <= this.run.waterLevel
+    // );
+
+    sprinkleLifeFormsDebug(
       this.run,
       this.divisions,
-      (row, col) => this.run.hydroAlt[row][col] <= this.run.waterLevel
+      this.run.hydroAlt,
+      this.run.waterLevel,
+      5
     );
 
     this.renderLifeForms();
