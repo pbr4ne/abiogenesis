@@ -41,8 +41,9 @@ export default class EvolutionPlanet extends PlanetBase {
     this.renderLifeBumps();
     this.redrawTiles();
 
-    this.rebuildLifeIndex();
-    this.enableLifeHover();
+  this.rebuildLifeIndex();
+  this.enableLifeHover();
+  this.enableLifeClick();
   }
 
   private keyOf(row: number, col: number) {
@@ -82,6 +83,22 @@ export default class EvolutionPlanet extends PlanetBase {
         this.hoveredLifeId = lf.id;
         this.emitHover(lf);
       }
+    });
+  }
+
+  public enableLifeClick() {
+    this.onPlanetPointerDown(pointer => {
+      const dx = pointer.worldX - this.x;
+      const dy = pointer.worldY - this.y;
+
+      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+      if (!cell) return;
+
+      const lf = this.lifeByCell.get(`${cell.row},${cell.col}`);
+      if (!lf) return;
+
+      const def = LIFEFORMS[lf.type];
+      this.scene.events.emit("life:select", { lf, def });
     });
   }
 
