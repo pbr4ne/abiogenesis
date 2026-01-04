@@ -1,9 +1,9 @@
 import Phaser from "phaser";
-import { Rotator, projectLatLon, latForIndex, lonForIndex } from "./PlanetMath";
+import { Rotator, projectLatLon, latForIndex, lonForIndex, projectCellCorners } from "./PlanetMath";
 import type { RGBA } from "./PlanetGrid";
 
 export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number, centerY: number) => {
-    g.clear();
+  g.clear();
 
   const layers = 110;
   const inner = Phaser.Display.Color.ValueToColor(0x656057);
@@ -161,4 +161,96 @@ export const drawWireGrid = (
     }
     drawCurveFrontOnly(pts);
   }
+};
+
+const shadeHex = (hex: number, mul: number) => {
+  const r = Math.max(0, Math.min(255, Math.round(((hex >> 16) & 0xff) * mul)));
+  const g = Math.max(0, Math.min(255, Math.round(((hex >> 8) & 0xff) * mul)));
+  const b = Math.max(0, Math.min(255, Math.round((hex & 0xff) * mul)));
+  return (r << 16) | (g << 8) | b;
+};
+
+const fillQuad = (g: Phaser.GameObjects.Graphics, a: { x: number; y: number }, b: { x: number; y: number }, c: { x: number; y: number }, d: { x: number; y: number }) => {
+  g.beginPath();
+  g.moveTo(a.x, a.y);
+  g.lineTo(b.x, b.y);
+  g.lineTo(c.x, c.y);
+  g.lineTo(d.x, d.y);
+  g.closePath();
+  g.fillPath();
+};
+
+export const drawCellBump = (
+  g: Phaser.GameObjects.Graphics,
+  row: number,
+  col: number,
+  r: number,
+  divisions: number,
+  rotate: Rotator,
+  baseHex: number,
+  heightPx: number,
+  alpha = 1
+) => {
+  const base = projectCellCorners(row, col, r, divisions, rotate);
+  if (!base) return;
+
+  const latC = latForIndex(row, divisions) * 0.5 + latForIndex(row + 1, divisions) * 0.5;
+  const lonC = lonForIndex(col, divisions) * 0.5 + lonForIndex(col + 1, divisions) * 0.5;
+
+  const c = projectLatLon(1, latC, lonC, rotate);
+  if (c.z <= 0) return;
+
+  const cx = c.x * r;
+  const cy = c.y * r;
+
+  const nLen = Math.sqrt(cx * cx + cy * cy) || 1;
+  const nx = cx / nLen;
+  const ny = cy / nLen;
+
+  const offX = nx * heightPx;
+  const offY = ny * heightPx;
+
+  const top = base.map(p => ({ x: p.x + offX, y: p.y + offY }));
+
+  const topCol = shadeHex(baseHex, 1.10);
+  const sideDark = shadeHex(baseHex, 0.55);
+  const sideLight = shadeHex(baseHex, 0.80);
+
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) & 3;
+
+    const a = base[i];
+    const b = base[j];
+    const d = top[i];
+    const c2 = top[j];
+
+    const edgeNx = (a.x + b.x) * 0.5;
+    const edgeNy = (a.y + b.y) * 0.5;
+    const edgeLen = Math.sqrt(edgeNx * edgeNx + edgeNy * edgeNy) || 1;
+    const ex = edgeNx / edgeLen;
+    const ey = edgeNy / edgeLen;
+
+    const facing = ex * nx + ey * ny;
+    const sideCol = facing > 0 ? sideLight : sideDark;
+
+    g.fillStyle(sideCol, alpha);
+    fillQuad(g, a, b, c2, d);
+  }
+
+  g.fillStyle(topCol, alpha);
+  g.beginPath();
+  g.moveTo(top[0].x, top[0].y);
+  g.lineTo(top[1].x, top[1].y);
+  g.lineTo(top[2].x, top[2].y);
+  g.lineTo(top[3].x, top[3].y);
+  g.closePath();
+  g.fillPath();
+
+  g.beginPath();
+  g.moveTo(top[0].x, top[0].y);
+  g.lineTo(top[1].x, top[1].y);
+  g.lineTo(top[2].x, top[2].y);
+  g.lineTo(top[3].x, top[3].y);
+  g.closePath();
+  g.strokePath();
 };

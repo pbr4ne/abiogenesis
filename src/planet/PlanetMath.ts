@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+export type Vec2 = { x: number; y: number; };
 export type Vec3 = { x: number; y: number; z: number; };
 
 export type Rotator = (x: number, y: number, z: number) => Vec3;
@@ -92,4 +93,31 @@ export const pickCellByNearestProjectedCenter = (
   }
 
   return { row: bestRow, col: bestCol };
- }
+}
+
+export const projectCellCorners = (
+  row: number,
+  col: number,
+  r: number,
+  divisions: number,
+  rotate: Rotator
+): Vec2[] | null => {
+  const lat0 = latForIndex(row, divisions);
+  const lat1 = latForIndex(row + 1, divisions);
+  const lon0 = lonForIndex(col, divisions);
+  const lon1 = lonForIndex(col + 1, divisions);
+
+  const p00 = projectLatLon(1, lat0, lon0, rotate);
+  const p01 = projectLatLon(1, lat0, lon1, rotate);
+  const p11 = projectLatLon(1, lat1, lon1, rotate);
+  const p10 = projectLatLon(1, lat1, lon0, rotate);
+
+  if (p00.z <= 0 && p01.z <= 0 && p11.z <= 0 && p10.z <= 0) return null;
+
+  return [
+    { x: p00.x * r, y: p00.y * r },
+    { x: p01.x * r, y: p01.y * r },
+    { x: p11.x * r, y: p11.y * r },
+    { x: p10.x * r, y: p10.y * r }
+  ];
+};

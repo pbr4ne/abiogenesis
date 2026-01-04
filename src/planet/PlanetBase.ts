@@ -29,6 +29,7 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
   protected gridData: PlanetGrid;
 
   protected lastRevealAt: number;
+  protected lifeBumps!: Phaser.GameObjects.Graphics;
 
   private onUpdate = () => {
     const now = this.scene.time.now;
@@ -36,8 +37,8 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.lastRevealAt = now;
 
     drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
+    this.onAfterTilesRedraw();
   };
-
   constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}) {
     super(scene, x, y);
 
@@ -59,10 +60,12 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.base = scene.add.graphics();
     this.tiles = scene.add.graphics();
     this.grid = scene.add.graphics();
+    this.lifeBumps = scene.add.graphics();
 
     this.add(this.base);
-    this.add(this.tiles);
+    this.add(this.tiles);    
     this.add(this.grid);
+    this.add(this.lifeBumps);
 
     drawBaseGradient(this.base, this.r, 0);
     drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
@@ -87,6 +90,8 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
       this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.onUpdate);
     });
   }
+
+  protected onAfterTilesRedraw() { }
 
   public onPlanetPointerDown(cb: (pointer: Phaser.Input.Pointer) => void) {
     this.hitZone.on("pointerdown", cb);
