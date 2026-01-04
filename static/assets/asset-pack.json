@@ -22,6 +22,11 @@
                 "key": "ape"
             },
             {
+                "url": "assets/images/arrow.png",
+                "type": "image",
+                "key": "arrow"
+            },
+            {
                 "url": "assets/images/atmosphereDevice1.png",
                 "type": "image",
                 "key": "atmosphereDevice1"
@@ -107,6 +112,21 @@
                 "key": "insect"
             },
             {
+                "url": "assets/images/life_form.png",
+                "type": "image",
+                "key": "life_form"
+            },
+            {
+                "url": "assets/images/life_form_mutated.png",
+                "type": "image",
+                "key": "life_form_mutated"
+            },
+            {
+                "url": "assets/images/life_form_reproduced.png",
+                "type": "image",
+                "key": "life_form_reproduced"
+            },
+            {
                 "url": "assets/images/magnetosphereDevice1.png",
                 "type": "image",
                 "key": "magnetosphereDevice1"
@@ -137,6 +157,11 @@
                 "key": "planet"
             },
             {
+                "url": "assets/images/plus.png",
+                "type": "image",
+                "key": "plus"
+            },
+            {
                 "url": "assets/images/prokaryote.png",
                 "type": "image",
                 "key": "prokaryote"
@@ -150,6 +175,16 @@
                 "url": "assets/images/rodent.png",
                 "type": "image",
                 "key": "rodent"
+            },
+            {
+                "url": "assets/images/shield.png",
+                "type": "image",
+                "key": "shield"
+            },
+            {
+                "url": "assets/images/sword.png",
+                "type": "image",
+                "key": "sword"
             },
             {
                 "url": "assets/images/tree.png",
