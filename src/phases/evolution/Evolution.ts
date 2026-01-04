@@ -5,6 +5,9 @@ import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
 
 export default class Evolution extends PhaseScene {
   private planet!: Planet;
+  private infoBg!: Phaser.GameObjects.Rectangle;
+  private infoText!: Phaser.GameObjects.Text;
+  private infoIcon!: Phaser.GameObjects.Image;
 
   constructor() {
     super("Evolution");
@@ -19,18 +22,27 @@ export default class Evolution extends PhaseScene {
     this.listenForLifeHover();
   }
 
-  private infoBg!: Phaser.GameObjects.Rectangle;
-  private infoText!: Phaser.GameObjects.Text;
 
   private listenForLifeHover() {
     this.events.on("life:hover", (payload: { lf: LifeFormInstance; def: LifeFormDef } | null) => {
       if (!payload) {
         this.infoBg.setVisible(false);
+        this.infoIcon.setVisible(false);
         this.infoText.setVisible(false);
         return;
       }
 
       const { lf, def } = payload;
+
+      const tint =
+        (def.colour.r << 16) |
+        (def.colour.g << 8) |
+        def.colour.b;
+
+      this.infoIcon.setTexture(def.type);
+      this.infoIcon.setTintFill(tint);
+
+      this.infoBg.setStrokeStyle(2, tint, 0.9);
 
       const habitats = def.habitats.join(", ");
       const mutates = def.mutatesTo.length ? def.mutatesTo.join(", ") : "none";
@@ -45,13 +57,12 @@ export default class Evolution extends PhaseScene {
           ``,
           `Mutation: ${lf.mutationRate}/10`,
           `Reproduction: ${lf.reproductionRate}/10`,
-          `Survival: ${lf.survivalRate}/10`,
-          ``,
-          `Cell: (${lf.row}, ${lf.col})`
+          `Survival: ${lf.survivalRate}/10`
         ].join("\n")
       );
 
       this.infoBg.setVisible(true);
+      this.infoIcon.setVisible(true);
       this.infoText.setVisible(true);
     });
   }
@@ -68,7 +79,19 @@ export default class Evolution extends PhaseScene {
     this.infoBg.setStrokeStyle(2, 0xffffff, 0.2);
     this.infoBg.setScrollFactor(0);
 
-    this.infoText = this.add.text(x - w / 2 + pad, y - h / 2 + pad, "", {
+    const iconSize = 64;
+    const iconX = x - w / 2 + pad + iconSize / 2;
+    const iconY = y - h / 2 + pad + iconSize / 2;
+
+    this.infoIcon = this.add.image(iconX, iconY, "prokaryote");
+    this.infoIcon.setDisplaySize(iconSize, iconSize);
+    this.infoIcon.setScrollFactor(0);
+    this.infoIcon.setTint(0xd0d0d0);
+
+    const textX = x - w / 2 + pad;
+    const textY = y - h / 2 + pad + iconSize + 10;
+
+    this.infoText = this.add.text(textX, textY, "", {
       fontFamily: "Arial",
       fontSize: "18px",
       color: "#ffffff",
@@ -77,6 +100,7 @@ export default class Evolution extends PhaseScene {
     this.infoText.setScrollFactor(0);
 
     this.infoBg.setVisible(false);
+    this.infoIcon.setVisible(false);
     this.infoText.setVisible(false);
   }
 }
