@@ -212,18 +212,22 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     row.plus.setTintFill(tint);
 
     if (key === "mutation") {
+      row.left.setTexture("life_form").setTintFill(tint);
+      row.plus.setTintFill(tint);
       row.mid.setTexture("arrow").setTintFill(tint);
       row.right.setTexture("life_form_mutated").setTintFill(tint);
     }
 
     if (key === "reproduction") {
+      row.left.setTexture("life_form").setTintFill(tint);
       row.mid.setTexture("arrow").setTintFill(tint);
       row.right.setTexture("life_form_reproduced").setTintFill(tint);
     }
 
     if (key === "survival") {
-      row.mid.setTexture("sword").setTintFill(tint);
-      row.right.setTexture("shield").setTintFill(tint);
+      row.left.setTexture("life_form_heart").setTintFill(tint);
+      row.mid.setTexture("arrow").setTintFill(tint);
+      row.right.setTexture("life_form_hearts").setTintFill(tint);
     }
 
     const innerW = row.barW - 4;

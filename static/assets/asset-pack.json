@@ -117,6 +117,16 @@
                 "key": "life_form"
             },
             {
+                "url": "assets/images/life_form_heart.png",
+                "type": "image",
+                "key": "life_form_heart"
+            },
+            {
+                "url": "assets/images/life_form_hearts.png",
+                "type": "image",
+                "key": "life_form_hearts"
+            },
+            {
                 "url": "assets/images/life_form_mutated.png",
                 "type": "image",
                 "key": "life_form_mutated"
