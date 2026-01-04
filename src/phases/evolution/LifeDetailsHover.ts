@@ -25,26 +25,25 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
   private icon: Phaser.GameObjects.Image;
   private bars: Record<StatKey, VBar>;
 
+  private wi = 420;
+  private h = 580;
+
+  private dockPadRight = 96;
+
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
 
-    const w = 420;
-    const h = 580;
-
-    const x = scene.scale.width - w / 2 - 96;
-    const y = scene.scale.height / 2;
-
-    this.setPosition(x, y);
     this.setScrollFactor(0);
+    this.setDepth(20001);
 
-    this.bg = scene.add.rectangle(0, 0, w, h, 0x0b0b0b, 0.78);
+    this.bg = scene.add.rectangle(0, 0, this.wi, this.h, 0x0b0b0b, 0.78);
     this.bg.setStrokeStyle(3, 0xffffff, 0.25);
 
     const iconSize = 170;
-    this.icon = scene.add.image(0, -h / 2 + iconSize / 2 + 32, "prokaryote");
+    this.icon = scene.add.image(0, -this.h / 2 + iconSize / 2 + 32, "prokaryote");
     this.icon.setDisplaySize(iconSize, iconSize);
 
-    const barAreaY = h / 2 - 240;
+    const barAreaY = this.h / 2 - 240;
     const barH = 200;
 
     const barW = 26;
@@ -63,6 +62,8 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
       ...this.flattenBars()
     ]);
 
+    this.dockRight();
+
     this.setVisible(false);
     scene.add.existing(this);
   }
@@ -75,6 +76,13 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
       b.icon
     ]);
   }
+
+  private dockRight() {
+    const x = this.scene.scale.width - this.wi / 2 - this.dockPadRight;
+    const y = this.scene.scale.height / 2;
+    this.setPosition(x, y);
+  }
+
   private makeVBar(scene: Phaser.Scene, x: number, y: number, w: number, h: number, bottomIconKey: string): VBar {
     const pad = 4;
 
@@ -98,7 +106,12 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     return { bg, fill, ticks, icon, topY, botY, innerH, pad, w };
   }
 
-  public setLife(payload: LifePayload) {
+  public hide() {
+    this.setVisible(false);
+    this.dockRight();
+  }
+
+  private render(payload: LifePayload) {
     if (!payload) {
       this.setVisible(false);
       return;
@@ -117,6 +130,40 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.applyBar("survival", lf.survivalRate, tint);
 
     this.setVisible(true);
+  }
+
+  public setLife(payload: LifePayload) {
+    if (!payload) {
+      this.hide();
+      return;
+    }
+
+    this.dockRight();
+    this.render(payload);
+  }
+
+  public setLifeAt(payload: LifePayload, anchorX: number, anchorY: number, anchorSize = 70) {
+    if (!payload) {
+      this.setVisible(false);
+      return;
+    }
+
+    const margin = 14;
+    const offX = anchorSize * 0.75 + this.wi / 2 + margin;
+
+    const sw = this.scene.scale.width;
+    const sh = this.scene.scale.height;
+
+    let x = anchorX + offX;
+    let y = anchorY;
+
+    if (x + this.wi / 2 > sw - margin) x = anchorX - offX;
+    if (x - this.wi / 2 < margin) x = Phaser.Math.Clamp(x, margin + this.wi / 2, sw - margin - this.wi / 2);
+
+    y = Phaser.Math.Clamp(y, margin + this.h / 2, sh - margin - this.h / 2);
+
+    this.setPosition(x, y);
+    this.render(payload);
   }
 
   private applyBar(key: StatKey, value: number, tint: number) {
@@ -144,11 +191,10 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     b.ticks.clear();
     b.ticks.lineStyle(2, tint, 0.35);
 
-    const cx = b.bg.x as number;
     const cy = b.bg.y as number;
 
-    const x0 = - (b.bg.width as number) / 2 + 2;
-    const x1 = + (b.bg.width as number) / 2 - 2;
+    const x0 = -(b.bg.width as number) / 2 + 2;
+    const x1 = +(b.bg.width as number) / 2 - 2;
 
     for (let i = 1; i < 10; i++) {
       const yy = b.botY - (b.innerH * i) / 10;

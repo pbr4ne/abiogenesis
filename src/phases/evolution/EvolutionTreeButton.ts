@@ -13,16 +13,13 @@ export default class EvolutionTreeButton extends Phaser.GameObjects.Image {
     this.setDepth(9999);
     this.setInteractive({ useHandCursor: true });
 
-    this.setDisplaySize(62, 62);
+    //this.setDisplaySize(62, 62);
 
     this.on("pointerover", () => this.setScale(1.08));
     this.on("pointerout", () => this.setScale(1.0));
     this.on("pointerdown", () => onClick());
 
     scene.add.existing(this);
-
-    scene.scale.on("resize", () => {
-      this.setPosition(scene.scale.width - pad, pad);
-    });
+    
   }
 }

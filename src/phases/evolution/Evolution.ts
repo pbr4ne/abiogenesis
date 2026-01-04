@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import PhaseScene from "../../scenes/PhaseScene";
 import Planet from "./EvolutionPlanet";
 import LifePanel from "./LifeDetailsHover";
@@ -32,14 +33,31 @@ export default class Evolution extends PhaseScene {
     this.evoModal = new EvolutionTreeModal(this);
 
     this.evoBtn = new EvolutionTreeButton(this, () => {
-      if (this.evoModal.isOpen()) this.evoModal.hide();
-      else this.evoModal.show(this.run.lifeForms);
+      if (this.evoModal.isOpen()) {
+        this.evoModal.hide();
+        this.hoverPanel.hide();
+      } else {
+        this.evoModal.show(this.run.lifeForms);
+      }
     });
 
     this.add.existing(this.evoBtn);
 
-    this.events.on("life:hover", (payload: { lf: LifeFormInstance; def: LifeFormDef } | null) => {
-      if (!this.modal.isOpen()) this.hoverPanel.setLife(payload);
+    this.events.on(
+      "life:hoverAt",
+      (e: { payload: { lf: LifeFormInstance; def: LifeFormDef }; x: number; y: number; size: number } | null) => {
+        if (!e) {
+          this.hoverPanel.hide();
+          return;
+        }
+
+        this.hoverPanel.setLifeAt(e.payload, e.x, e.y, e.size);
+      }
+    );
+
+    this.events.on("life:hover", (p: { lf: LifeFormInstance; def: LifeFormDef } | null) => {
+      if (this.evoModal.isOpen()) return;
+      this.hoverPanel.setLife(p);
     });
 
     this.events.on("life:select", (payload: { lf: LifeFormInstance; def: LifeFormDef }) => {

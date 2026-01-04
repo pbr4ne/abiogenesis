@@ -23,19 +23,19 @@ export default class EvolutionPlanet extends PlanetBase {
 
     paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
 
-    // ensureStartingProkaryotes(
-    //   this.run,
-    //   this.divisions,
-    //   (row, col) => this.run.hydroAlt[row][col] <= this.run.waterLevel
-    // );
-
-    sprinkleLifeFormsDebug(
+    ensureStartingProkaryotes(
       this.run,
       this.divisions,
-      this.run.hydroAlt,
-      this.run.waterLevel,
-      5
+      (row, col) => this.run.hydroAlt[row][col] <= this.run.waterLevel
     );
+
+    // sprinkleLifeFormsDebug(
+    //   this.run,
+    //   this.divisions,
+    //   this.run.hydroAlt,
+    //   this.run.waterLevel,
+    //   5
+    // );
 
     this.renderLifeForms();
     this.renderLifeBumps();
