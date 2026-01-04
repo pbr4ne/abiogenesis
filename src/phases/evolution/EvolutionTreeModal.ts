@@ -68,18 +68,18 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
 
     const pad = 26;
 
-    const closeW = 44;
-    const closeH = 36;
+    const closeW = 68;
+    const closeH = 60;
     const closeX = cx + w / 2 - pad - closeW / 2;
-    const closeY = cy - h / 2 + pad + closeH / 2 - 4;
+    const closeY = cy - h / 2 + pad + closeH / 2 - 6;
 
     this.closeHit = scene.add.rectangle(closeX, closeY, closeW, closeH, 0x000000, 0);
     this.closeHit.setInteractive({ useHandCursor: true });
 
     this.closeText = scene.add.text(closeX, closeY, "✕", {
       fontFamily: "Arial",
-      fontSize: "26px",
-      color: "#ffffff"
+      fontSize: "44px",
+      color: "#ffd400"
     }).setOrigin(0.5, 0.5);
 
     this.g = scene.add.graphics();
@@ -91,6 +91,7 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     this.setVisible(false);
 
     this.backdrop.on("pointerdown", () => this.hide());
+
     this.closeHit.on("pointerdown", () => this.hide());
 
     this.buildLayout(w, h, cx, cy, pad);

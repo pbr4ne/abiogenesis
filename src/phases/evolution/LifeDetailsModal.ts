@@ -42,7 +42,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const sh = scene.scale.height;
 
     this.backdrop = scene.add.rectangle(0, 0, sw, sh, 0x000000, 0.55).setOrigin(0, 0);
-    this.backdrop.setInteractive();
+    this.backdrop.setInteractive({ useHandCursor: false });
+    this.backdrop.on("pointerover", () => this.scene.input.setDefaultCursor("default"));
 
     const w = Math.min(1180, sw - 60);
     const h = Math.min(720, sh - 60);
@@ -53,19 +54,23 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     this.panel = scene.add.rectangle(cx, cy, w, h, 0x0b0b0b, 0.96);
     this.panel.setStrokeStyle(3, 0xffffff, 0.25);
 
+    this.panel.setInteractive({ useHandCursor: false });
+    this.panel.on("pointerover", () => this.scene.input.setDefaultCursor("default"));
+    this.panel.on("pointerdown", (p: Phaser.Input.Pointer) => p.event.stopPropagation());
+
     const pad = 28;
 
-    const closeW = 44;
-    const closeH = 36;
+    const closeW = 68;
+    const closeH = 60;
     const closeX = cx + w / 2 - pad - closeW / 2;
-    const closeY = cy - h / 2 + pad + closeH / 2 - 4;
+    const closeY = cy - h / 2 + pad + closeH / 2 - 6;
 
     this.closeHit = scene.add.rectangle(closeX, closeY, closeW, closeH, 0x000000, 0);
     this.closeHit.setInteractive({ useHandCursor: true });
 
     this.closeText = scene.add.text(closeX, closeY, "✕", {
       fontFamily: "Arial",
-      fontSize: "26px",
+      fontSize: "44px",
       color: "#ffffff"
     }).setOrigin(0.5, 0.5);
 
@@ -138,8 +143,20 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     this.setDepth(10000);
     this.setVisible(false);
 
-    this.backdrop.on("pointerdown", () => this.hide());
-    this.closeHit.on("pointerdown", () => this.hide());
+    this.backdrop.on("pointerdown", (p: Phaser.Input.Pointer) => {
+      const left = cx - this.panel.width / 2;
+      const right = cx + this.panel.width / 2;
+      const top = cy - this.panel.height / 2;
+      const bot = cy + this.panel.height / 2;
+
+      const inside = p.x >= left && p.x <= right && p.y >= top && p.y <= bot;
+      if (!inside) this.hide();
+    });
+
+    this.closeHit.on("pointerdown", (p: Phaser.Input.Pointer) => {
+      p.event.stopPropagation();
+      this.hide();
+    });
 
     scene.add.existing(this);
   }
@@ -193,6 +210,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     const plus = scene.add.image(barX + barW + 24 + LifeDetailsModal.PLUS_SIZE / 2, cy, "plus").setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
     plus.setInteractive({ useHandCursor: true });
+    plus.on("pointerdown", (p: Phaser.Input.Pointer) => p.event.stopPropagation());
 
     return { left, mid, right, barBg, barFill, ticks, plus, barW, barX, barH };
   }
@@ -311,7 +329,9 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
     });
 
-    row.plus.on("pointerdown", () => {
+    row.plus.on("pointerdown", (p: Phaser.Input.Pointer) => {
+      p.event.stopPropagation();
+
       const cur = this.current;
       if (!cur) return;
 
