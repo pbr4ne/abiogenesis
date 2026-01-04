@@ -44,7 +44,7 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.icon.setDisplaySize(iconSize, iconSize);
 
     const barAreaY = this.h / 2 - 240;
-    const barH = 200;
+    const barH = 150;
 
     const barW = 26;
     const gap = 102;
@@ -172,7 +172,7 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     b.bg.setStrokeStyle(3, tint, 0.9);
     b.icon.setTintFill(tint);
 
-    const p01 = Phaser.Math.Clamp(value / 10, 0, 1);
+    const p01 = Phaser.Math.Clamp(value / 5, 0, 1);
     const fillH = Math.floor(b.innerH * p01);
 
     b.fill.clear();
@@ -196,8 +196,8 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     const x0 = -(b.bg.width as number) / 2 + 2;
     const x1 = +(b.bg.width as number) / 2 - 2;
 
-    for (let i = 1; i < 10; i++) {
-      const yy = b.botY - (b.innerH * i) / 10;
+    for (let i = 1; i < 5; i++) {
+      const yy = b.botY - (b.innerH * i) / 5;
       const y = yy - cy;
       b.ticks.beginPath();
       b.ticks.moveTo(x0, y);

@@ -32,7 +32,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   private rows: Record<StatKey, StatRow>;
 
   private current: LifeHoverPayload = null;
-  private static readonly STAT_MAX = 10;
+  private static readonly STAT_MAX = 5;
   private static readonly PLUS_SIZE = 50;
 
   constructor(scene: Phaser.Scene) {
@@ -236,7 +236,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
         key === "reproduction" ? lf.reproductionRate :
           lf.survivalRate;
 
-    const p01 = Phaser.Math.Clamp(v / 10, 0, 1);
+    const p01 = Phaser.Math.Clamp(v / 5, 0, 1);
 
     row.left.setTexture("life_form").setTintFill(tint);
     row.plus.setTintFill(tint);
@@ -272,8 +272,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     row.barBg.setStrokeStyle(4, tint, 0.9);
 
-    for (let i = 1; i < 10; i++) {
-      const x = (row.barX + 2) + (innerW * i) / 10;
+    for (let i = 1; i < 5; i++) {
+      const x = (row.barX + 2) + (innerW * i) / 5;
       row.ticks.beginPath();
       row.ticks.moveTo(x, y0);
       row.ticks.lineTo(x, y1);
