@@ -1,4 +1,4 @@
-import { LIFEFORM_COLOURS, LifeFormDef, LifeFormType } from "./EvolutionTypes";
+import { LifeFormDef, LifeFormType } from "./EvolutionTypes";
 
 export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
   prokaryote: {
@@ -7,7 +7,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea"],
     rarity: 1,
     mutatesTo: ["eukaryote", "virus"],
-    colour: LIFEFORM_COLOURS.red,
+    colour: { r: 255, g: 92, b: 92 }
   },
 
   eukaryote: {
@@ -16,7 +16,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea"],
     rarity: 1,
     mutatesTo: ["algae", "mollusk", "fungi"],
-    colour: LIFEFORM_COLOURS.red,
+    colour: { r: 255, g: 176, b: 77 }
   },
 
   algae: {
@@ -25,7 +25,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea"],
     rarity: 1,
     mutatesTo: ["tree", "flower"],
-    colour: LIFEFORM_COLOURS.green,
+    colour: { r: 56, g: 214, b: 140 }
   },
 
   tree: {
@@ -34,7 +34,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 2,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.green,
+    colour: { r: 40, g: 186, b: 72 }
   },
 
   flower: {
@@ -43,7 +43,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 2,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.green,
+    colour: { r: 255, g: 92, b: 209 }
   },
 
   mollusk: {
@@ -52,7 +52,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea"],
     rarity: 1,
     mutatesTo: ["fish", "squid"],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 0, g: 227, b: 255 }
   },
 
   fish: {
@@ -61,7 +61,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea"],
     rarity: 1,
     mutatesTo: ["amphibian"],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 64, g: 143, b: 255 }
   },
 
   amphibian: {
@@ -70,7 +70,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea", "land"],
     rarity: 2,
     mutatesTo: ["reptile"],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 168, g: 255, b: 76 }
   },
 
   reptile: {
@@ -79,7 +79,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 2,
     mutatesTo: ["dinosaur", "rodent"],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 255, g: 224, b: 60 }
   },
 
   dinosaur: {
@@ -88,7 +88,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 3,
     mutatesTo: ["bird"],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 255, g: 92, b: 40 }
   },
 
   bird: {
@@ -97,7 +97,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["air"],
     rarity: 2,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 176, g: 120, b: 255 }
   },
 
   rodent: {
@@ -106,7 +106,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 3,
     mutatesTo: ["cat", "whale", "ape"],
-    colour: LIFEFORM_COLOURS.orange,
+    colour: { r: 255, g: 151, b: 235 }
   },
 
   cat: {
@@ -115,7 +115,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 3,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.orange,
+    colour: { r: 255, g: 112, b: 176 }
   },
 
   whale: {
@@ -124,7 +124,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea"],
     rarity: 3,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.orange,
+    colour: { r: 0, g: 168, b: 255 }
   },
 
   ape: {
@@ -133,7 +133,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 3,
     mutatesTo: ["human", "alien"],
-    colour: LIFEFORM_COLOURS.orange,
+    colour: { r: 255, g: 168, b: 0 }
   },
 
   human: {
@@ -142,7 +142,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 4,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.orange,
+    colour: { r: 0, g: 255, b: 195 }
   },
 
   alien: {
@@ -151,7 +151,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 5,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.orange,
+    colour: { r: 154, g: 255, b: 0 }
   },
 
   squid: {
@@ -160,7 +160,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea"],
     rarity: 2,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 110, g: 92, b: 255 }
   },
 
   insect: {
@@ -169,7 +169,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land"],
     rarity: 1,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.yellow,
+    colour: { r: 255, g: 255, b: 0 }
   },
 
   fungi: {
@@ -178,7 +178,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land", "sea"],
     rarity: 2,
     mutatesTo: ["crystal"],
-    colour: LIFEFORM_COLOURS.purple,
+    colour: { r: 185, g: 60, b: 255 }
   },
 
   crystal: {
@@ -187,7 +187,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["land", "sea"],
     rarity: 4,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.purple,
+    colour: { r: 0, g: 255, b: 255 }
   },
 
   virus: {
@@ -196,6 +196,6 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     habitats: ["sea", "land", "air"],
     rarity: 2,
     mutatesTo: [],
-    colour: LIFEFORM_COLOURS.purple,
-  },
+    colour: { r: 255, g: 0, b: 120 }
+  }
 };
