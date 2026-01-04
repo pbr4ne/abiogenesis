@@ -8,7 +8,7 @@ export default class EvolutionTreeButton extends Phaser.GameObjects.Container {
   private base = 150;
   private hover = 155;
 
-  private iconDown = 8;
+  private iconDown = 0;
 
   constructor(scene: Phaser.Scene, onClick: () => void) {
     const pad = 18;
@@ -47,19 +47,20 @@ export default class EvolutionTreeButton extends Phaser.GameObjects.Container {
   }
 
   private applySize(size: number, hover: boolean) {
-    const plateR = (size + 18) / 2;
+    const plateR = (size + 18) / 2 + 20;
 
     this.bg.setRadius(plateR);
     this.ring.setRadius(plateR);
 
     this.bg.setFillStyle(0x0b0b0b, hover ? 0.82 : 0.70);
-    this.ring.setStrokeStyle(2, 0xffffff, hover ? 0.30 : 0.18);
+    this.ring.setStrokeStyle(2, hover ? 0xffffff : 0xd9acde, hover ? 0.30 : 0.18);
 
     this.img.setDisplaySize(size, size);
 
     this.bg.setPosition(-plateR, plateR);
     this.ring.setPosition(-plateR, plateR);
-    this.img.setPosition(-plateR, plateR + this.iconDown);
+    this.img.setPosition(-plateR - 10, plateR + this.iconDown);
+    this.img.setTintFill(hover ? 0xffffff : 0xaf39be);
 
     this.bg.setInteractive(
       new Phaser.Geom.Circle(this.bg.x, this.bg.y, plateR),
