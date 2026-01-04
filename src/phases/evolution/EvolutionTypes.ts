@@ -23,7 +23,7 @@ export type LifeFormType =
   | "algae"
   | "tree"
   | "flower"
-  | "snail"
+  | "mollusk"
   | "fish"
   | "amphibian"
   | "reptile"

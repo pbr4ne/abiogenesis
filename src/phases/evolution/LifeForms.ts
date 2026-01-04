@@ -15,7 +15,7 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     iconKey: "lf_eukaryote",
     habitats: ["sea"],
     rarity: 1,
-    mutatesTo: ["algae", "snail", "fungi"],
+    mutatesTo: ["algae", "mollusk", "fungi"],
     colour: LIFEFORM_COLOURS.red,
   },
 
@@ -46,9 +46,9 @@ export const LIFEFORMS: Record<LifeFormType, LifeFormDef> = {
     colour: LIFEFORM_COLOURS.green,
   },
 
-  snail: {
-    type: "snail",
-    iconKey: "lf_snail",
+  mollusk: {
+    type: "mollusk",
+    iconKey: "lf_mollusk",
     habitats: ["sea"],
     rarity: 1,
     mutatesTo: ["fish", "squid"],
