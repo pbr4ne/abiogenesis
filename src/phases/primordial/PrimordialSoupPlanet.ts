@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import PlanetBase, { PlanetBaseConfig } from "../../planet/PlanetBase";
+import PlanetBase from "../../planet/PlanetBase";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
 import CellLayerField from "./CellLayerField";
 import SoupSpawner from "./SoupSpawner";
@@ -8,12 +8,16 @@ import SoupProgress from "./SoupProgress";
 import { paintHydrosphere } from "../terraform/HydrosphereMap";
 import PlanetRunState from "../../planet/PlanetRunState";
 
+import PlanetGrid from "../../planet/PlanetGrid";
+
 export default class PrimordialSoupPlanet extends PlanetBase {
   private spawnEvent?: Phaser.Time.TimerEvent;
   private field: CellLayerField;
   private spawner: SoupSpawner;
   private progress = new SoupProgress();
   private run: PlanetRunState;
+  private soupData: PlanetGrid;
+  private terrainCells: ReturnType<PlanetGrid["getCellsRef"]>;
 
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
@@ -21,6 +25,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     this.run = scene.registry.get("run") as PlanetRunState;
     this.field = new CellLayerField(this.divisions);
     this.spawner = new SoupSpawner(this.divisions, this.r, this.rotate);
+
+    this.soupData = new PlanetGrid(this.divisions);
 
     this.onPlanetPointerDown(this.onPlanetDown);
     this.onPlanetPointerMove(this.onPlanetMove);
@@ -35,7 +41,10 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     });
 
     paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
-    this.redrawTiles();
+
+    this.terrainCells = this.cloneCells(this.gridData.getCellsRef());
+
+    this.redrawCompositeTiles();
   }
 
   public startSoup() {
@@ -70,8 +79,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.field.applyBloomFromSeed(pos.row, pos.col, now, stepBloom5x5, true);
     }
 
-    this.gridData.setCell(pos.row, pos.col, { r: rgb.r, g: rgb.g, b: rgb.b, a: 1 });
-    this.redrawTiles();
+    this.soupData.setCell(pos.row, pos.col, { r: rgb.r, g: rgb.g, b: rgb.b, a: 1 });
+    this.redrawCompositeTiles();
 
     const targetDelay = this.progress.spawnDelayMs();
     if (this.spawnEvent && this.spawnEvent.delay !== targetDelay) {
@@ -88,7 +97,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     const now = this.scene.time.now;
 
-    const cell = this.gridData.getCell(picked.row, picked.col);
+    const cell = this.soupData.getCell(picked.row, picked.col);
 
     if (cell && cell.a > 0) {
       const token = this.field.getCellClickToken(picked.row, picked.col);
@@ -104,10 +113,10 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true, true);
 
     const changed = this.field.tick(now, (row, col, rgba) => {
-      this.gridData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
+      this.soupData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
     });
 
-    if (changed) this.redrawTiles();
+    if (changed) this.redrawCompositeTiles();
   };
 
   private onPlanetMove = (pointer: Phaser.Input.Pointer) => {
@@ -121,7 +130,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     }
 
     const now = this.scene.time.now;
-    const cell = this.gridData.getCell(picked.row, picked.col);
+    const cell = this.soupData.getCell(picked.row, picked.col);
     if ((cell && cell.a > 0) || this.field.isClickableAt(picked.row, picked.col, now)) {
       this.scene.input.setDefaultCursor("pointer");
     } else {
@@ -133,18 +142,18 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const now = this.scene.time.now;
 
     const changed = this.field.tick(now, (row, col, rgba) => {
-      this.gridData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
+      this.soupData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
     });
 
     this.progress.computeHelixBinsFromGrid(() => this.iterVisibleGridColours());
 
-    if (changed) this.redrawTiles();
+    if (changed) this.redrawCompositeTiles();
   }
 
   private * iterVisibleGridColours() {
     for (let r = 0; r < this.divisions; r++) {
       for (let c = 0; c < this.divisions; c++) {
-        const cell = this.gridData.getCell(r, c);
+        const cell = this.soupData.getCell(r, c);
         if (!cell || cell.a <= 0) continue;
         yield { r: cell.r, g: cell.g, b: cell.b };
       }
@@ -153,5 +162,36 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
   public getProgress() {
     return this.progress;
+  }
+
+  private cloneCells(cells: ReturnType<PlanetGrid["getCellsRef"]>) {
+    return cells.map(row => row.map(c => ({ r: c.r, g: c.g, b: c.b, a: c.a })));
+  }
+
+  private redrawCompositeTiles() {
+    const base = this.terrainCells;
+    const soup = this.soupData.getCellsRef();
+
+    for (let r = 0; r < this.divisions; r++) {
+      for (let c = 0; c < this.divisions; c++) {
+        const t = base[r][c];
+        const s = soup[r][c];
+
+        const a = Phaser.Math.Clamp(s.a ?? 0, 0, 1);
+
+        if (a <= 0) {
+          this.gridData.setCell(r, c, { r: t.r, g: t.g, b: t.b, a: t.a });
+          continue;
+        }
+
+        const rr = Math.round(t.r * (1 - a) + s.r * a);
+        const gg = Math.round(t.g * (1 - a) + s.g * a);
+        const bb = Math.round(t.b * (1 - a) + s.b * a);
+
+        this.gridData.setCell(r, c, { r: rr, g: gg, b: bb, a: 1 });
+      }
+    }
+
+    this.redrawTiles();
   }
 }
