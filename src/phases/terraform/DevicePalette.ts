@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import type { DeviceButtonTheme } from "./TerraformingView";
 
 type DeviceButtonsCfg =
   | {
@@ -10,6 +11,7 @@ type DeviceButtonsCfg =
     costs: Record<0 | 1 | 2, number>;
     getPoints: () => number;
     onSelect: (device: 0 | 1 | 2) => void;
+    theme?: DeviceButtonTheme;
   }
   | {
     layout: "col";
@@ -21,7 +23,22 @@ type DeviceButtonsCfg =
     costs: Record<0 | 1 | 2, number>;
     getPoints: () => number;
     onSelect: (device: 0 | 1 | 2) => void;
+    theme?: DeviceButtonTheme;
   };
+
+const clamp255 = (n: number) => Math.max(0, Math.min(255, n));
+
+const lighten = (hex: number, mul: number) => {
+  const r = (hex >> 16) & 0xff;
+  const g = (hex >> 8) & 0xff;
+  const b = hex & 0xff;
+
+  const rr = clamp255(Math.round(r + (255 - r) * mul));
+  const gg = clamp255(Math.round(g + (255 - g) * mul));
+  const bb = clamp255(Math.round(b + (255 - b) * mul));
+
+  return (rr << 16) | (gg << 8) | bb;
+};
 
 export default class DeviceButtons {
   public readonly buttons = new Map<0 | 1 | 2, Phaser.GameObjects.Container>();
@@ -44,15 +61,17 @@ export default class DeviceButtons {
   private topY: number;
   private spacing: number;
 
+  private theme?: DeviceButtonTheme;
+
   constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: DeviceButtonsCfg) {
     this.scene = scene;
     this.parent = parent;
 
     this.radius = cfg.radius ?? 100;
-
     this.layout = cfg.layout ?? "row";
-
     this.radius = cfg.radius ?? 100;
+
+    this.theme = cfg.theme;
 
     if (cfg.layout === "col") {
       this.layout = "col";
@@ -122,7 +141,7 @@ export default class DeviceButtons {
     }
   }
 
-  private drawButtonGlow(g: Phaser.GameObjects.Graphics, radius: number, color = 0x9fd6ff) {
+  private drawButtonGlow(g: Phaser.GameObjects.Graphics, radius: number, color: number) {
     g.clear();
 
     const layers = 18;
@@ -142,22 +161,29 @@ export default class DeviceButtons {
   private makeCircleImageButton(localX: number, localY: number, radius: number, imageKey: string, deviceIndex: 0 | 1 | 2) {
     const btn = this.scene.add.container(localX, localY);
 
+    const strokeIdle = this.theme?.stroke?.[deviceIndex] ?? (this.theme?.idleStrokeFallback ?? 0x494949);
+    const glowCol = this.theme?.glow?.[deviceIndex] ?? 0x9fd6ff;
+    const bgFill = this.theme?.bgFill ?? 0x20202c;
+    const hoverMul = this.theme?.hoverStrokeMul ?? 0.40;
+    const strokeHover = lighten(strokeIdle, hoverMul);
+
     const bg = this.scene.add.graphics();
 
     const draw = (strokeColor: number) => {
       bg.clear();
-      bg.fillStyle(0x20202c, 1);
+      bg.fillStyle(bgFill, 1);
       bg.fillCircle(0, 0, radius);
       bg.lineStyle(6, strokeColor, 1);
       bg.strokeCircle(0, 0, radius);
     };
 
-    draw(0x494949);
+    draw(strokeIdle);
 
     const glow = this.scene.add.graphics();
-    this.drawButtonGlow(glow, radius);
+    this.drawButtonGlow(glow, radius, glowCol);
 
     const img = this.scene.add.image(0, 0, imageKey);
+    img.setTintFill(this.theme?.stroke?.[deviceIndex] ?? 0xffffff);
 
     const pad = 28;
     const max = radius * 2 - pad * 2;
@@ -171,13 +197,13 @@ export default class DeviceButtons {
     hit.on("pointerover", () => {
       if (!hit.input?.enabled) return;
       this.scene.input.setDefaultCursor("pointer");
-      draw(0xffd84d);
+      draw(strokeHover);
       btn.setScale(1.03);
     });
 
     hit.on("pointerout", () => {
       this.scene.input.setDefaultCursor("default");
-      draw(0x494949);
+      draw(strokeIdle);
       btn.setScale(1.0);
     });
 

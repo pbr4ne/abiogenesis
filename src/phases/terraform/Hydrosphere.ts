@@ -85,6 +85,12 @@ export default class Hydrosphere extends TerraformingView {
       deviceCosts: { 0: 5, 1: 20, 2: 100 },
       deviceRates: { 0: 1, 1: 5, 2: 10 },
 
+      deviceButtonTheme: {
+        stroke: [0xa8d5ba, 0x5fbf8a, 0x2ecc71],
+        glow: [0xd7efe1, 0x9ee4c4, 0x8af5c2],
+        hoverStrokeMul: 0.35
+      },
+
       onBackEvent: "ui:goToPlanet",
 
       slotCount: Hydrosphere.SLOT_COUNT

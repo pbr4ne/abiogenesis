@@ -36,6 +36,7 @@ export default class PlanetButton {
     const max = this.size - pad * 2;
     const scale = Math.min(max / img.width, max / img.height);
     img.setScale(scale);
+    img.setTintFill(0xd9acde);
 
     this.hit = scene.add.zone(0, 0, this.size, this.size).setOrigin(0.5, 0.5);
     this.hit.setInteractive(new Phaser.Geom.Rectangle(0, 0, this.size, this.size), Phaser.Geom.Rectangle.Contains);

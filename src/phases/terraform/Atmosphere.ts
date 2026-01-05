@@ -31,6 +31,12 @@ export default class Atmosphere extends TerraformingView {
       deviceCosts: { 0: 5, 1: 20, 2: 100 },
       deviceRates: { 0: 1, 1: 5, 2: 10 },
 
+      deviceButtonTheme: {
+        stroke: [0xf2b7d8, 0xf06fb4, 0xff2f9f],
+        glow: [0xf8d3e8, 0xf5a0cf, 0xff8fc9],
+        hoverStrokeMul: 0.35
+      },
+
       onBackEvent: "ui:goToPlanet"
     });
   }

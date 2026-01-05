@@ -9,6 +9,14 @@ import PlanetButton from "./PlanetButton";
 import DeviceButtons from "./DevicePalette";
 import DeviceSlots from "./DeviceSlots";
 
+export type DeviceButtonTheme = {
+  stroke: readonly [number, number, number];
+  glow: readonly [number, number, number];
+  bgFill?: number;
+  idleStrokeFallback?: number;
+  hoverStrokeMul?: number;
+};
+
 export type TerraformingViewConfig = {
   diameter: number;
   offsetRatio: number;
@@ -43,6 +51,8 @@ export type TerraformingViewConfig = {
   deviceCosts: Record<0 | 1 | 2, number>;
   deviceRates: Record<0 | 1 | 2, number>;
 
+  deviceButtonTheme?: DeviceButtonTheme;
+
   onBackEvent: string;
 };
 
@@ -72,6 +82,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected readonly deviceKeys: readonly [string, string, string];
   protected readonly deviceCosts: Record<0 | 1 | 2, number>;
   protected readonly deviceRates: Record<0 | 1 | 2, number>;
+
+  protected readonly deviceButtonTheme?: DeviceButtonTheme;
 
   protected pointsTimer?: Phaser.Time.TimerEvent;
 
@@ -118,6 +130,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.deviceKeys = cfg.deviceKeys;
     this.deviceCosts = cfg.deviceCosts;
     this.deviceRates = cfg.deviceRates;
+
+    this.deviceButtonTheme = cfg.deviceButtonTheme;
 
     this.buttonRowLocalY = cfg.buttonRowLocalY ?? (1080 - 240 - y);
     this.buttonLayout = cfg.buttonLayout ?? "row";
@@ -166,6 +180,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
       slotCount: this.atmoCount,
       deviceKeys: this.deviceKeys,
+      deviceColors: this.deviceButtonTheme?.stroke ?? [0xffffff, 0xffffff, 0xffffff],
 
       getSlots: () => this.deviceSlots,
       getSlotTransform: (i) => this.getSlotTransform(i),
@@ -185,7 +200,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
         imageKeys: this.deviceKeys,
         costs: this.deviceCosts,
         getPoints: () => this.points,
-        onSelect: (d: 0 | 1 | 2) => this.selectDevice(d)
+        onSelect: (d: 0 | 1 | 2) => this.selectDevice(d),
+        theme: this.deviceButtonTheme
       });
     } else {
       this.palette = new DeviceButtons(this.scene, this.ui, {
@@ -194,7 +210,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
         imageKeys: this.deviceKeys,
         costs: this.deviceCosts,
         getPoints: () => this.points,
-        onSelect: (d: 0 | 1 | 2) => this.selectDevice(d)
+        onSelect: (d: 0 | 1 | 2) => this.selectDevice(d),
+        theme: this.deviceButtonTheme
       });
     }
 

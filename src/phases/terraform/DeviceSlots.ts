@@ -13,6 +13,7 @@ type DeviceSlotsCfg = {
   slotCount: number;
 
   deviceKeys: readonly [string, string, string];
+  deviceColors: readonly [number, number, number];
 
   getSlots: () => (0 | 1 | 2 | null)[];
   getSlotTransform: (slotIndex: number) => SlotTransform;
@@ -40,6 +41,8 @@ export default class DeviceSlots {
 
   private getCellSize: () => number;
 
+  private deviceColors: readonly [number, number, number];
+
   constructor(cfg: DeviceSlotsCfg) {
     this.scene = cfg.scene;
     this.world = cfg.world;
@@ -47,6 +50,7 @@ export default class DeviceSlots {
     this.slotCount = cfg.slotCount;
 
     this.deviceKeys = cfg.deviceKeys;
+    this.deviceColors = cfg.deviceColors;
 
     this.getSlots = cfg.getSlots;
     this.getSlotTransform = cfg.getSlotTransform;
@@ -124,6 +128,9 @@ export default class DeviceSlots {
 
       const key = this.deviceKeys[slot];
       const img = this.scene.add.image(tr.x, tr.y, key);
+
+      const tint = this.deviceColors[slot];
+      img.setTintFill(tint);
 
       const cellSize = this.getCellSize();
       const targetSize = cellSize * 0.75;

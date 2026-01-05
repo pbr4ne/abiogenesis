@@ -35,11 +35,17 @@ export default class Magnetosphere extends TerraformingView {
       thermoW: 700,
       thermoH: 60,
       arcStartDeg: 140,
-      arcEndDeg: 220,            
+      arcEndDeg: 220,
 
       deviceKeys: ["magnetosphereDevice1", "magnetosphereDevice2", "magnetosphereDevice3"],
       deviceCosts: { 0: 5, 1: 20, 2: 100 },
       deviceRates: { 0: 1, 1: 5, 2: 10 },
+
+      deviceButtonTheme: {
+        stroke: [0x9fbcd6, 0x5fa8e8, 0x3aa0ff],
+        glow: [0xd6e6f3, 0xa6d4f5, 0x7ac6ff],
+        hoverStrokeMul: 0.35
+      },
 
       onBackEvent: "ui:goToPlanet"
     });
