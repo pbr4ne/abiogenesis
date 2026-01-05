@@ -34,6 +34,9 @@ export default class GalaxyMap extends PhaseScene {
 
     this.drawGalaxyBackground(w, h);
 
+    this.bgCam.ignore(this.bgG);
+    this.bgCam.ignore(this.planetG);
+
     const defs: PlanetDef[] = [
       { id: "p1", r: 22 },
       { id: "p2", r: 36 },
@@ -222,32 +225,35 @@ export default class GalaxyMap extends PhaseScene {
   private enablePlanetInput() {
     const hoverG = this.add.graphics();
     hoverG.setScrollFactor(0);
+    this.bgCam.ignore(hoverG);
 
     for (const p of this.planets) {
-      const zone = this.add.zone(p.x, p.y, p.def.r * 2.2, p.def.r * 2.2);
-      zone.setScrollFactor(0);
+      const hitCircle = this.add.circle(p.x, p.y, p.def.r, 0xffffff, 0.001);
+      hitCircle.setScrollFactor(0);
+      this.bgCam.ignore(hitCircle);
 
-      const hit = new Phaser.Geom.Circle(p.x, p.y, p.def.r);
-      zone.setInteractive(hit, Phaser.Geom.Circle.Contains);
+      hitCircle.setInteractive({ useHandCursor: true });
 
-      zone.on("pointerover", () => {
+      hitCircle.on(Phaser.Input.Events.POINTER_OVER, () => {
         hoverG.clear();
         hoverG.lineStyle(3, 0xffffff, 0.35);
         hoverG.strokeCircle(p.x, p.y, p.def.r + 6);
       });
 
-      zone.on("pointerout", () => {
+      hitCircle.on(Phaser.Input.Events.POINTER_OUT, () => {
         hoverG.clear();
       });
 
-      zone.on("pointerdown", () => {
+      hitCircle.on(Phaser.Input.Events.POINTER_DOWN, () => {
         log("Clicked planet: " + p.def.id);
+        this.scene.start("Terraforming");
       });
     }
 
-    this.scale.on("resize", () => hoverG.clear());
+    const onResize = () => hoverG.clear();
+    this.scale.on("resize", onResize);
+    this.onShutdown(() => this.scale.off("resize", onResize));
   }
-
 
   private strokeEllipseArc(
     g: Phaser.GameObjects.Graphics,
