@@ -66,7 +66,7 @@ export default class EvolutionPlanet extends PlanetBase {
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
 
-      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+      const cell = this.pickLifeCellForgiving(dx, dy);
       if (!cell) {
         this.setCursorDefault();
         this.emitHover(null);
@@ -139,12 +139,74 @@ export default class EvolutionPlanet extends PlanetBase {
     this.deathPoof.playAt(p.x, p.y);
   }
 
+  private cellCenterLocal(row: number, col: number) {
+    const v = (row + 0.5) / this.divisions;
+    const lat = (v - 0.5) * Math.PI;
+
+    const u = (col + 0.5) / this.divisions;
+    const lon = (u - 0.5) * Math.PI * 2;
+
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+
+    const x = Math.sin(lon) * cosLat;
+    const y = sinLat;
+    const z = Math.cos(lon) * cosLat;
+
+    const p = this.rotate(x, y, z);
+
+    return {
+      visible: p.z > 0,
+      z: p.z,
+      x: p.x * this.r,
+      y: p.y * this.r
+    };
+  }
+
+  private pickLifeCellForgiving(dx: number, dy: number) {
+    const base = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+    if (!base) return null;
+
+    const isClickable = (r: number, c: number) => this.lifeByCell.has(this.keyOf(r, c));
+
+    if (isClickable(base.row, base.col)) return base;
+
+    const slopPx = 22;
+    const searchR = 2;
+
+    let best: { row: number; col: number } | null = null;
+    let bestD2 = slopPx * slopPx;
+
+    for (let rr = base.row - searchR; rr <= base.row + searchR; rr++) {
+      if (rr < 0 || rr >= this.divisions) continue;
+
+      for (let cc = base.col - searchR; cc <= base.col + searchR; cc++) {
+        if (cc < 0 || cc >= this.divisions) continue;
+        if (!isClickable(rr, cc)) continue;
+
+        const p = this.cellCenterLocal(rr, cc);
+        if (!p.visible) continue;
+
+        const ddx = dx - p.x;
+        const ddy = dy - p.y;
+        const d2 = ddx * ddx + ddy * ddy;
+
+        if (d2 <= bestD2) {
+          bestD2 = d2;
+          best = { row: rr, col: cc };
+        }
+      }
+    }
+
+    return best ?? base;
+  }
+
   public enableLifeClick() {
     this.onPlanetPointerDown(pointer => {
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
 
-      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+      const cell = this.pickLifeCellForgiving(dx, dy);
       if (!cell) return;
 
       const lf = this.lifeByCell.get(`${cell.row},${cell.col}`);

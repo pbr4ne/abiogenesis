@@ -104,6 +104,75 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     return true;
   }
 
+  private cellCenterLocal(row: number, col: number) {
+    const v = (row + 0.5) / this.divisions;
+    const lat = (v - 0.5) * Math.PI;
+
+    const u = (col + 0.5) / this.divisions;
+    const lon = (u - 0.5) * Math.PI * 2;
+
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+
+    const x = Math.sin(lon) * cosLat;
+    const y = sinLat;
+    const z = Math.cos(lon) * cosLat;
+
+    const p = this.rotate(x, y, z);
+
+    return {
+      visible: p.z > 0,
+      z: p.z,
+      x: p.x * this.r,
+      y: p.y * this.r
+    };
+  }
+
+  private pickSoupCellForgiving(dx: number, dy: number, now: number) {
+    const base = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+    if (!base) return null;
+
+    const isClickable = (r: number, c: number) => {
+      if (!this.isWaterCell(r, c)) return false;
+
+      const cell = this.soupData.getCell(r, c);
+      if (cell && cell.a > 0) return true;
+
+      return this.field.isClickableAt(r, c, now);
+    };
+
+    if (isClickable(base.row, base.col)) return base;
+
+    const slopPx = 24;
+    const searchR = 2;
+
+    let best: { row: number; col: number } | null = null;
+    let bestD2 = slopPx * slopPx;
+
+    for (let rr = base.row - searchR; rr <= base.row + searchR; rr++) {
+      if (rr < 0 || rr >= this.divisions) continue;
+
+      for (let cc = base.col - searchR; cc <= base.col + searchR; cc++) {
+        if (cc < 0 || cc >= this.divisions) continue;
+        if (!isClickable(rr, cc)) continue;
+
+        const p = this.cellCenterLocal(rr, cc);
+        if (!p.visible) continue;
+
+        const ddx = dx - p.x;
+        const ddy = dy - p.y;
+        const d2 = ddx * ddx + ddy * ddy;
+
+        if (d2 <= bestD2) {
+          bestD2 = d2;
+          best = { row: rr, col: cc };
+        }
+      }
+    }
+
+    return best ?? base;
+  }
+
   private isAllowedSoupRow(row: number): boolean {
     return row >= 4;
   }
@@ -137,12 +206,12 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const dx = pointer.worldX - this.x;
     const dy = pointer.worldY - this.y;
 
-    const picked = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+    const now = this.scene.time.now;
+    const picked = this.pickSoupCellForgiving(dx, dy, now);
+
     if (!picked) return;
 
     if (!this.isWaterCell(picked.row, picked.col)) return;
-
-    const now = this.scene.time.now;
 
     const cell = this.soupData.getCell(picked.row, picked.col);
 
@@ -175,7 +244,9 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const dx = pointer.worldX - this.x;
     const dy = pointer.worldY - this.y;
 
-    const picked = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+    const now = this.scene.time.now;
+    const picked = this.pickSoupCellForgiving(dx, dy, now);
+
     if (!picked) {
       this.scene.input.setDefaultCursor("default");
       return;
@@ -186,7 +257,6 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       return;
     }
 
-    const now = this.scene.time.now;
     const cell = this.soupData.getCell(picked.row, picked.col);
 
     if ((cell && cell.a > 0) || this.field.isClickableAt(picked.row, picked.col, now)) {
