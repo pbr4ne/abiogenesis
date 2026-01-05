@@ -12,7 +12,7 @@ type TerraformingProgressCfg = {
 export default class TerraformingProgress {
   private bg: Phaser.GameObjects.Graphics;
   private fill: Phaser.GameObjects.Graphics;
-
+  private orientation: "vertical" | "horizontal";
   private x: number;
   private topY: number;
   private w: number;
@@ -22,6 +22,7 @@ export default class TerraformingProgress {
   private value = 0;
 
   constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: TerraformingProgressCfg) {
+    this.orientation = cfg.orientation;
     this.x = cfg.x;
     this.topY = cfg.topY;
     this.w = cfg.w;
@@ -74,14 +75,30 @@ export default class TerraformingProgress {
     const iw = w - inset * 2;
     const ih = h - inset * 2;
 
-    const fillH = Math.floor(ih * ratio);
-    const fillY = y + inset + (ih - fillH);
-
     this.fill.clear();
-    if (fillH <= 0) return;
+    if (ratio <= 0) return;
 
     this.fill.fillStyle(0xff0000, 0.85);
-    this.fill.fillRect(x - iw / 2, fillY, iw, fillH);
+
+    if (this.orientation === "horizontal") {
+      const fillW = Math.floor(iw * ratio);
+      this.fill.fillRect(
+        x - w / 2 + inset,
+        y + inset,
+        fillW,
+        ih
+      );
+    } else {
+      const fillH = Math.floor(ih * ratio);
+      const fillY = y + inset + (ih - fillH);
+
+      this.fill.fillRect(
+        x - iw / 2,
+        fillY,
+        iw,
+        fillH
+      );
+    }
   }
 
   public destroy() {
