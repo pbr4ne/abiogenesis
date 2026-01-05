@@ -38,7 +38,7 @@ export default class SoupProgress {
   }
 
   public computeHelixBinsFromGrid(getCells: () => Iterable<RGB>) {
-    this.setAllFill01(0.98);
+    //this.setAllFill01(0.98);
     const prev = this.helixBins.slice();
 
     this.helixBins.fill(0);
