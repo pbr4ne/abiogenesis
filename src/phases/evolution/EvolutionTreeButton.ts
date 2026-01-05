@@ -1,70 +1,71 @@
 import Phaser from "phaser";
 
 export default class EvolutionTreeButton extends Phaser.GameObjects.Container {
-  private bg: Phaser.GameObjects.Arc;
-  private ring: Phaser.GameObjects.Arc;
+  private bg: Phaser.GameObjects.Graphics;
   private img: Phaser.GameObjects.Image;
+  private hit: Phaser.GameObjects.Zone;
 
-  private base = 150;
-  private hover = 155;
-
-  private iconDown = 0;
+  private size = 120;
+  private half!: number;
 
   constructor(scene: Phaser.Scene, onClick: () => void) {
     const pad = 18;
-    const x = scene.scale.width - pad;
-    const y = pad;
+    const size = 120;
+    const half = size / 2;
+
+    const x = scene.scale.width - pad - half;
+    const y = pad + half;
 
     super(scene, x, y);
+
+    this.size = size;
+    this.half = half;
 
     this.setScrollFactor(0);
     this.setDepth(9999);
 
-    this.bg = scene.add.circle(0, 0, 1, 0x0b0b0b, 0.70) as Phaser.GameObjects.Arc;
-
-    this.ring = scene.add.circle(0, 0, 1, 0x000000, 0) as Phaser.GameObjects.Arc;
-    this.ring.setStrokeStyle(2, 0xffffff, 0.18);
+    this.bg = scene.add.graphics();
+    this.draw(0x494949);
 
     this.img = scene.add.image(0, 0, "evolution_tree");
-    this.img.setDisplaySize(this.base, this.base);
 
-    this.add([this.bg, this.ring, this.img]);
+    const innerPad = 16;
+    const max = this.size - innerPad * 2;
+    const scale = Math.min(max / this.img.width, max / this.img.height);
+    this.img.setScale(scale);
+    this.img.setTintFill(0xd9acde);
 
-    this.applySize(this.base, false);
+    this.img.y += 2;
 
-    const onOver = () => this.applySize(this.hover, true);
-    const onOut = () => this.applySize(this.base, false);
-    const onDown = () => onClick();
+    this.hit = scene.add.zone(0, 0, this.size, this.size).setOrigin(0.5, 0.5);
+    this.hit.setInteractive({ useHandCursor: true });
 
-    this.bg.on("pointerover", onOver);
-    this.bg.on("pointerout", onOut);
-    this.bg.on("pointerdown", onDown);
+    this.hit.on("pointerover", () => {
+      this.scene.input.setDefaultCursor("pointer");
+      this.draw(0xffd84d);
+      this.setScale(1.03);
+    });
 
-    this.img.setInteractive({ useHandCursor: true });
-    this.img.on("pointerover", onOver);
-    this.img.on("pointerout", onOut);
-    this.img.on("pointerdown", onDown);
+    this.hit.on("pointerout", () => {
+      this.scene.input.setDefaultCursor("default");
+      this.draw(0x494949);
+      this.setScale(1.0);
+    });
+
+    this.hit.on("pointerdown", () => onClick());
+
+    this.add([this.bg, this.img, this.hit]);
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      if (this.scene) this.scene.input.setDefaultCursor("default");
+    });
   }
 
-  private applySize(size: number, hover: boolean) {
-    const plateR = (size + 18) / 2 + 20;
-
-    this.bg.setRadius(plateR);
-    this.ring.setRadius(plateR);
-
-    this.bg.setFillStyle(0x0b0b0b, hover ? 0.82 : 0.70);
-    this.ring.setStrokeStyle(2, hover ? 0xffffff : 0xd9acde, hover ? 0.30 : 0.18);
-
-    this.img.setDisplaySize(size, size);
-
-    this.bg.setPosition(-plateR, plateR);
-    this.ring.setPosition(-plateR, plateR);
-    this.img.setPosition(-plateR - 10, plateR + this.iconDown);
-    this.img.setTintFill(hover ? 0xffffff : 0xaf39be);
-
-    this.bg.setInteractive(
-      new Phaser.Geom.Circle(this.bg.x, this.bg.y, plateR),
-      Phaser.Geom.Circle.Contains
-    );
+  private draw(strokeColor: number) {
+    this.bg.clear();
+    this.bg.fillStyle(0x20202c, 1);
+    this.bg.fillRect(-this.half, -this.half, this.size, this.size);
+    this.bg.lineStyle(6, strokeColor, 1);
+    this.bg.strokeRect(-this.half, -this.half, this.size, this.size);
   }
 }
