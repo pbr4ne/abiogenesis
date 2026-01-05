@@ -52,6 +52,11 @@
                 "key": "cat"
             },
             {
+                "url": "assets/images/check.png",
+                "type": "image",
+                "key": "check"
+            },
+            {
                 "url": "assets/images/crystal.png",
                 "type": "image",
                 "key": "crystal"
@@ -65,6 +70,11 @@
                 "url": "assets/images/dnosaur.png",
                 "type": "image",
                 "key": "dinosaur"
+            },
+            {
+                "url": "assets/images/dna.png",
+                "type": "image",
+                "key": "dna"
             },
             {
                 "url": "assets/images/eukaryote.png",
@@ -192,6 +202,11 @@
                 "key": "reptile"
             },
             {
+                "url": "assets/images/rocket.png",
+                "type": "image",
+                "key": "rocket"
+            },
+            {
                 "url": "assets/images/rodent.png",
                 "type": "image",
                 "key": "rodent"
@@ -205,6 +220,11 @@
                 "url": "assets/images/sword.png",
                 "type": "image",
                 "key": "sword"
+            },
+            {
+                "url": "assets/images/terraformed.png",
+                "type": "image",
+                "key": "terraformed"
             },
             {
                 "url": "assets/images/tree.png",
