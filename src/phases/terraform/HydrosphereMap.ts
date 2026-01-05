@@ -74,10 +74,73 @@ export const paintHydrosphere = (gridData: PlanetGrid, altGrid: number[][], wate
   const rows = altGrid.length;
   const cols = altGrid[0].length;
 
+  const wl = Phaser.Math.Clamp(waterLevel, 0, 20);
+
+  const maxFrac = 0.22;
+  const maxRows = Math.max(1, Math.floor(rows * maxFrac));
+  const iceRows = Phaser.Math.Clamp(Math.floor((wl / 20) * maxRows), 0, maxRows);
+
+  const blendToWhite = (baseHex: number, t: number) => {
+    const tr = Phaser.Math.Clamp(t, 0, 1);
+
+    const br = (baseHex >> 16) & 0xff;
+    const bg = (baseHex >> 8) & 0xff;
+    const bb = baseHex & 0xff;
+
+    const r = Math.round(Phaser.Math.Linear(br, 255, tr));
+    const g = Math.round(Phaser.Math.Linear(bg, 255, tr));
+    const b = Math.round(Phaser.Math.Linear(bb, 255, tr));
+
+    return (r << 16) | (g << 8) | b;
+  };
+
+  const hash01 = (n: number) => {
+    let x = n | 0;
+    x ^= x << 13;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    return ((x >>> 0) % 100000) / 100000;
+  };
+
+  const edgeJitterMax = Math.max(1, Math.floor(iceRows * 0.22));
+
+  const seed = 1337;
+  const edgeJitter: number[] = Array.from({ length: cols }, (_, c) => {
+    if (iceRows <= 0) return 0;
+    const n = hash01(seed + c * 1013);
+    return Math.round((n * 2 - 1) * edgeJitterMax);
+  });
+
+  const waterWhite = 0.75;
+  const landWhite = 0.75;
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const col = terrainColour(altGrid[r][c], waterLevel);
-      gridData.setHex(r, c, toHex(col), 1);
+      const alt = altGrid[r][c];
+      const baseHex = terrainColour(alt, wl);
+
+      if (iceRows <= 0) {
+        gridData.setHex(r, c, toHex(baseHex), 1);
+        continue;
+      }
+
+      const dPole = Math.min(r, rows - 1 - r);
+
+      const bandDepth = Phaser.Math.Clamp(iceRows + edgeJitter[c], 0, iceRows + edgeJitterMax);
+
+      const inCap = bandDepth > 0 && dPole < bandDepth;
+
+      if (!inCap) {
+        gridData.setHex(r, c, toHex(baseHex), 1);
+        continue;
+      }
+
+      const isWater = wl > 0 && alt < wl;
+
+      const t = isWater ? waterWhite : landWhite;
+
+      const outHex = blendToWhite(baseHex, t);
+      gridData.setHex(r, c, toHex(outHex), 1);
     }
   }
 };
