@@ -86,7 +86,7 @@ export default class DeviceSlots {
 
     const hitRadius = 26;
     const hit = this.scene.add.zone(0, 0, hitRadius * 2, hitRadius * 2).setOrigin(0.5, 0.5);
-    hit.setInteractive(new Phaser.Geom.Circle(0, 0, hitRadius), Phaser.Geom.Circle.Contains);
+    hit.setInteractive(new Phaser.Geom.Circle(hitRadius, hitRadius, hitRadius), Phaser.Geom.Circle.Contains);
 
     hit.on("pointerover", () => {
       this.scene.input.setDefaultCursor("pointer");
