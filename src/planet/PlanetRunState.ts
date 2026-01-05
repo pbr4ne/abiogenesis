@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import type { AltGrid } from "../phases/terraform/HydrosphereTerrain";
 import { generateAltGrid } from "../phases/terraform/HydrosphereTerrain";
 import { LifeFormInstance, LifeFormType } from "../phases/evolution/EvolutionTypes";
+import { getUrlParam, log } from "../utilities/GameUtils";
 
 export type TerraformLevels = {
   atmosphere: number;
@@ -25,6 +26,12 @@ export default class PlanetRunState {
     this.seed = seed ?? Phaser.Math.RND.uuid();
     const rng = new Phaser.Math.RandomDataGenerator([this.seed]);
     this.hydroAlt = generateAltGrid(divisions, divisions, rng);
+
+    const overrideWater = getUrlParam("waterLevel");
+    if (overrideWater !== null) {
+      this.waterLevel = parseFloat(overrideWater);
+      log(`Overriding water level to ${this.waterLevel}`);
+    }
 
     this.terraform = {
       atmosphere: 5,
