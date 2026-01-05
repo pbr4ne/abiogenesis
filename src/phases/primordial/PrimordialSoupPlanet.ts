@@ -24,7 +24,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     this.run = scene.registry.get("run") as PlanetRunState;
     this.field = new CellLayerField(this.divisions);
-    this.spawner = new SoupSpawner(this.divisions, this.r, this.rotate);
+    this.spawner = new SoupSpawner(this.divisions, this.r);
 
     this.soupData = new PlanetGrid(this.divisions);
 
@@ -58,16 +58,30 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     this.spawnEvent = this.scene.time.addEvent({
       delay: this.progress.spawnDelayMs(),
       loop: true,
-      callback: () => this.spawnOne()
+      callback: () => {
+        const n = this.spawnsPerTick();
+
+        for (let i = 0; i < n; i++) {
+          const didSpawn = this.spawnOne();
+          if (!didSpawn) break;
+        }
+      }
     });
   }
 
-  private spawnOne() {
-    const pos = this.spawner.trySpawn((r, c) => this.field.hasCell(r, c));
-    if (!pos) return;
+  private spawnsPerTick() {
+    const t = Phaser.Math.Clamp(this.progress.getTotal01(), 0, 1);
+
+    const n = Phaser.Math.Linear(1, 6, t);
+
+    return Math.max(1, Math.round(n));
+  }
+
+  private spawnOne(): boolean {
+    const pos = this.spawner.trySpawn(this.rotate, (r, c) => this.field.hasCell(r, c) && this.isWaterCell(r, c));
+    if (!pos) return false;
 
     const now = this.scene.time.now;
-
     const rgb = this.progress.pickSpawnRGB();
 
     this.field.addSeed(pos.row, pos.col, rgb, now, 5000, true);
@@ -86,6 +100,37 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     if (this.spawnEvent && this.spawnEvent.delay !== targetDelay) {
       this.rescheduleSpawner();
     }
+
+    return true;
+  }
+
+  private isAllowedSoupRow(row: number): boolean {
+    return row >= 4;
+  }
+
+  private isWaterCell(row: number, col: number): boolean {
+    const altAny: any = (this.run as any)?.hydroAlt;
+    const wl = (this.run as any).waterLevel ?? 0;
+
+    if (!this.isAllowedSoupRow(row)) return false;
+
+    let alt: number | null = null;
+
+    if (Array.isArray(altAny)) {
+      const v = altAny[row]?.[col];
+      if (typeof v === "number") alt = v;
+    } else if (altAny && typeof altAny.getAltitude === "function") {
+      const v = altAny.getAltitude(row, col);
+      if (typeof v === "number") alt = v;
+    } else if (altAny && typeof altAny.getCell === "function") {
+      const v = altAny.getCell(row, col);
+      if (typeof v === "number") alt = v;
+    }
+
+    if (alt === null) return true;
+
+    const eps = 1e-6;
+    return wl > 0 && alt < (wl - eps);
   }
 
   private onPlanetDown = (pointer: Phaser.Input.Pointer) => {
@@ -94,6 +139,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     const picked = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
     if (!picked) return;
+
+    if (!this.isWaterCell(picked.row, picked.col)) return;
 
     const now = this.scene.time.now;
 
@@ -113,6 +160,11 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     this.field.applyBloomFromSeed(picked.row, picked.col, now, stepBloom5x5, true, true);
 
     const changed = this.field.tick(now, (row, col, rgba) => {
+      if (!this.isWaterCell(row, col)) {
+        this.soupData.setCell(row, col, { r: 0, g: 0, b: 0, a: 0 });
+        return;
+      }
+
       this.soupData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
     });
 
@@ -129,8 +181,14 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       return;
     }
 
+    if (!this.isWaterCell(picked.row, picked.col)) {
+      this.scene.input.setDefaultCursor("default");
+      return;
+    }
+
     const now = this.scene.time.now;
     const cell = this.soupData.getCell(picked.row, picked.col);
+
     if ((cell && cell.a > 0) || this.field.isClickableAt(picked.row, picked.col, now)) {
       this.scene.input.setDefaultCursor("pointer");
     } else {
@@ -142,6 +200,11 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     const now = this.scene.time.now;
 
     const changed = this.field.tick(now, (row, col, rgba) => {
+      if (!this.isWaterCell(row, col)) {
+        this.soupData.setCell(row, col, { r: 0, g: 0, b: 0, a: 0 });
+        return;
+      }
+
       this.soupData.setCell(row, col, { r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a });
     });
 
@@ -152,7 +215,11 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
   private * iterVisibleGridColours() {
     for (let r = 0; r < this.divisions; r++) {
+      if (!this.isAllowedSoupRow(r)) continue;
+
       for (let c = 0; c < this.divisions; c++) {
+        if (!this.isWaterCell(r, c)) continue;
+
         const cell = this.soupData.getCell(r, c);
         if (!cell || cell.a <= 0) continue;
         yield { r: cell.r, g: cell.g, b: cell.b };

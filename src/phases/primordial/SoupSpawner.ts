@@ -4,15 +4,16 @@ import { projectLatLon, latForIndex, lonForIndex } from "../../planet/PlanetMath
 export default class SoupSpawner {
   private divisions: number;
   private r: number;
-  private rotate: any;
 
-  constructor(divisions: number, r: number, rotate: any) {
+  constructor(divisions: number, r: number) {
     this.divisions = divisions;
     this.r = r;
-    this.rotate = rotate;
   }
 
-  public trySpawn(isTaken: (row: number, col: number) => boolean) {
+  public trySpawn(
+    rotate: any,
+    isTaken: (row: number, col: number) => boolean
+  ) {
     for (let tries = 0; tries < 200; tries++) {
       const row = Phaser.Math.Between(0, this.divisions - 1);
       const col = Phaser.Math.Between(0, this.divisions - 1);
@@ -27,7 +28,7 @@ export default class SoupSpawner {
       const latMid = (lat0 + lat1) / 2;
       const lonMid = (lon0 + lon1) / 2;
 
-      const p = projectLatLon(this.r, latMid, lonMid, this.rotate);
+      const p = projectLatLon(this.r, latMid, lonMid, rotate);
       if (p.z < 0) continue;
 
       return { row, col };

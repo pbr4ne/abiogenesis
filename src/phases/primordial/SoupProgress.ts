@@ -38,6 +38,9 @@ export default class SoupProgress {
   }
 
   public computeHelixBinsFromGrid(getCells: () => Iterable<RGB>) {
+    this.setAllFill01(0.98);
+    const prev = this.helixBins.slice();
+
     this.helixBins.fill(0);
 
     let count = 0;
@@ -55,7 +58,12 @@ export default class SoupProgress {
       count++;
     }
 
-    if (count <= 0) return;
+    if (count <= 0) {
+      for (let i = 0; i < this.helixBins.length; i++) {
+        this.helixBins[i] = prev[i] * 0.92;
+      }
+      return;
+    }
 
     for (let i = 0; i < this.helixBins.length; i++) {
       this.helixBins[i] = this.helixBins[i] / count;
@@ -64,13 +72,25 @@ export default class SoupProgress {
     const smooth = this.helixBins.slice();
     const n = this.helixBins.length;
 
+    const smoothStrength = Phaser.Math.Clamp(Phaser.Math.Linear(1.0, 3.5, 1 - Phaser.Math.Clamp(count / 120, 0, 1)), 1.0, 3.5);
+
+    for (let pass = 0; pass < Math.round(smoothStrength); pass++) {
+      for (let i = 0; i < n; i++) {
+        const a = smooth[(i - 2 + n) % n];
+        const b = smooth[(i - 1 + n) % n];
+        const c = smooth[i];
+        const d = smooth[(i + 1) % n];
+        const e = smooth[(i + 2) % n];
+        this.helixBins[i] = (a + b + c * 2 + d + e) / 6;
+      }
+      for (let i = 0; i < n; i++) smooth[i] = this.helixBins[i];
+    }
+
+    const t = Phaser.Math.Clamp(count / 220, 0, 1);
+    const lerp = Phaser.Math.Linear(0.12, 0.55, t);
+
     for (let i = 0; i < n; i++) {
-      const a = smooth[(i - 2 + n) % n];
-      const b = smooth[(i - 1 + n) % n];
-      const c = smooth[i];
-      const d = smooth[(i + 1) % n];
-      const e = smooth[(i + 2) % n];
-      this.helixBins[i] = (a + b + c * 2 + d + e) / 6;
+      this.helixBins[i] = Phaser.Math.Linear(prev[i], this.helixBins[i], lerp);
     }
   }
 
@@ -78,9 +98,9 @@ export default class SoupProgress {
     const idx = Math.floor(Phaser.Math.Wrap(h01, 0, 1) * (this.helixBins.length - 1));
     const a = this.helixBins[idx] ?? 0;
 
-    if (a < 0.002) return 0;
+    if (a < 0.001) return 0;
 
-    const k = 80;
+    const k = 70;
     const boosted01 = Math.log1p(k * a) / Math.log1p(k);
 
     const maxDynamic = 0.92;
