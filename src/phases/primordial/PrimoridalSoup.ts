@@ -3,9 +3,11 @@ import Planet from "./PrimordialSoupPlanet";
 import { log } from "../../utilities/GameUtils";
 import DNAHelix from "./DNAHelix";
 import Nucleotides from "./Nucleotides";
+import Phaser from "phaser";
 
 export default class PrimordialSoup extends PhaseScene {
   private planet!: Planet;
+  private didComplete = false;
 
   constructor() {
     super("PrimordialSoup");
@@ -35,6 +37,21 @@ export default class PrimordialSoup extends PhaseScene {
 
     this.planet.startSoup();
 
+    this.events.on(Phaser.Scenes.Events.UPDATE, this.checkComplete, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.events.off(Phaser.Scenes.Events.UPDATE, this.checkComplete, this);
+    });
+
     log("PrimordialSoup scene created");
+  }
+
+  private checkComplete() {
+    if (this.didComplete) return;
+
+    const progress = this.planet.getProgress();
+    if (!progress.isEffectivelyComplete()) return;
+
+    this.didComplete = true;
+    this.time.delayedCall(0, () => this.scene.start("PrimordialSoupComplete"));
   }
 }
