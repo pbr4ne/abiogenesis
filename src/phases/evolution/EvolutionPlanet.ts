@@ -127,6 +127,7 @@ export default class EvolutionPlanet extends PlanetBase {
 
     return {
       visible: p.z > 0,
+      z: p.z,
       x: this.x + p.x * this.r,
       y: this.y + p.y * this.r
     };
@@ -188,7 +189,17 @@ export default class EvolutionPlanet extends PlanetBase {
   private renderLifeBumps() {
     this.lifeBumps.clear();
 
+    const items: { lf: LifeFormInstance; z: number }[] = [];
+
     for (const lf of this.run.lifeForms) {
+      const p = this.cellCenterWorld(lf.row, lf.col);
+      if (!p.visible) continue;
+      items.push({ lf, z: p.z });
+    }
+
+    items.sort((a, b) => a.z - b.z);
+
+    for (const { lf } of items) {
       const def = LIFEFORMS[lf.type];
       const baseHex =
         (def.colour.r << 16) |
