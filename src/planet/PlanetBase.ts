@@ -31,6 +31,20 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
   protected lastRevealAt: number;
   protected lifeBumps!: Phaser.GameObjects.Graphics;
 
+  private yawRad = 0;
+  private tiltRad = 0;
+  private yawStepRad = 0;
+
+  private rotationEvent?: Phaser.Time.TimerEvent;
+
+  private wireEvery: number;
+  private wireWidth: number;
+  private wireAlpha: number;
+
+  private updateRotator() {
+    this.rotate = makeRotator(this.tiltRad, this.yawRad);
+  }
+
   private onUpdate = () => {
     const now = this.scene.time.now;
     if (now - this.lastRevealAt < 1000) return;
@@ -46,9 +60,18 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.diameter = cfg.diameter ?? 768;
     this.r = this.diameter / 2;
 
+    this.wireEvery = cfg.wireEvery ?? 160;
+    this.wireWidth = cfg.wireWidth ?? 3;
+    this.wireAlpha = cfg.wireAlpha ?? 0.35;
+
     const tilt = Phaser.Math.DegToRad(cfg.tiltDeg ?? -28);
     const yaw = Phaser.Math.DegToRad(cfg.yawDeg ?? 20);
-    this.rotate = makeRotator(tilt, yaw);
+
+    this.tiltRad = tilt;
+    this.yawRad = yaw;
+    this.yawStepRad = (Math.PI * 2) / this.divisions;
+
+    this.rotate = makeRotator(this.tiltRad, this.yawRad);
 
     this.gridData = new PlanetGrid(this.divisions);
 
@@ -63,7 +86,7 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.lifeBumps = scene.add.graphics();
 
     this.add(this.base);
-    this.add(this.tiles);    
+    this.add(this.tiles);
     this.add(this.grid);
     this.add(this.lifeBumps);
 
@@ -85,9 +108,41 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.hitZone.setInteractive(new Phaser.Geom.Circle(this.r, this.r, this.r), Phaser.Geom.Circle.Contains);
     this.add(this.hitZone);
 
+    this.startPlanetRotation(2000);
+
     this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onUpdate);
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.onUpdate);
+    });
+  }
+
+  protected redrawForRotation() {
+    this.redrawTiles();
+
+    drawWireGrid(
+      this.grid,
+      this.r,
+      this.divisions,
+      this.wireEvery,
+      this.wireWidth,
+      this.wireAlpha,
+      this.rotate
+    );
+
+    this.onAfterTilesRedraw();
+  }
+
+  protected startPlanetRotation(stepEveryMs = 2000) {
+    if (this.rotationEvent) return;
+
+    this.rotationEvent = this.scene.time.addEvent({
+      delay: stepEveryMs,
+      loop: true,
+      callback: () => {
+        this.yawRad += this.yawStepRad;
+        this.updateRotator();
+        this.redrawForRotation();
+      }
     });
   }
 
