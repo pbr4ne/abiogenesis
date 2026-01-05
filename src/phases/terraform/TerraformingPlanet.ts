@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import PlanetBase from "../../planet/PlanetBase";
-import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
+import { latForIndex, lonForIndex, pickCellByNearestProjectedCenter, projectLatLon } from "../../planet/PlanetMath";
 import MagnetosphereRenderer from "./MagnetosphereRenderer";
 import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { log } from "../../utilities/GameUtils";
@@ -15,6 +15,7 @@ export default class TerraformingPlanet extends PlanetBase {
 
   private enabledEffects: Required<Record<Key, boolean>>;
   private enabledHotspots: Required<Record<Key, boolean>>;
+  private hotspotOutline?: Phaser.GameObjects.Graphics;
 
   private hotspotGroups: {
     key: Key;
@@ -79,8 +80,8 @@ export default class TerraformingPlanet extends PlanetBase {
       {
         key: "atmosphere",
         event: "ui:goToAtmosphere",
-        baseA: 0.45,
-        hoverA: 0.85,
+        baseA: 0.85,
+        hoverA: 1,
         colourHex: "#ff00ff",
         cells: atmosphereCells(),
         cellSet: new Set<string>()
@@ -88,8 +89,8 @@ export default class TerraformingPlanet extends PlanetBase {
       {
         key: "magnetosphere",
         event: "ui:goToMagnetosphere",
-        baseA: 0.45,
-        hoverA: 0.85,
+        baseA: 0.85,
+        hoverA: 1,
         colourHex: "#ff0000",
         cells: magnetosphereCells,
         cellSet: new Set<string>()
@@ -97,9 +98,9 @@ export default class TerraformingPlanet extends PlanetBase {
       {
         key: "hydrosphere",
         event: "ui:goToHydrosphere",
-        baseA: 0.45,
-        hoverA: 0.85,
-        colourHex: "#9a4dff",
+        baseA: 0.85,
+        hoverA: 1,
+        colourHex: "#0084ff",
         cells: [
           { row: 8, col: 10 }, { row: 9, col: 10 }, { row: 10, col: 10 }, { row: 11, col: 10 },
           { row: 8, col: 11 }, { row: 9, col: 11 }, { row: 10, col: 11 }, { row: 11, col: 11 },
@@ -115,12 +116,16 @@ export default class TerraformingPlanet extends PlanetBase {
     for (const g of this.hotspotGroups) {
       for (const c of g.cells) {
         g.cellSet.add(keyOf(c.row, c.col));
-        this.gridData.setHex(c.row, c.col, g.colourHex, g.baseA);
       }
     }
 
-    this.lastRevealAt = this.scene.time.now;
-    this.redrawTiles();
+    if (!this.hotspotOutline) {
+      this.hotspotOutline = this.scene.add.graphics();
+      this.add(this.hotspotOutline);
+      //this.hotspotOutline.setBlendMode(Phaser.BlendModes.ADD);
+    }
+
+    this.redrawHotspotOutlines();
   }
 
   private wireHotspotInput() {
@@ -150,21 +155,12 @@ export default class TerraformingPlanet extends PlanetBase {
 
       if (nextKey === this.hoveredGroupKey) return;
 
-      if (this.hoveredGroupKey !== null) {
-        const prev = this.hotspotGroups.find(g => g.key === this.hoveredGroupKey)!;
-        for (const c of prev.cells) this.gridData.setHex(c.row, c.col, prev.colourHex, prev.baseA);
-        this.scene.input.setDefaultCursor("default");
-      }
-
       this.hoveredGroupKey = nextKey;
 
-      if (nextKey !== null) {
-        const cur = this.hotspotGroups.find(g => g.key === nextKey)!;
-        for (const c of cur.cells) this.gridData.setHex(c.row, c.col, cur.colourHex, cur.hoverA);
-        this.scene.input.setDefaultCursor("pointer");
-      }
+      if (nextKey !== null) this.scene.input.setDefaultCursor("pointer");
+      else this.scene.input.setDefaultCursor("default");
 
-      this.redrawTiles();
+      this.redrawHotspotOutlines();
     });
 
     this.hitZone.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
@@ -190,12 +186,7 @@ export default class TerraformingPlanet extends PlanetBase {
     if (!this.hotspotGroups?.length) return;
 
     this.hoveredGroupKey = null;
-
-    for (const g of this.hotspotGroups) {
-      for (const c of g.cells) this.gridData.setHex(c.row, c.col, g.colourHex, g.baseA);
-    }
-
-    this.redrawTiles();
+    this.redrawHotspotOutlines();
     this.scene.input.setDefaultCursor("default");
   }
 
@@ -231,6 +222,63 @@ export default class TerraformingPlanet extends PlanetBase {
       this.run.waterLevel = water;
       this.applyHydrosphere(water);
       return;
+    }
+  }
+
+  private redrawHotspotOutlines() {
+    if (!this.hotspotOutline) return;
+
+    const g = this.hotspotOutline;
+    g.clear();
+
+    const div = this.divisions;
+    const r = this.r;
+    const rotate = this.rotate;
+
+    const keyOf = (row: number, col: number) => `${row},${col}`;
+    const wrapCol = (col: number) => (col % div + div) % div;
+
+    const drawEdge = (hex: number, a: number, latA: number, lonA: number, latB: number, lonB: number) => {
+      const p0 = projectLatLon(r, latA, lonA, rotate);
+      const p1 = projectLatLon(r, latB, lonB, rotate);
+
+      if (p0.z <= 0 || p1.z <= 0) return;
+
+      g.lineStyle(5, hex, a);
+      g.beginPath();
+      g.moveTo(p0.x, p0.y);
+      g.lineTo(p1.x, p1.y);
+      g.strokePath();
+    };
+
+    for (const group of this.hotspotGroups) {
+      const a = this.hoveredGroupKey === group.key ? group.hoverA : group.baseA;
+      const hex = Phaser.Display.Color.HexStringToColor(group.colourHex).color;
+
+      const has = (row: number, col: number) => {
+        if (row < 0 || row >= div) return false;
+        return group.cellSet.has(keyOf(row, wrapCol(col)));
+      };
+
+      for (const cell of group.cells) {
+        const row = cell.row;
+        const col = cell.col;
+
+        const lat0 = latForIndex(row, div);
+        const lat1 = latForIndex(row + 1, div);
+        const lon0 = lonForIndex(col, div);
+        const lon1 = lonForIndex(col + 1, div);
+
+        const topMissing = !has(row - 1, col);
+        const botMissing = !has(row + 1, col);
+        const leftMissing = !has(row, col - 1);
+        const rightMissing = !has(row, col + 1);
+
+        if (topMissing) drawEdge(hex, a, lat0, lon0, lat0, lon1);
+        if (botMissing) drawEdge(hex, a, lat1, lon0, lat1, lon1);
+        if (leftMissing) drawEdge(hex, a, lat0, lon0, lat1, lon0);
+        if (rightMissing) drawEdge(hex, a, lat0, lon1, lat1, lon1);
+      }
     }
   }
 
@@ -281,14 +329,7 @@ export default class TerraformingPlanet extends PlanetBase {
 
   private applyHydrosphere(waterLevel: number) {
     paintHydrosphere(this.gridData, this.run.hydroAlt, waterLevel);
-
-    for (const g of this.hotspotGroups) {
-      for (const cell of g.cells) {
-        const a = (this.hoveredGroupKey === g.key) ? g.hoverA : g.baseA;
-        this.gridData.setHex(cell.row, cell.col, g.colourHex, a);
-      }
-    }
-
     this.redrawTiles();
+    this.redrawHotspotOutlines();
   }
 }
