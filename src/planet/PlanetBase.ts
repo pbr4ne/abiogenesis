@@ -36,6 +36,19 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
   private tiltRad = 0;
   private yawStepRad = 0;
 
+  private isRotating = false;
+  private yawSpeedRadPerSec = 0;
+
+  private redrawEveryMs = 33;
+  private redrawAccumMs = 0;
+
+  private yawAtLastRedraw = 0;
+  private minYawDeltaForRedraw = 0;
+
+  private tileSubWhileRotating = 1;
+  private tileSubIdle = 2;
+  private curTileSub = 2;
+
   private rotationEvent?: Phaser.Time.TimerEvent;
 
   private wireEvery: number;
@@ -46,18 +59,38 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.rotate = makeRotator(this.tiltRad, this.yawRad);
   }
 
-  private onUpdate = () => {
-    const now = this.scene.time.now;
-    if (now - this.lastRevealAt < 1000) return;
-    this.lastRevealAt = now;
+  private onUpdate = (_time: number, dt: number) => {
+    if (!this.isRotating) return;
 
-    drawTiles(this.tiles, this.r, this.divisions, 2, this.rotate, this.gridData.getCellsRef());
+    const dtSec = dt / 1000;
+
+    this.yawRad += this.yawSpeedRadPerSec * dtSec;
+    this.updateRotator();
+
+    this.curTileSub = this.tileSubWhileRotating;
+
+    this.redrawAccumMs += dt;
+
+    const yawDelta = Math.abs(this.yawRad - this.yawAtLastRedraw);
+
+    if (this.redrawAccumMs < this.redrawEveryMs && yawDelta < this.minYawDeltaForRedraw) {
+      return;
+    }
+
+    this.redrawAccumMs = 0;
+    this.yawAtLastRedraw = this.yawRad;
+
+    this.redrawTilesWithSub(this.curTileSub);
+    this.redrawWire();
     this.onAfterTilesRedraw();
   };
+
   constructor(scene: Phaser.Scene, x = 960, y = 540, cfg: PlanetBaseConfig = {}) {
     super(scene, x, y);
 
     this.divisions = cfg.divisions ?? 40;
+    this.minYawDeltaForRedraw = Math.abs((Math.PI * 2) / this.divisions) / 12;
+
     this.diameter = cfg.diameter ?? 768;
     this.r = this.diameter / 2;
 
@@ -109,7 +142,7 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.hitZone.setInteractive(new Phaser.Geom.Circle(this.r, this.r, this.r), Phaser.Geom.Circle.Contains);
     this.add(this.hitZone);
 
-    this.startPlanetRotation(2000);
+    this.startSmoothRotation(1200, -1);
 
     this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onUpdate);
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
@@ -132,6 +165,37 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     );
 
     this.onAfterTilesRedraw();
+  }
+
+  protected startSmoothRotation(msPerCell = 2000, direction = -1) {
+    const step = (Math.PI * 2) / this.divisions;
+    this.yawSpeedRadPerSec = direction * (step / (msPerCell / 1000));
+    this.isRotating = true;
+  }
+
+  protected stopSmoothRotation() {
+    this.isRotating = false;
+    this.yawSpeedRadPerSec = 0;
+    this.curTileSub = this.tileSubIdle;
+    this.redrawTilesWithSub(this.curTileSub);
+    this.redrawWire();
+    this.onAfterTilesRedraw();
+  }
+
+  private redrawTilesWithSub(sub: number) {
+    drawTiles(this.tiles, this.r, this.divisions, sub, this.rotate, this.gridData.getCellsRef());
+  }
+
+  private redrawWire() {
+    drawWireGrid(
+      this.grid,
+      this.r,
+      this.divisions,
+      this.wireEvery,
+      this.wireWidth,
+      this.wireAlpha,
+      this.rotate
+    );
   }
 
   protected startPlanetRotation(stepEveryMs = 2000) {
