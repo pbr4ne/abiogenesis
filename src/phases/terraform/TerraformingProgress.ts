@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-type TerraformProgressCfg = {
+type TerraformingProgressCfg = {
   x: number;
   topY: number;
   w: number;
@@ -8,8 +8,7 @@ type TerraformProgressCfg = {
   max: number;
 };
 
-export default class TerraformProgress {
-  private scene: Phaser.Scene;
+export default class TerraformingProgress {
   private bg: Phaser.GameObjects.Graphics;
   private fill: Phaser.GameObjects.Graphics;
 
@@ -21,9 +20,7 @@ export default class TerraformProgress {
   private max: number;
   private value = 0;
 
-  constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: TerraformProgressCfg) {
-    this.scene = scene;
-
+  constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: TerraformingProgressCfg) {
     this.x = cfg.x;
     this.topY = cfg.topY;
     this.w = cfg.w;

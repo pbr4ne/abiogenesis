@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import PlanetBase from "../../planet/PlanetBase";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
 import MagnetosphereRenderer from "./MagnetosphereRenderer";
-import TerraformingState from "./TerraformingState";
 import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { log } from "../../utilities/GameUtils";
 import PlanetRunState from "../../planet/PlanetRunState";
@@ -11,7 +10,7 @@ import { getTerraforming } from "./getTerraformingState";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere";
 
-export default class TerraformPlanet extends PlanetBase {
+export default class TerraformingPlanet extends PlanetBase {
   private run: PlanetRunState;
 
   private enabledEffects: Required<Record<Key, boolean>>;
@@ -76,7 +75,7 @@ export default class TerraformPlanet extends PlanetBase {
       { row: 16, col: 10 }, { row: 17, col: 10 }, { row: 18, col: 10 }, { row: 19, col: 10 }, { row: 20, col: 10 }, { row: 21, col: 10 }
     ];
 
-    const allGroups: TerraformPlanet["hotspotGroups"] = [
+    const allGroups: TerraformingPlanet["hotspotGroups"] = [
       {
         key: "atmosphere",
         event: "ui:goToAtmosphere",

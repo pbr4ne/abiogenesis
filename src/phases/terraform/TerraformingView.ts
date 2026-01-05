@@ -4,7 +4,7 @@ import { makeRotator } from "../../planet/PlanetMath";
 import { drawWireGrid } from "../../planet/PlanetRenderer";
 import { log } from "../../utilities/GameUtils";
 
-import TerraformProgress from "./TerraformProgress";
+import TerraformingProgress from "./TerraformingProgress";
 import PlanetButton from "./PlanetButton";
 import DeviceButtons from "./DevicePalette";
 import DeviceSlots from "./DeviceSlots";
@@ -84,7 +84,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected worldCenterLocalY: number;
   protected renderPlanetEdge: boolean;
 
-  protected thermometer!: TerraformProgress;
+  protected thermometer!: TerraformingProgress;
   protected backBtn?: PlanetButton;
   protected palette!: DeviceButtons;
   protected placement!: DeviceSlots;
@@ -176,7 +176,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       onClick: () => this.scene.events.emit(this.onBackEvent)
     });
 
-    this.thermometer = new TerraformProgress(this.scene, this.ui, {
+    this.thermometer = new TerraformingProgress(this.scene, this.ui, {
       x: this.thermoLocalX,
       topY: this.thermoTopLocalY,
       w: this.thermoW,

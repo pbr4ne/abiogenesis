@@ -1,10 +1,10 @@
-import Planet from "./TerraformPlanet";
+import Planet from "./TerraformingPlanet";
 import Atmosphere from "./Atmosphere";
 import Magnetosphere from "./Magnetosphere";
 import PhaseScene from "../../scenes/PhaseScene";
 import Hydrosphere from "./Hydrosphere";
 import { getTerraformingState } from "./TerraformingState";
-import TerraformPlanet from "./TerraformPlanet";
+import TerraformingPlanet from "./TerraformingPlanet";
 import { log } from "../../utilities/GameUtils";
 import { getTerraforming } from "./getTerraformingState";
 
@@ -36,7 +36,7 @@ export default class Terraforming extends PhaseScene {
     tf.on("maybeComplete", tryComplete);
     this.onShutdown(() => tf.off("maybeComplete", tryComplete));
 
-    this.planet = new TerraformPlanet(this, 960, 540);
+    this.planet = new TerraformingPlanet(this, 960, 540);
 
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);
