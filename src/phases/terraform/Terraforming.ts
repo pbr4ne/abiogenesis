@@ -5,6 +5,9 @@ import PhaseScene from "../../scenes/PhaseScene";
 import Hydrosphere from "./Hydrosphere";
 import { getTerraformingState } from "./TerraformingState";
 import TerraformPlanet from "./TerraformPlanet";
+import { log } from "../../utilities/GameUtils";
+import { getTerraforming } from "./getTerraformingState";
+
 
 export default class Terraforming extends PhaseScene {
   public planet!: Planet;
@@ -14,7 +17,26 @@ export default class Terraforming extends PhaseScene {
   }
 
   protected createPhase() {
-    this.planet = new TerraformPlanet(this, 960, 540, getTerraformingState(this));
+    const tf = getTerraforming(this);
+
+    let transitioning = false;
+
+    const tryComplete = () => {
+      if (transitioning) return;
+      if (!tf.isComplete()) return;
+
+      transitioning = true;
+
+      this.cameras.main.fadeOut(250, 0, 0, 0);
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+        this.scene.start("TerraformingComplete");
+      });
+    };
+
+    tf.on("maybeComplete", tryComplete);
+    this.onShutdown(() => tf.off("maybeComplete", tryComplete));
+
+    this.planet = new TerraformPlanet(this, 960, 540);
 
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);

@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import TerraformingView from "./TerraformingView";
 import HydrosphereMap from "./HydrosphereMap";
-import { getTerraformingState } from "./TerraformingState";
 import { terrainColour } from "./HydrosphereTerrain";
+import { getTerraforming } from "./getTerraformingState";
 
 export default class Hydrosphere extends TerraformingView {
   private map: HydrosphereMap;
@@ -11,6 +11,8 @@ export default class Hydrosphere extends TerraformingView {
   private rows = 18;
 
   private slotCells: { r: number; c: number }[] = [];
+
+  private static readonly WATER_STEPS = 4;
 
   private static readonly SLOT_ROW_START_1 = 2;
   private static readonly SLOT_ROW_END_1 = 13;
@@ -22,6 +24,8 @@ export default class Hydrosphere extends TerraformingView {
   private static readonly SLOT_COUNT = 20;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
+    const tf = getTerraforming(scene);
+
     const cols = 32;
     const rows = 18;
 
@@ -31,9 +35,7 @@ export default class Hydrosphere extends TerraformingView {
     const col0End = Hydrosphere.SLOT_COL_END_1 - 1;
 
     const preMap = new HydrosphereMap(cols, rows);
-
-    const progress = getTerraformingState(scene);
-    preMap.waterLevel = progress.hydrosphereLevel;
+    preMap.waterLevel = tf.waterStep04();
 
     preMap.ensureAtLeastLowCellsInRect(
       row0Start,
@@ -91,8 +93,21 @@ export default class Hydrosphere extends TerraformingView {
     this.map = preMap;
     this.slotCells = slotCells;
 
+    this.points = Phaser.Math.Clamp(tf.hydrosphereLevel, 0, this.thermometerMax);
+    this.thermometer.setValue(this.points);
+
     this.drawGridLines();
     this.onPointsChanged();
+  }
+
+  private static pointsToWaterLevel(points: number) {
+    const level = Phaser.Math.Clamp(Math.round(points), 0, 1000);
+    const ratio01 = Phaser.Math.Clamp(level / 1000, 0, 1);
+    return Phaser.Math.Clamp(
+      Math.floor(ratio01 * (Hydrosphere.WATER_STEPS + 1)),
+      0,
+      Hydrosphere.WATER_STEPS
+    );
   }
 
   protected override getSlotTransform(slotIndex: number) {
@@ -142,7 +157,7 @@ export default class Hydrosphere extends TerraformingView {
       }
     }
 
-    g.lineStyle(2, 0x0f0f0f, 0.50);
+    g.lineStyle(2, 0x0f0f0f, 0.5);
 
     for (let i = 0; i <= this.cols; i++) {
       const x = left + i * stepX;
@@ -166,16 +181,15 @@ export default class Hydrosphere extends TerraformingView {
   }
 
   protected override onPointsChanged() {
-    const state = getTerraformingState(this.scene);
+    const tf = getTerraforming(this.scene);
 
-    const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
-    const waterLevel = Math.round(Phaser.Math.Linear(0, 7, ratio));
+    const level = Phaser.Math.Clamp(Math.round(this.points), 0, this.thermometerMax);
+    tf.setHydrosphereLevel(level);
 
-    if (waterLevel === this.map.waterLevel) return;
+    const nextWater = tf.waterStep04();
+    if (nextWater === this.map.waterLevel) return;
 
-    this.map.waterLevel = waterLevel;
-    state.setHydrosphereLevel(waterLevel);
-
+    this.map.waterLevel = nextWater;
     this.drawGridLines();
   }
 }

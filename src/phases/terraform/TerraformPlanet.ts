@@ -7,12 +7,11 @@ import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { log } from "../../utilities/GameUtils";
 import PlanetRunState from "../../planet/PlanetRunState";
 import { paintHydrosphere } from "./HydrosphereMap";
+import { getTerraforming } from "./getTerraformingState";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere";
-type Mask = Partial<Record<Key, boolean>>;
 
 export default class TerraformPlanet extends PlanetBase {
-  private progress: TerraformingState;
   private run: PlanetRunState;
 
   private enabledEffects: Required<Record<Key, boolean>>;
@@ -33,37 +32,23 @@ export default class TerraformPlanet extends PlanetBase {
   private magnetosphereRenderer?: MagnetosphereRenderer;
   private atmosphereGlow?: Phaser.GameObjects.Graphics;
 
-  constructor(
-    scene: Phaser.Scene,
-    x = 960,
-    y = 540,
-    progress: TerraformingState
-  ) {
+  constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
 
-    this.progress = progress;
     this.run = scene.registry.get("run") as PlanetRunState;
+    const tf = getTerraforming(scene);
 
-    this.enabledEffects = {
-      atmosphere: true,
-      magnetosphere: true,
-      hydrosphere: true
-    };
-
-    this.enabledHotspots = {
-      atmosphere: true,
-      magnetosphere: true,
-      hydrosphere: true
-    };
+    this.enabledEffects = { atmosphere: true, magnetosphere: true, hydrosphere: true };
+    this.enabledHotspots = { atmosphere: true, magnetosphere: true, hydrosphere: true };
 
     this.buildHotspots();
     this.wireHotspotInput();
 
-    const onChange = (k: any) => this.applyEffect(k);
-    this.progress.on("change", onChange);
+    const onChange = (k: Key) => this.applyEffect(k);
+    tf.on("change", onChange);
 
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
-      this.progress.off("change", onChange);
+      tf.off("change", onChange);
       this.magnetosphereRenderer?.destroy();
       this.magnetosphereRenderer = undefined;
     });
@@ -227,24 +212,25 @@ export default class TerraformPlanet extends PlanetBase {
       return;
     }
 
+    const tf = getTerraforming(this.scene);
+
     if (k === "atmosphere") {
+      const strength01 = tf.ratio01("atmosphere");
       log("TerraformPlanet: applyEffect atmosphere");
-      //this.applyAtmosphere(this.progress.atmosphere01);
-      this.applyAtmosphere(5);
+      this.applyAtmosphere(strength01);
       return;
     }
 
     if (k === "magnetosphere") {
-      //this.applyMagnetosphere(this.progress.magnetosphere01);
-      this.applyMagnetosphere(5);
+      const strength01 = tf.ratio01("magnetosphere");
+      this.applyMagnetosphere(strength01);
       return;
     }
 
-    //this.applyHydrosphere(this.progress.waterLevel);
     if (k === "hydrosphere") {
-      const hydrosphereLevel = this.progress.hydrosphereLevel;
-      this.run.waterLevel = hydrosphereLevel;
-      this.applyHydrosphere(hydrosphereLevel);
+      const water = tf.waterStep04(); //0..4
+      this.run.waterLevel = water;
+      this.applyHydrosphere(water);
       return;
     }
   }
@@ -257,28 +243,25 @@ export default class TerraformPlanet extends PlanetBase {
   }
 
   private applyAtmosphere(strength01: number) {
-    if (strength01 <= 0) {
+    const s = Phaser.Math.Clamp(strength01, 0, 1);
+
+    if (s <= 0) {
       this.atmosphereGlow?.clear();
       return;
     }
 
     if (!this.atmosphereGlow) {
       this.atmosphereGlow = this.scene.add.graphics();
-
       this.add(this.atmosphereGlow);
-
       this.atmosphereGlow.setBlendMode(Phaser.BlendModes.ADD);
     }
 
-    drawAtmosphereGlow(
-      this.atmosphereGlow,
-      this.r,
-      0,
-      strength01
-    );
+    drawAtmosphereGlow(this.atmosphereGlow, this.r, 0, s);
   }
 
   private applyMagnetosphere(strength01: number) {
+    const s = Phaser.Math.Clamp(strength01, 0, 1);
+
     if (!this.magnetosphereRenderer) {
       this.magnetosphereRenderer = new MagnetosphereRenderer(this.scene, this.behind, {
         r: this.r,
@@ -290,15 +273,15 @@ export default class TerraformPlanet extends PlanetBase {
         loopCenterOffsetMul: 1,
         innerRadiusMul: 0.15,
         outerRadiusMul: 1.35,
-        strengthOverride01: 1
+        strengthOverride01: null
       });
     }
 
-    this.magnetosphereRenderer.setStrength01(strength01);
+    this.magnetosphereRenderer.setStrength01(s);
   }
 
   private applyHydrosphere(waterLevel: number) {
-    paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
+    paintHydrosphere(this.gridData, this.run.hydroAlt, waterLevel);
 
     for (const g of this.hotspotGroups) {
       for (const cell of g.cells) {

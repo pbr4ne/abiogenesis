@@ -15,7 +15,7 @@ export default class Init extends Phaser.Scene {
     this.registry.set("run", run);
 
     if (checkUrlParam("skipWelcome", "true")) {
-      this.scene.start("Evolution");
+      this.scene.start("Terraforming");
     } else {
       this.scene.start("Welcome");
     }

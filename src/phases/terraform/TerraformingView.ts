@@ -191,7 +191,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       delay: 1000,
       loop: true,
       callback: () => {
-        this.points += this.getPointsPerSecond();
+        this.points = Math.min(this.thermometerMax, this.points + this.getPointsPerSecond());
+
         log(`Points: ${this.points}`);
 
         this.thermometer.setValue(this.points);

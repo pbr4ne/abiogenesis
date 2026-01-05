@@ -5,9 +5,9 @@ import { createStarfield, Starfield } from "../utilities/StarField";
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
 
-export type PhaseKey = "Terraforming" | "PrimordialSoup" | "Evolution" | "GalaxyMap";
+export type PhaseKey = "Terraforming" | "TerraformingComplete" | "PrimordialSoup" | "PrimordialSoupComplete" | "Evolution" | "EvolutionComplete" | "GalaxyMap";
 
-const PHASES: readonly PhaseKey[] = ["Terraforming", "PrimordialSoup", "Evolution", "GalaxyMap"];
+const PHASES: readonly PhaseKey[] = ["Terraforming", "TerraformingComplete", "PrimordialSoup", "PrimordialSoupComplete", "Evolution", "EvolutionComplete", "GalaxyMap"];
 
 export default abstract class PhaseScene extends BaseScene {
   protected bgCam!: Phaser.Cameras.Scene2D.Camera;

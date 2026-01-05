@@ -1,6 +1,7 @@
 import TerraformingView from "./TerraformingView";
 import { getTerraformingState } from "./TerraformingState";
 import MagnetosphereRenderer from "./MagnetosphereRenderer";
+import { getTerraforming } from "./getTerraformingState";
 
 type MagnetosphereConfig = {
   diameter: number;
@@ -65,12 +66,14 @@ export default class Magnetosphere extends TerraformingView {
   }
 
   protected override onTick() {
-    const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
-    this.magField?.setStrength01(ratio);
+    const state = getTerraformingState(this.scene);
+    const ratio01 = Phaser.Math.Clamp(state.magnetosphereLevel / 1000, 0, 1);
+    this.magField?.setStrength01(ratio01);
   }
 
   protected override onPointsChanged() {
-    const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
-    getTerraformingState(this.scene).setMagnetosphereLevel(ratio);
+    const tf = getTerraforming(this.scene);
+    const level = Phaser.Math.Clamp(Math.round(this.points), 0, this.thermometerMax);
+    tf.setMagnetosphereLevel(level);
   }
 }

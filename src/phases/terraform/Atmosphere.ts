@@ -1,5 +1,5 @@
 import TerraformingView from "./TerraformingView";
-import { getTerraformingState } from "./TerraformingState";
+import { getTerraforming } from "./getTerraformingState";
 
 type AtmosphereConfig = {
   diameter: number;
@@ -36,7 +36,8 @@ export default class Atmosphere extends TerraformingView {
   }
 
   protected onPointsChanged() {
-    const ratio = Phaser.Math.Clamp(this.points / this.thermometerMax, 0, 1);
-    getTerraformingState(this.scene).setAtmosphereLevel(ratio);
+    const tf = getTerraforming(this.scene);
+    const level = Phaser.Math.Clamp(Math.round(this.points), 0, this.thermometerMax);
+    tf.setAtmosphereLevel(level);
   }
 }
