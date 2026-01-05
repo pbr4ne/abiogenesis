@@ -1,7 +1,7 @@
 {
-  "name": "abiogenesis-inc",
+  "name": "autopoiesis",
   "version": "1.0.0",
-  "description": "Abiogenesis, Inc.",
+  "description": "Autopoiesis",
   "main": "webpack.config.js",
   "scripts": {
     "start": "webpack serve --mode=development --stats-error-details --no-open",
