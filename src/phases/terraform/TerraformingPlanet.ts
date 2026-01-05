@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import PlanetBase from "../../planet/PlanetBase";
-import { latForIndex, lonForIndex, pickCellByNearestProjectedCenter, projectLatLon } from "../../planet/PlanetMath";
+import { latForIndex, lonForIndex, makeRotator, pickCellByNearestProjectedCenter, projectLatLon } from "../../planet/PlanetMath";
 import MagnetosphereRenderer from "./MagnetosphereRenderer";
 import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { log } from "../../utilities/GameUtils";
@@ -28,12 +28,19 @@ export default class TerraformingPlanet extends PlanetBase {
   }[] = [];
 
   private hoveredGroupKey: Key | null = null;
+  private hotspotRotate?: ReturnType<typeof makeRotator>;
+
+  private getHotspotRotate() {
+    return this.hotspotRotate ?? this.rotate;
+  }
 
   private magnetosphereRenderer?: MagnetosphereRenderer;
   private atmosphereGlow?: Phaser.GameObjects.Graphics;
 
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
+
+    this.hotspotRotate = this.rotate;
 
     this.run = scene.registry.get("run") as PlanetRunState;
     const tf = getTerraforming(scene);
@@ -139,7 +146,7 @@ export default class TerraformingPlanet extends PlanetBase {
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
 
-      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.getHotspotRotate());
 
       let nextKey: Key | null = null;
 
@@ -167,7 +174,7 @@ export default class TerraformingPlanet extends PlanetBase {
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
 
-      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+      const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.getHotspotRotate());
       if (!cell) return;
 
       const k = `${cell.row},${cell.col}`;
@@ -233,7 +240,7 @@ export default class TerraformingPlanet extends PlanetBase {
 
     const div = this.divisions;
     const r = this.r;
-    const rotate = this.rotate;
+    const rotate = this.getHotspotRotate();
 
     const keyOf = (row: number, col: number) => `${row},${col}`;
     const wrapCol = (col: number) => (col % div + div) % div;
@@ -280,6 +287,10 @@ export default class TerraformingPlanet extends PlanetBase {
         if (rightMissing) drawEdge(hex, a, lat0, lon1, lat1, lon1);
       }
     }
+  }
+
+  protected onAfterTilesRedraw() {
+    this.redrawHotspotOutlines();
   }
 
   private disableEffect(k: Key) {
