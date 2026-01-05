@@ -8,6 +8,7 @@ import Evolution from "./phases/evolution/Evolution";
 import GalaxyMap from "./phases/galaxy/GalaxyMap";
 import TerraformingComplete from "./phases/terraform/TerraformingComplete";
 import PrimordialSoupComplete from "./phases/primordial/PrimordialSoupComplete";
+import EvolutionComplete from "./phases/evolution/EvolutionComplete";
 
 const game = new Phaser.Game({
   width: 1920,
@@ -18,7 +19,7 @@ const game = new Phaser.Game({
     autoCenter: Phaser.Scale.Center.CENTER_BOTH,
   },
   physics: { default: "arcade" },
-  scene: [Preload, Init, Welcome, Terraforming, TerraformingComplete, PrimordialSoup, PrimordialSoupComplete, Evolution, GalaxyMap],
+  scene: [Preload, Init, Welcome, Terraforming, TerraformingComplete, PrimordialSoup, PrimordialSoupComplete, Evolution, EvolutionComplete, GalaxyMap],
   transparent: false,
   input: { activePointers: 3 },
 });
