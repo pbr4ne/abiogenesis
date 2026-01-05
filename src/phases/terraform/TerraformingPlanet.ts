@@ -218,7 +218,7 @@ export default class TerraformingPlanet extends PlanetBase {
     }
 
     if (k === "hydrosphere") {
-      const water = tf.waterStep04(); //0..4
+      const water = tf.waterStep10();
       this.run.waterLevel = water;
       this.applyHydrosphere(water);
       return;

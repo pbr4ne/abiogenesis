@@ -29,7 +29,7 @@ export default class PlanetRunState {
 
     const sceneOverride = getUrlParam("scene");
     if (sceneOverride !== null && sceneOverride != "Terraforming") {
-      this.waterLevel = 4;
+      this.waterLevel = 10;
       log(`Overriding water level to ${this.waterLevel}`);
     }
 

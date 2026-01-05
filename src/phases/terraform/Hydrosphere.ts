@@ -35,7 +35,7 @@ export default class Hydrosphere extends TerraformingView {
     const col0End = Hydrosphere.SLOT_COL_END_1 - 1;
 
     const preMap = new HydrosphereMap(cols, rows);
-    preMap.waterLevel = tf.waterStep04();
+    preMap.waterLevel = tf.waterStep10();
 
     preMap.ensureAtLeastLowCellsInRect(
       row0Start,
@@ -192,7 +192,7 @@ export default class Hydrosphere extends TerraformingView {
     const level = Phaser.Math.Clamp(Math.round(this.points), 0, this.thermometerMax);
     tf.setHydrosphereLevel(level);
 
-    const nextWater = tf.waterStep04();
+    const nextWater = tf.waterStep10();
     if (nextWater === this.map.waterLevel) return;
 
     this.map.waterLevel = nextWater;

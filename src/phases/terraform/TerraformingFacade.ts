@@ -63,8 +63,8 @@ export default class TerraformingFacade extends Phaser.Events.EventEmitter {
     return Phaser.Math.Clamp(this.getLevel(k) / TerraformingFacade.MAX, 0, 1);
   }
 
-  public waterStep04() {
-    return Phaser.Math.Clamp(Math.floor(this.ratio01("hydrosphere") * 5), 0, 4);
+  public waterStep10() {
+    return Phaser.Math.Clamp(Math.floor(this.ratio01("hydrosphere") * 11), 0, 10);
   }
 
   private getLevel(k: TerraformKey) {

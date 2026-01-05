@@ -19,7 +19,7 @@ export default class HydrosphereMap {
     this.cols = cols;
     this.rows = rows;
     const rng = new Phaser.Math.RandomDataGenerator();
-    this.alt = generateAltGrid(rows, cols, rng);
+    this.alt = generateAltGrid(rows, cols, rng, 20);
 
     this.cells = Array.from({ length: rows }, (_, r) =>
       Array.from({ length: cols }, (_, c) => ({ a: this.alt[r][c] }))
