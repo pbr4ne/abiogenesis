@@ -1,14 +1,27 @@
 import Phaser from "phaser";
 
-type DeviceButtonsCfg = {
-  y: number;
-  radius?: number;
-  xPositions?: [number, number, number];
-  imageKeys: readonly [string, string, string];
-  costs: Record<0 | 1 | 2, number>;
-  getPoints: () => number;
-  onSelect: (device: 0 | 1 | 2) => void;
-};
+type DeviceButtonsCfg =
+  | {
+    layout?: "row";
+    y: number;
+    radius?: number;
+    xPositions?: [number, number, number];
+    imageKeys: readonly [string, string, string];
+    costs: Record<0 | 1 | 2, number>;
+    getPoints: () => number;
+    onSelect: (device: 0 | 1 | 2) => void;
+  }
+  | {
+    layout: "col";
+    x: number;
+    topY: number;
+    spacing?: number;
+    radius?: number;
+    imageKeys: readonly [string, string, string];
+    costs: Record<0 | 1 | 2, number>;
+    getPoints: () => number;
+    onSelect: (device: 0 | 1 | 2) => void;
+  };
 
 export default class DeviceButtons {
   public readonly buttons = new Map<0 | 1 | 2, Phaser.GameObjects.Container>();
@@ -26,13 +39,38 @@ export default class DeviceButtons {
   private getPoints: () => number;
   private onSelect: (device: 0 | 1 | 2) => void;
 
+  private layout: "row" | "col";
+  private x: number;
+  private topY: number;
+  private spacing: number;
+
   constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: DeviceButtonsCfg) {
     this.scene = scene;
     this.parent = parent;
 
-    this.y = cfg.y;
     this.radius = cfg.radius ?? 100;
-    this.xPositions = cfg.xPositions ?? [-360, 0, 360];
+
+    this.layout = cfg.layout ?? "row";
+
+    this.radius = cfg.radius ?? 100;
+
+    if (cfg.layout === "col") {
+      this.layout = "col";
+      this.x = cfg.x;
+      this.topY = cfg.topY;
+      this.spacing = cfg.spacing ?? (this.radius * 2 + 26) + 30;
+
+      this.y = 0;
+      this.xPositions = [-360, 0, 360];
+    } else {
+      this.layout = "row";
+      this.y = cfg.y;
+      this.xPositions = cfg.xPositions ?? [-360, 0, 360];
+
+      this.x = 0;
+      this.topY = 0;
+      this.spacing = 0;
+    }
 
     this.imageKeys = cfg.imageKeys;
     this.costs = cfg.costs;
@@ -48,7 +86,19 @@ export default class DeviceButtons {
 
     for (let i = 0; i < 3; i++) {
       const device = i as 0 | 1 | 2;
-      const btn = this.makeCircleImageButton(this.xPositions[i], this.y, this.radius, this.imageKeys[i], device);
+
+      let x: number;
+      let y: number;
+
+      if (this.layout === "col") {
+        x = this.x;
+        y = this.topY + i * this.spacing;
+      } else {
+        x = this.xPositions[i];
+        y = this.y;
+      }
+
+      const btn = this.makeCircleImageButton(x, y, this.radius, this.imageKeys[i], device);
       this.parent.add(btn);
       this.buttons.set(device, btn);
     }

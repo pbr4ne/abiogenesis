@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 type TerraformingProgressCfg = {
+  orientation: "vertical" | "horizontal";
   x: number;
   topY: number;
   w: number;

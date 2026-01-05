@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import TerraformingView from "./TerraformingView";
 import { getTerraformingState } from "./TerraformingState";
 import MagnetosphereRenderer from "./MagnetosphereRenderer";
@@ -18,25 +19,32 @@ export default class Magnetosphere extends TerraformingView {
     super(scene, x, y, {
       ...cfg,
 
-      flipWorldY: true,
+      flipWorldY: false,
 
-      buttonRowLocalY: 1080 - 240 - y,
+      buttonLayout: "col",
+      buttonLocalX: -800,
+      buttonTopLocalY: 520,
+      buttonRowLocalY: 0,
 
-      backButtonLocalX: 820,
-      backButtonLocalY: 950,
+      backButtonLocalX: -800,
+      backButtonLocalY: 230,
 
-      thermoLocalX: -820,
-      thermoTopLocalY: 300,
-      thermoH: 700,
-      thermoW: 60,
+      thermoOrientation: "horizontal",
+      thermoLocalX: -50,
+      thermoTopLocalY: 200,
+      thermoW: 700,
+      thermoH: 60,
+      arcStartDeg: 140,
+      arcEndDeg: 220,            
 
       deviceKeys: ["magnetosphereDevice1", "magnetosphereDevice2", "magnetosphereDevice3"],
-
       deviceCosts: { 0: 5, 1: 20, 2: 100 },
       deviceRates: { 0: 1, 1: 5, 2: 10 },
 
       onBackEvent: "ui:goToPlanet"
     });
+
+    this.world.x = 1620;
 
     this.onPointsChanged();
   }

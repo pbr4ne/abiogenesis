@@ -21,7 +21,12 @@ export type TerraformingViewConfig = {
 
   slotCount?: number;
 
-  buttonRowLocalY: number;
+  buttonRowLocalY?: number;
+
+  buttonLayout?: "row" | "col";
+  buttonLocalX?: number;
+  buttonTopLocalY?: number;
+
   backButtonLocalX: number;
   backButtonLocalY: number;
 
@@ -29,6 +34,8 @@ export type TerraformingViewConfig = {
   thermoTopLocalY: number;
   thermoH: number;
   thermoW: number;
+
+  thermoOrientation?: "vertical" | "horizontal";
 
   flipWorldY?: boolean;
 
@@ -72,8 +79,12 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected thermoTopLocalY: number;
   protected thermoH: number;
   protected thermoW: number;
+  protected thermoOrientation: "vertical" | "horizontal";
 
   protected buttonRowLocalY: number;
+  protected buttonLayout: "row" | "col";
+  protected buttonLocalX: number;
+  protected buttonTopLocalY: number;
 
   protected backButtonLocalX: number;
   protected backButtonLocalY: number;
@@ -108,12 +119,16 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.deviceCosts = cfg.deviceCosts;
     this.deviceRates = cfg.deviceRates;
 
-    this.buttonRowLocalY = cfg.buttonRowLocalY;
+    this.buttonRowLocalY = cfg.buttonRowLocalY ?? (1080 - 240 - y);
+    this.buttonLayout = cfg.buttonLayout ?? "row";
+    this.buttonLocalX = cfg.buttonLocalX ?? -850;
+    this.buttonTopLocalY = cfg.buttonTopLocalY ?? 260;
 
     this.thermoLocalX = cfg.thermoLocalX;
     this.thermoTopLocalY = cfg.thermoTopLocalY;
     this.thermoH = cfg.thermoH;
     this.thermoW = cfg.thermoW;
+    this.thermoOrientation = cfg.thermoOrientation ?? "vertical";
 
     this.backButtonLocalX = cfg.backButtonLocalX;
     this.backButtonLocalY = cfg.backButtonLocalY;
@@ -162,13 +177,26 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
     this.placement.rebuildSprites();
 
-    this.palette = new DeviceButtons(this.scene, this.ui, {
-      y: this.buttonRowLocalY,
-      imageKeys: this.deviceKeys,
-      costs: this.deviceCosts,
-      getPoints: () => this.points,
-      onSelect: (d: 0 | 1 | 2) => this.selectDevice(d)
-    });
+    if (this.buttonLayout === "col") {
+      this.palette = new DeviceButtons(this.scene, this.ui, {
+        layout: "col",
+        x: this.buttonLocalX,
+        topY: this.buttonTopLocalY,
+        imageKeys: this.deviceKeys,
+        costs: this.deviceCosts,
+        getPoints: () => this.points,
+        onSelect: (d: 0 | 1 | 2) => this.selectDevice(d)
+      });
+    } else {
+      this.palette = new DeviceButtons(this.scene, this.ui, {
+        layout: "row",
+        y: this.buttonRowLocalY,
+        imageKeys: this.deviceKeys,
+        costs: this.deviceCosts,
+        getPoints: () => this.points,
+        onSelect: (d: 0 | 1 | 2) => this.selectDevice(d)
+      });
+    }
 
     this.backBtn = new PlanetButton(this.scene, this.ui, {
       x: this.backButtonLocalX,
@@ -177,6 +205,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     });
 
     this.thermometer = new TerraformingProgress(this.scene, this.ui, {
+      orientation: this.thermoOrientation,
       x: this.thermoLocalX,
       topY: this.thermoTopLocalY,
       w: this.thermoW,
