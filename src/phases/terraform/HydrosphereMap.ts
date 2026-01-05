@@ -1,4 +1,4 @@
-import { generateAltGrid } from "./HydrosphereTerrain";
+import { enforceGlobalAltSplit5050, generateAltGrid } from "./HydrosphereTerrain";
 import { terrainColour, toHex } from "./HydrosphereTerrain";
 import PlanetGrid from "../../planet/PlanetGrid";
 
@@ -20,6 +20,7 @@ export default class HydrosphereMap {
     this.rows = rows;
     const rng = new Phaser.Math.RandomDataGenerator();
     this.alt = generateAltGrid(rows, cols, rng, 20);
+    enforceGlobalAltSplit5050(this.alt, 10, 20, rng);
 
     this.cells = Array.from({ length: rows }, (_, r) =>
       Array.from({ length: cols }, (_, c) => ({ a: this.alt[r][c] }))

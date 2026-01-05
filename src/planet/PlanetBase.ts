@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { makeRotator, pickCellByNearestProjectedCenter } from "./PlanetMath";
 import { drawBaseGradient, drawTiles, drawWireGrid } from "./PlanetRenderer";
 import PlanetGrid from "./PlanetGrid";
+import { log } from "../utilities/GameUtils";
 
 export type PlanetBaseConfig = {
   divisions?: number;
@@ -117,6 +118,7 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
   }
 
   protected redrawForRotation() {
+    log('redrawing for rotation');
     this.redrawTiles();
 
     drawWireGrid(

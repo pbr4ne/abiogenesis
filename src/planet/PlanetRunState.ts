@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import type { AltGrid } from "../phases/terraform/HydrosphereTerrain";
-import { generateAltGrid } from "../phases/terraform/HydrosphereTerrain";
+import { enforceGlobalAltSplit5050, generateAltGrid } from "../phases/terraform/HydrosphereTerrain";
 import { LifeFormInstance, LifeFormType } from "../phases/evolution/EvolutionTypes";
 import { getUrlParam, log } from "../utilities/GameUtils";
 
@@ -26,6 +26,7 @@ export default class PlanetRunState {
     this.seed = seed ?? Phaser.Math.RND.uuid();
     const rng = new Phaser.Math.RandomDataGenerator([this.seed]);
     this.hydroAlt = generateAltGrid(divisions, divisions, rng);
+    enforceGlobalAltSplit5050(this.hydroAlt, 10, 20, rng);
 
     const sceneOverride = getUrlParam("scene");
     if (sceneOverride !== null && sceneOverride != "Terraforming") {

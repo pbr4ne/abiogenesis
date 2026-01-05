@@ -2,7 +2,67 @@ import Phaser from "phaser";
 
 export type AltGrid = number[][];
 
-export const generateAltGrid = (rows: number, cols: number, rng: Phaser.Math.RandomDataGenerator, levels = 20): AltGrid => {
+export const enforceGlobalAltSplit5050 = (
+  altGrid: number[][],
+  splitAlt = 10,
+  levels = 20,
+  rng: Phaser.Math.RandomDataGenerator
+) => {
+  const rows = altGrid.length;
+  const cols = altGrid[0].length;
+
+  const all: { r: number; c: number }[] = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      all.push({ r, c });
+    }
+  }
+
+  const targetHigh = Math.floor(all.length * 0.5);
+
+  let curHigh = 0;
+  for (const { r, c } of all) {
+    if (altGrid[r][c] >= splitAlt) curHigh++;
+  }
+
+  if (curHigh === targetHigh) return;
+
+  const highs: { r: number; c: number }[] = [];
+  const lows: { r: number; c: number }[] = [];
+
+  for (const rc of all) {
+    if (altGrid[rc.r][rc.c] >= splitAlt) highs.push(rc);
+    else lows.push(rc);
+  }
+
+  Phaser.Utils.Array.Shuffle(highs);
+  Phaser.Utils.Array.Shuffle(lows);
+
+  const randInt = (min: number, max: number) => Math.floor(rng.frac() * (max - min + 1)) + min;
+
+  if (curHigh > targetHigh) {
+    let need = curHigh - targetHigh;
+    for (let i = 0; need > 0 && i < highs.length; i++) {
+      const { r, c } = highs[i];
+      altGrid[r][c] = randInt(0, splitAlt - 1);
+      need--;
+    }
+  } else {
+    let need = targetHigh - curHigh;
+    for (let i = 0; need > 0 && i < lows.length; i++) {
+      const { r, c } = lows[i];
+      altGrid[r][c] = randInt(splitAlt, levels - 1);
+      need--;
+    }
+  }
+};
+
+export const generateAltGrid = (
+  rows: number,
+  cols: number,
+  rng: Phaser.Math.RandomDataGenerator,
+  levels = 20
+): AltGrid => {
   const noise = Array.from({ length: rows }, () =>
     Array.from({ length: cols }, () => rng.frac())
   );
@@ -17,10 +77,11 @@ export const generateAltGrid = (rows: number, cols: number, rng: Phaser.Math.Ran
         let n = 0;
 
         for (let dr = -1; dr <= 1; dr++) {
+          const rr = r + dr;
+          if (rr < 0 || rr >= rows) continue;
+
           for (let dc = -1; dc <= 1; dc++) {
-            const rr = r + dr;
-            const cc = c + dc;
-            if (rr < 0 || rr >= rows || cc < 0 || cc >= cols) continue;
+            const cc = (c + dc + cols) % cols;
             sum += noise[rr][cc];
             n++;
           }
@@ -47,7 +108,7 @@ export const generateAltGrid = (rows: number, cols: number, rng: Phaser.Math.Ran
     thresholds.push(flat[idx]);
   }
 
-  const alt: AltGrid = Array.from({ length: rows }, () => Array.from({ length: cols }, () => 0));
+  const alt: AltGrid = Array.from({ length: rows }, () => Array(cols).fill(0));
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
