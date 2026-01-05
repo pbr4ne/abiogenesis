@@ -33,13 +33,13 @@ export default class EvolutionPlanet extends PlanetBase {
       (row, col) => this.run.hydroAlt[row][col] <= this.run.waterLevel
     );
 
-    sprinkleLifeFormsDebug(
-      this.run,
-      this.divisions,
-      this.run.hydroAlt,
-      this.run.waterLevel,
-      5
-    );
+    // sprinkleLifeFormsDebug(
+    //   this.run,
+    //   this.divisions,
+    //   this.run.hydroAlt,
+    //   this.run.waterLevel,
+    //   5
+    // );
 
     this.renderLifeForms();
     this.renderLifeBumps();
