@@ -27,9 +27,9 @@ export default class PlanetRunState {
     const rng = new Phaser.Math.RandomDataGenerator([this.seed]);
     this.hydroAlt = generateAltGrid(divisions, divisions, rng);
 
-    const overrideWater = getUrlParam("waterLevel");
-    if (overrideWater !== null) {
-      this.waterLevel = parseFloat(overrideWater);
+    const sceneOverride = getUrlParam("scene");
+    if (sceneOverride !== null && sceneOverride != "Terraforming") {
+      this.waterLevel = 4;
       log(`Overriding water level to ${this.waterLevel}`);
     }
 
