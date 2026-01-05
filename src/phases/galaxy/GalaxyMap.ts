@@ -9,7 +9,6 @@ type PlanetDef = {
 };
 
 export default class GalaxyMap extends PhaseScene {
-  private bgG!: Phaser.GameObjects.Graphics;
   private planetG!: Phaser.GameObjects.Graphics;
 
   private planets: {
@@ -23,18 +22,19 @@ export default class GalaxyMap extends PhaseScene {
   }
 
   protected createPhase() {
-    const w = this.scale.width;
-    const h = this.scale.height;
+    const w = 1920;
+    const h = 1080;
 
-    this.bgG = this.add.graphics();
-    this.bgG.setScrollFactor(0);
+    const bg = this.add.image(w / 2, h / 2, "galaxy");
+    bg.setScrollFactor(0);
+    bg.setDepth(-10000);
+
+    this.bgCam.ignore(bg);
 
     this.planetG = this.add.graphics();
     this.planetG.setScrollFactor(0);
+    this.planetG.setDepth(0);
 
-    this.drawGalaxyBackground(w, h);
-
-    this.bgCam.ignore(this.bgG);
     this.bgCam.ignore(this.planetG);
 
     const defs: PlanetDef[] = [
@@ -53,84 +53,7 @@ export default class GalaxyMap extends PhaseScene {
     this.planets = this.placePlanetsHardcoded(defs, w, h);
 
     this.drawPlanets();
-
     this.enablePlanetInput();
-  }
-
-  private drawGalaxyBackground(w: number, h: number) {
-    const g = this.bgG;
-    g.clear();
-
-    g.fillStyle(0x05060a, 1);
-    g.fillRect(0, 0, w, h);
-
-    const cx = w * 0.52;
-    const cy = h * 0.48;
-
-    const arms = 3;
-    const dotsPerArm = 1800;
-
-    for (let arm = 0; arm < arms; arm++) {
-      const armPhase = (arm / arms) * Math.PI * 2;
-
-      for (let i = 0; i < dotsPerArm; i++) {
-        const t = i / (dotsPerArm - 1);
-
-        const rad = Phaser.Math.Linear(2, Math.min(w, h) * 0.95, t);
-
-        const ang = armPhase + t * 3.6 * Math.PI;
-
-        const armWidth = Phaser.Math.Linear(6, 120, t);
-        const jitter = Phaser.Math.FloatBetween(-armWidth, armWidth);
-        const j2 = Phaser.Math.FloatBetween(-armWidth * 0.7, armWidth * 0.7);
-
-        const x = cx + Math.cos(ang) * (rad + jitter);
-        const y = cy + Math.sin(ang) * (rad * 0.85 + j2);
-
-        if (x < -120 || x > w + 120 || y < -120 || y > h + 120) continue;
-
-        const coreBoost = Phaser.Math.Linear(1.9, 1.0, t);
-        const a =
-          Phaser.Math.Linear(0.22, 0.04, t) *
-          coreBoost *
-          Phaser.Math.FloatBetween(0.6, 1.0);
-
-        const size = Phaser.Math.FloatBetween(0.9, 2.8) * coreBoost;
-
-        g.fillStyle(0xcfe1ff, a);
-        g.fillCircle(x, y, size);
-      }
-    }
-
-    for (let i = 0; i < 1200; i++) {
-      const t = Math.random();
-      const r = Math.min(w, h) * 0.14 * t * t;
-
-      const a = Phaser.Math.FloatBetween(0, Math.PI * 2);
-
-      const x = cx + Math.cos(a) * r;
-      const y = cy + Math.sin(a) * (r * 0.85);
-
-      const coreBoost = Phaser.Math.Linear(2.2, 1.0, t);
-
-      const alpha = Phaser.Math.FloatBetween(0.06, 0.16) * coreBoost;
-      const size = Phaser.Math.FloatBetween(1.6, 3.4) * coreBoost;
-
-      g.fillStyle(0xe9f0ff, alpha);
-      g.fillCircle(x, y, size);
-    }
-
-    const starCount = 450;
-    for (let i = 0; i < starCount; i++) {
-      const x = Phaser.Math.FloatBetween(0, w);
-      const y = Phaser.Math.FloatBetween(0, h);
-      const size = Phaser.Math.FloatBetween(0.6, 2.2);
-      const a = Phaser.Math.FloatBetween(0.15, 0.9);
-
-      const warm = Math.random() < 0.12;
-      g.fillStyle(warm ? 0xfff2cf : 0xf7fbff, a);
-      g.fillCircle(x, y, size);
-    }
   }
 
   private placePlanetsHardcoded(defs: PlanetDef[], w: number, h: number) {

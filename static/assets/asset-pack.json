@@ -102,6 +102,11 @@
                 "key": "fungi"
             },
             {
+                "url": "assets/images/galaxy.png",
+                "type": "image",
+                "key": "galaxy"
+            },
+            {
                 "url": "assets/images/human.png",
                 "type": "image",
                 "key": "human"
