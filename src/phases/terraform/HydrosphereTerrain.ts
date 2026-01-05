@@ -105,8 +105,8 @@ export const terrainColour = (alt: number, waterLevel: number) => {
   const t = Phaser.Math.Clamp((depth - 1) / 6, 0, 1);
   const tt = t * t * t;
 
-  const WATER_SHALLOW = 0x6fe6ff;
-  const WATER_DEEP = 0x1f5f8a;
+  const WATER_SHALLOW = 0x4fb6e0;
+  const WATER_DEEP = 0x1e4f9a;
 
   return lerpColour(WATER_SHALLOW, WATER_DEEP, tt);
 };
