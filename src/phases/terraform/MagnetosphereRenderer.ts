@@ -15,6 +15,15 @@ export type MagnetosphereRendererConfig = {
   outerRadiusMul: number;
 
   strengthOverride01?: number | null;
+
+  loopCenterOffsetMulMin?: number;
+  loopCenterOffsetMulMax?: number;
+
+  innerRadiusMulMin?: number;
+  innerRadiusMulMax?: number;
+
+  outerRadiusMulMin?: number;
+  outerRadiusMulMax?: number;
 };
 
 export default class MagnetosphereRenderer {
@@ -33,6 +42,17 @@ export default class MagnetosphereRenderer {
   private innerRadiusMul: number;
   private outerRadiusMul: number;
 
+  private strengthOverride01: number | null | undefined;
+
+  private loopCenterOffsetMulMin?: number;
+  private loopCenterOffsetMulMax?: number;
+
+  private innerRadiusMulMin?: number;
+  private innerRadiusMulMax?: number;
+
+  private outerRadiusMulMin?: number;
+  private outerRadiusMulMax?: number;
+
   private strength01 = 0;
 
   constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: MagnetosphereRendererConfig) {
@@ -49,6 +69,17 @@ export default class MagnetosphereRenderer {
     this.innerRadiusMul = cfg.innerRadiusMul;
     this.outerRadiusMul = cfg.outerRadiusMul;
 
+    this.strengthOverride01 = cfg.strengthOverride01;
+
+    this.loopCenterOffsetMulMin = cfg.loopCenterOffsetMulMin;
+    this.loopCenterOffsetMulMax = cfg.loopCenterOffsetMulMax;
+
+    this.innerRadiusMulMin = cfg.innerRadiusMulMin;
+    this.innerRadiusMulMax = cfg.innerRadiusMulMax;
+
+    this.outerRadiusMulMin = cfg.outerRadiusMulMin;
+    this.outerRadiusMulMax = cfg.outerRadiusMulMax;
+
     this.g = scene.add.graphics();
     parent.add(this.g);
 
@@ -64,24 +95,53 @@ export default class MagnetosphereRenderer {
     this.draw();
   }
 
+  private pickMul(min: number | undefined, max: number | undefined, fallback: number, s: number) {
+    if (min === undefined || max === undefined) return fallback;
+    return Phaser.Math.Linear(min, max, s);
+  }
+
   private draw() {
-    const strength = this.strength01;
+    const raw = this.strengthOverride01 ?? this.strength01;
+    const strength = Phaser.Math.Clamp(raw, 0, 1);
 
     this.g.clear();
     if (strength <= 0.001) return;
 
-    const ox = this.r * this.loopCenterOffsetMul;
-    const innerR = this.r * this.innerRadiusMul;
-    const outerR = this.r * this.outerRadiusMul;
-
     const count = this.perSideLines;
+
+    const sShape = Phaser.Math.Easing.Cubic.Out(strength);
+
+    const loopMul = this.pickMul(
+      this.loopCenterOffsetMulMin,
+      this.loopCenterOffsetMulMax,
+      this.loopCenterOffsetMul,
+      sShape
+    );
+
+    const innerMul = this.pickMul(
+      this.innerRadiusMulMin,
+      this.innerRadiusMulMax,
+      this.innerRadiusMul,
+      sShape
+    );
+
+    const outerMul = this.pickMul(
+      this.outerRadiusMulMin,
+      this.outerRadiusMulMax,
+      this.outerRadiusMul,
+      sShape
+    );
+
+    const ox = this.r * loopMul;
+    const innerR = this.r * innerMul;
+    const outerR = this.r * outerMul;
 
     this.g.lineStyle(this.lineWidth, 0x66ccff, this.lineAlpha * strength);
 
     for (let i = 0; i < count; i++) {
       const t = count <= 1 ? 0 : i / (count - 1);
-            const tt = Math.pow(t, 1.7);
-            const rr = Phaser.Math.Linear(innerR, outerR, tt);
+      const tt = Math.pow(t, 1.7);
+      const rr = Phaser.Math.Linear(innerR, outerR, tt);
 
       this.g.strokeCircle(this.cx - ox, this.cy, rr);
       this.g.strokeCircle(this.cx + ox, this.cy, rr);

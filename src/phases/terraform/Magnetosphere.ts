@@ -14,6 +14,7 @@ type MagnetosphereConfig = {
 
 export default class Magnetosphere extends TerraformingView {
   private magField?: MagnetosphereRenderer;
+  private static readonly DEBUG_FORCE_FULL_STRENGTH = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: MagnetosphereConfig) {
     super(scene, x, y, {
@@ -55,6 +56,12 @@ export default class Magnetosphere extends TerraformingView {
     this.onPointsChanged();
   }
 
+  private updateMagStrength() {
+    const tf = getTerraforming(this.scene);
+    const s = Phaser.Math.Clamp(tf.ratio01("magnetosphere"), 0, 1);
+    this.magField?.setStrength01(s);
+  }
+
   protected override createBehindWorldOverlays() {
     this.magField = new MagnetosphereRenderer(this.scene, this.behindWorld, {
       r: this.r,
@@ -63,15 +70,28 @@ export default class Magnetosphere extends TerraformingView {
 
       lineAlpha: 0.18,
       lineWidth: 2,
+      perSideLines: 6,
 
-      perSideLines: 5,
+      loopCenterOffsetMul: 1,
+      innerRadiusMul: 0.15,
+      outerRadiusMul: 1.35,
 
-      loopCenterOffsetMul: 0.62,
-      innerRadiusMul: 0.55,
-      outerRadiusMul: 1.85,
+      loopCenterOffsetMulMin: 0.85,
+      loopCenterOffsetMulMax: 1,
 
-      strengthOverride01: null
+      innerRadiusMulMin: 0.12,
+      innerRadiusMulMax: 0.18,
+
+      outerRadiusMulMin: 1.15,
+      outerRadiusMulMax: 1.75,
+
+      strengthOverride01: Magnetosphere.DEBUG_FORCE_FULL_STRENGTH ? 1 : null
     });
+
+    const tf = getTerraforming(this.scene);
+    const onChange = () => this.updateMagStrength();
+    tf.on("change", onChange);
+    this.updateMagStrength();
 
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.magField?.destroy();
@@ -80,9 +100,7 @@ export default class Magnetosphere extends TerraformingView {
   }
 
   protected override onTick() {
-    const state = getTerraformingState(this.scene);
-    const ratio01 = Phaser.Math.Clamp(state.magnetosphereLevel / 1000, 0, 1);
-    this.magField?.setStrength01(ratio01);
+    this.updateMagStrength();
   }
 
   protected override onPointsChanged() {

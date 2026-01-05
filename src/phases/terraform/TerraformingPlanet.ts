@@ -320,6 +320,16 @@ export default class TerraformingPlanet extends PlanetBase {
         loopCenterOffsetMul: 1,
         innerRadiusMul: 0.15,
         outerRadiusMul: 1.35,
+
+        loopCenterOffsetMulMin: 0.95,
+        loopCenterOffsetMulMax: 1.05,
+
+        innerRadiusMulMin: 0.12,
+        innerRadiusMulMax: 0.16,
+
+        outerRadiusMulMin: 1.10,
+        outerRadiusMulMax: 1.45,
+
         strengthOverride01: null
       });
     }
