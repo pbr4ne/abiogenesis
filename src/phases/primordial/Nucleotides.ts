@@ -25,10 +25,10 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
     g.clear();
 
     const items: { key: NucKey; col: number }[] = [
-      { key: "A", col: 0xFF00FF },
-      { key: "G", col: 0xFFFF00 },
-      { key: "T", col: 0x00FF00 },
-      { key: "C", col: 0x00FFFF }
+      { key: "A", col: 0xff00ff },
+      { key: "G", col: 0xffff00 },
+      { key: "T", col: 0x00ff00 },
+      { key: "C", col: 0x00ffff }
     ];
 
     const w = 320;
@@ -40,7 +40,8 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
       const it = items[i];
       const y = yStart + i * (h + gap);
 
-      const f = Phaser.Math.Clamp(this.progress.getFill01(it.key), 0, 1);
+      const raw = Phaser.Math.Clamp(this.progress.getFill01(it.key), 0, 1);
+      const f = this.visualFill01(raw);
       this.drawNucleotide(g, 0, y, w, h, it.key, it.col, f);
     }
   }
@@ -57,9 +58,8 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
   ) {
     const isPurine = key === "A" || key === "G";
 
-    const tintA = fill01 <= 0 ? 0 : Phaser.Math.Linear(0.04, 0.80, fill01);
-
     const baseA = 0.10;
+    const fillA = 0.78;
 
     const blackW = 12;
     const whiteW = 4;
@@ -68,7 +68,6 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
     const cy = y + h * 0.52;
 
     const hexR = Math.min(w, h) * 0.38;
-
     const hexRot = Math.PI / 6;
 
     if (!isPurine) {
@@ -78,11 +77,17 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
       const topLeftIdx = this.topLeftIndex(hex);
       const bottomRightIdx = this.bottomRightIndex(hex);
 
-      g.fillStyle(0x0B0F14, baseA);
+      g.fillStyle(0x0b0f14, baseA);
       this.fillPoly(g, hex);
 
-      g.fillStyle(col, tintA);
-      this.fillPoly(g, hex);
+      if (fill01 > 0) {
+        const yCut = this.yCutForFill(hex, fill01);
+        const clipped = this.clipPolyBottom(hex, yCut);
+        if (clipped.length >= 3) {
+          g.fillStyle(col, fillA);
+          this.fillPoly(g, clipped);
+        }
+      }
 
       this.ribbonStrokePoly(g, hex, blackW, whiteW);
 
@@ -109,13 +114,25 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
 
     const pent = this.fusedRegularPentagon(hexC.x, hexC.y, vTop, vBot);
 
-    g.fillStyle(0x0B0F14, baseA);
+    g.fillStyle(0x0b0f14, baseA);
     this.fillPoly(g, hex);
     this.fillPoly(g, pent);
 
-    g.fillStyle(col, tintA);
-    this.fillPoly(g, hex);
-    this.fillPoly(g, pent);
+    if (fill01 > 0) {
+      const yCut = this.yCutForFillMulti([hex, pent], fill01);
+
+      const hexClip = this.clipPolyBottom(hex, yCut);
+      if (hexClip.length >= 3) {
+        g.fillStyle(col, fillA);
+        this.fillPoly(g, hexClip);
+      }
+
+      const pentClip = this.clipPolyBottom(pent, yCut);
+      if (pentClip.length >= 3) {
+        g.fillStyle(col, fillA);
+        this.fillPoly(g, pentClip);
+      }
+    }
 
     this.ribbonStrokePoly(g, hex, blackW, whiteW);
     this.ribbonStrokePoly(g, pent, blackW, whiteW);
@@ -123,7 +140,6 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
     const stubLen = 28;
 
     const topIdx = this.topmostIndex(hex);
-    const topLeftIdx = this.topLeftIndex(hex);
     const bottomRightIdx = this.bottomRightIndex(hex);
 
     if (key === "A") {
@@ -134,6 +150,84 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
       this.stubBW(g, hex, topIdx, stubLen);
       this.stubBW(g, hex, bottomRightIdx, stubLen);
     }
+  }
+
+  private visualFill01(raw01: number) {
+    const f = Phaser.Math.Clamp(raw01, 0, 1);
+    if (f <= 0) return 0;
+    if (f >= 1) return 1;
+
+    const minVis = 0.10;
+    const maxVis = 0.90;
+
+    return minVis + (maxVis - minVis) * f;
+  }
+
+  private yCutForFill(pts: Phaser.Math.Vector2[], fill01: number) {
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    for (const p of pts) {
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+
+    const f = Phaser.Math.Clamp(fill01, 0, 1);
+    return maxY - (maxY - minY) * f;
+  }
+
+  private yCutForFillMulti(polys: Phaser.Math.Vector2[][], fill01: number) {
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    for (const pts of polys) {
+      for (const p of pts) {
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+      }
+    }
+
+    const f = Phaser.Math.Clamp(fill01, 0, 1);
+    return maxY - (maxY - minY) * f;
+  }
+
+  private clipPolyBottom(pts: Phaser.Math.Vector2[], yCut: number): Phaser.Math.Vector2[] {
+    if (pts.length < 3) return [];
+
+    const inside = (p: Phaser.Math.Vector2) => p.y >= yCut;
+
+    const intersect = (a: Phaser.Math.Vector2, b: Phaser.Math.Vector2) => {
+      const dy = b.y - a.y;
+      if (Math.abs(dy) < 0.000001) return new Phaser.Math.Vector2(b.x, yCut);
+
+      const t = (yCut - a.y) / dy;
+      const x = a.x + (b.x - a.x) * t;
+      return new Phaser.Math.Vector2(x, yCut);
+    };
+
+    const out: Phaser.Math.Vector2[] = [];
+
+    let s = pts[pts.length - 1];
+    let sIn = inside(s);
+
+    for (let i = 0; i < pts.length; i++) {
+      const e = pts[i];
+      const eIn = inside(e);
+
+      if (sIn && eIn) {
+        out.push(e);
+      } else if (sIn && !eIn) {
+        out.push(intersect(s, e));
+      } else if (!sIn && eIn) {
+        out.push(intersect(s, e));
+        out.push(e);
+      }
+
+      s = e;
+      sIn = eIn;
+    }
+
+    return out;
   }
 
   private topmostIndex(pts: Phaser.Math.Vector2[]) {
@@ -245,7 +339,7 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
     g.lineStyle(blackW, 0x000000, 1);
     this.strokePoly(g, pts);
 
-    g.lineStyle(whiteW, 0xFFFFFF, 0.5);
+    g.lineStyle(whiteW, 0xffffff, 0.5);
     this.strokePoly(g, pts);
   }
 
@@ -273,7 +367,7 @@ export default class Nucleotides extends Phaser.GameObjects.Container {
     g.lineTo(x2, y2);
     g.strokePath();
 
-    g.lineStyle(4, 0xFFFFFF, 0.22);
+    g.lineStyle(4, 0xffffff, 0.22);
     g.beginPath();
     g.moveTo(p.x, p.y);
     g.lineTo(x2, y2);
