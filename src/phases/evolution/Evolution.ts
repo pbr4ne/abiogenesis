@@ -8,7 +8,7 @@ import EvolutionTreeModal from "./EvolutionTreeModal";
 import EvolutionTreeButton from "./EvolutionTreeButton";
 import PlanetRunState from "../../planet/PlanetRunState";
 import EvolutionSim from "./EvolutionSim";
-import PetriDishPoints from "./PetriDishPoints";
+import FlaskPoints from "./FlaskPoints";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -19,7 +19,7 @@ export default class Evolution extends PhaseScene {
   private evoBtn!: EvolutionTreeButton;
   private sim!: EvolutionSim;
   private simTimer?: Phaser.Time.TimerEvent;
-  private pointsDish!: PetriDishPoints;
+  private pointsDish!: FlaskPoints;
   private lastEvoPts = -1;
 
   constructor() {
@@ -33,14 +33,16 @@ export default class Evolution extends PhaseScene {
 
     this.run = this.registry.get("run") as PlanetRunState;
 
-    this.pointsDish = new PetriDishPoints(this, {
-      x: 405,
-      y: 540,
-      r: 140,
-      getPoints: () => this.run.getEvoPointsAvailable()
+    this.pointsDish = new FlaskPoints(this, {
+      x: 270,
+      y: 420,
+      getPoints: (): number => this.run.getEvoPointsAvailable(),
+      maxFillPoints: 60,
+      maxShownNuggets: 140,
+      displayW: 360,
+      displayH: 360
     });
     this.add.existing(this.pointsDish);
-
 
     this.sim = new EvolutionSim(this.run, 40);
 

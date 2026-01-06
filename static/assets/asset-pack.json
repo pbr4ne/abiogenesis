@@ -117,6 +117,11 @@
                 "key": "fish"
             },
             {
+                "url": "assets/images/flask.png",
+                "type": "image",
+                "key": "flask"
+            },
+            {
                 "url": "assets/images/flower.png",
                 "type": "image",
                 "key": "flower"

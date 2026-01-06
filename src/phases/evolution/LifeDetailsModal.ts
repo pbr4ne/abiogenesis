@@ -36,6 +36,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   private static readonly STAT_MAX = 5;
   private static readonly PLUS_SIZE = 50;
   private onPointsChanged: (() => void) | null = null;
+  private flaskTip: Phaser.GameObjects.Image;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -75,6 +76,14 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       fontSize: "44px",
       color: "#ffffff"
     }).setOrigin(0.5, 0.5);
+
+    this.flaskTip = scene.add.image(0, 0, "flask");
+    this.flaskTip.setVisible(false);
+    this.flaskTip.setAlpha(0.92);
+    this.flaskTip.setOrigin(0.5, 1);
+    this.flaskTip.setDisplaySize(58, 58);
+    this.flaskTip.setTintFill(0xffffff);
+    this.flaskTip.setDepth(10002);
 
     const leftColX = cx - w / 2 + pad;
 
@@ -138,7 +147,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       this.rows.survival.plus,
 
       this.closeHit,
-      this.closeText
+      this.closeText,
+      this.flaskTip,
     ]);
 
     this.setScrollFactor(0);
@@ -178,6 +188,29 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       if (this.onPointsChanged) this.scene.events.off("evoPoints:changed", this.onPointsChanged);
       this.onPointsChanged = null;
     });
+  }
+
+  private showFlaskTipAt(x: number, y: number) {
+    const sw = this.scene.scale.width;
+    const sh = this.scene.scale.height;
+
+    const pad = 12;
+
+    const w = this.flaskTip.displayWidth;
+    const h = this.flaskTip.displayHeight;
+
+    const tx = x + 46;
+    const ty = y - 34;
+
+    const cx = Phaser.Math.Clamp(tx, pad + w / 2, sw - pad - w / 2);
+    const cy = Phaser.Math.Clamp(ty, pad + h, sh - pad);
+
+    this.flaskTip.setPosition(cx, cy);
+    this.flaskTip.setVisible(true);
+  }
+
+  private hideFlaskTip() {
+    this.flaskTip.setVisible(false);
   }
 
   private getRun(): PlanetRunState | null {
@@ -271,6 +304,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   public hide() {
     this.current = null;
     this.setVisible(false);
+    this.hideFlaskTip();
   }
 
   public isOpen() {
@@ -278,6 +312,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   }
 
   private applyRow(key: StatKey, def: LifeFormDef, lf: LifeFormInstance, tint: number) {
+    this.hideFlaskTip();
     const row = this.rows[key];
 
     const v =
@@ -338,7 +373,22 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
 
     if (!canUpgrade) {
-      row.plus.disableInteractive();
+      row.plus.setInteractive({ useHandCursor: false });
+
+      row.plus.on("pointerover", () => {
+        this.showFlaskTipAt(row.plus.x, row.plus.y);
+        this.scene.input.setDefaultCursor("default");
+      });
+
+      row.plus.on("pointerout", () => {
+        this.hideFlaskTip();
+      });
+
+      row.plus.on("pointerdown", (p: Phaser.Input.Pointer) => {
+        p.event.stopPropagation();
+        this.hideFlaskTip();
+      });
+
       return;
     }
 
@@ -361,6 +411,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     row.plus.on("pointerdown", (p: Phaser.Input.Pointer) => {
       p.event.stopPropagation();
+      this.hideFlaskTip();
 
       const cur = this.current;
       if (!cur) return;
