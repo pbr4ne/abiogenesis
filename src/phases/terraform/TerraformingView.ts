@@ -8,6 +8,7 @@ import TerraformingProgress from "./TerraformingProgress";
 import PlanetButton from "./PlanetButton";
 import DeviceButtons from "./DevicePalette";
 import DeviceSlots from "./DeviceSlots";
+import PlanetRunState from "../../planet/PlanetRunState";
 
 export type DeviceButtonTheme = {
   stroke: readonly [number, number, number];
@@ -160,13 +161,20 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
     this.world.add(this.behindWorld);
 
-    if (this.renderPlanetEdge) {
-      this.planetEdge = new PlanetEdge(scene, 0, 0, { diameter: this.diameter, capRatio: this.offsetRatio });
-      this.world.add(this.planetEdge);
-    }
-
     this.grid = scene.add.graphics();
     this.world.add(this.grid);
+
+    if (this.renderPlanetEdge) {
+      const run = scene.registry.get("run") as PlanetRunState;
+
+      this.planetEdge = new PlanetEdge(scene, 0, 0, {
+        diameter: this.diameter,
+        capRatio: this.offsetRatio,
+        run
+      });
+
+      this.world.add(this.planetEdge);
+    }
 
     if (this.flipWorldY) {
       this.world.setScale(1, -1);
