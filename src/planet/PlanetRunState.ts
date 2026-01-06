@@ -22,6 +22,7 @@ export default class PlanetRunState {
   public unlockedLifeTypes = new Set<LifeFormType>();
 
   public terraform: TerraformLevels;
+  public evoPointsBank = 0;
 
   constructor(divisions: number, seed?: string) {
     this.seed = seed ?? Phaser.Math.RND.uuid();
@@ -45,5 +46,24 @@ export default class PlanetRunState {
 
   public makeLifeId() {
     return `lf_${this.nextLifeId++}`;
+  }
+
+  public getEvoPointsAvailable() {
+    return Math.floor(this.evoPointsBank);
+  }
+
+  public addEvoPoints(v: number) {
+    if (!Number.isFinite(v) || v <= 0) return;
+    this.evoPointsBank += v;
+    if (this.evoPointsBank > 9999) this.evoPointsBank = 9999;
+  }
+
+  public trySpendEvoPoints(n: number) {
+    const need = Math.max(0, Math.floor(n));
+    if (need <= 0) return true;
+    if (this.evoPointsBank < need) return false;
+    this.evoPointsBank -= need;
+    if (this.evoPointsBank < 0) this.evoPointsBank = 0;
+    return true;
   }
 }

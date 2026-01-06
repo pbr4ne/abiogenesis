@@ -8,6 +8,7 @@ import EvolutionTreeModal from "./EvolutionTreeModal";
 import EvolutionTreeButton from "./EvolutionTreeButton";
 import PlanetRunState from "../../planet/PlanetRunState";
 import EvolutionSim from "./EvolutionSim";
+import PetriDishPoints from "./PetriDishPoints";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -18,6 +19,7 @@ export default class Evolution extends PhaseScene {
   private evoBtn!: EvolutionTreeButton;
   private sim!: EvolutionSim;
   private simTimer?: Phaser.Time.TimerEvent;
+  private pointsDish!: PetriDishPoints;
 
   constructor() {
     super("Evolution");
@@ -29,6 +31,28 @@ export default class Evolution extends PhaseScene {
     this.bgCam.ignore(this.planet);
 
     this.run = this.registry.get("run") as PlanetRunState;
+
+    this.pointsDish = new PetriDishPoints(this, {
+      x: 405,
+      y: 540,
+      r: 140,
+      getPoints: () => this.run.getEvoPointsAvailable()
+    });
+    this.add.existing(this.pointsDish);
+
+
+    this.sim = new EvolutionSim(this.run, 40);
+
+    this.simTimer = this.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        this.sim.tick();
+        this.planet.refreshFromRun();
+        this.pointsDish.refresh();
+        if (this.evoModal.isOpen()) this.evoModal.show(this.run.lifeForms);
+      }
+    });
 
     this.sim = new EvolutionSim(this.run, 40);
 

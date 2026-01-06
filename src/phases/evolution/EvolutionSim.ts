@@ -12,6 +12,10 @@ type SimTuning = {
 
   baseAttackPerNeighbor: number;
   attackKillChance: number;
+
+  pointsBasePerTick: number;
+  pointsPerLifePerTick: number;
+  pointsPerDepthPerTick: number;
 };
 
 const DEFAULT_TUNING: SimTuning = {
@@ -22,7 +26,53 @@ const DEFAULT_TUNING: SimTuning = {
   baseRandomDeathPerTick: 0.01,
 
   baseAttackPerNeighbor: 0.03,
-  attackKillChance: 0.6
+  attackKillChance: 0.6,
+
+  pointsBasePerTick: 0.05,
+  pointsPerLifePerTick: 0.02,
+  pointsPerDepthPerTick: 0.015
+};
+
+const computeDepthByType = () => {
+  const types = Object.keys(LIFEFORMS) as LifeFormType[];
+
+  const indeg = new Map<LifeFormType, number>();
+  for (const t of types) indeg.set(t, 0);
+
+  for (const t of types) {
+    for (const to of LIFEFORMS[t].mutatesTo) {
+      indeg.set(to, (indeg.get(to) ?? 0) + 1);
+    }
+  }
+
+  const roots = types.filter(t => (indeg.get(t) ?? 0) === 0);
+  const depth = new Map<LifeFormType, number>();
+  const q: LifeFormType[] = [];
+
+  for (const r of roots) {
+    depth.set(r, 0);
+    q.push(r);
+  }
+
+  while (q.length > 0) {
+    const cur = q.shift()!;
+    const d = depth.get(cur) ?? 0;
+
+    for (const to of LIFEFORMS[cur].mutatesTo) {
+      const nd = d + 1;
+      const prev = depth.get(to);
+      if (prev === undefined || nd > prev) {
+        depth.set(to, nd);
+        q.push(to);
+      }
+    }
+  }
+
+  for (const t of types) {
+    if (!depth.has(t)) depth.set(t, 0);
+  }
+
+  return depth;
 };
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
@@ -55,15 +105,20 @@ export default class EvolutionSim {
   private tuning: SimTuning;
   private divisions: number;
 
+  private depthByType: Map<LifeFormType, number>;
+
   constructor(run: PlanetRunState, divisions: number, tuning?: Partial<SimTuning>) {
     this.run = run;
     this.divisions = divisions;
     this.tuning = { ...DEFAULT_TUNING, ...(tuning ?? {}) };
     this.rng = new Phaser.Math.RandomDataGenerator([run.seed, "evolution"]);
+    this.depthByType = computeDepthByType();
   }
 
   public tick() {
     if (this.run.lifeForms.length === 0) return;
+
+    this.accumulatePoints();
 
     const byCell = new Map<string, LifeFormInstance>();
     for (const lf of this.run.lifeForms) byCell.set(keyOf(lf.row, lf.col), lf);
@@ -79,8 +134,8 @@ export default class EvolutionSim {
 
     const neighborDeltas = [
       [-1, -1], [-1, 0], [-1, 1],
-      [0, -1],       [0, 1],
-      [1, -1],  [1, 0],  [1, 1]
+      [0, -1], [0, 1],
+      [1, -1], [1, 0], [1, 1]
     ] as const;
 
     const getNeighbors = (lf: LifeFormInstance) => {
@@ -197,6 +252,22 @@ export default class EvolutionSim {
 
     this.run.unlockedLifeTypes ??= new Set<LifeFormType>();
     for (const lf of this.run.lifeForms) this.run.unlockedLifeTypes.add(lf.type);
+  }
+
+  private accumulatePoints() {
+    let depthSum = 0;
+    for (const lf of this.run.lifeForms) {
+      depthSum += this.depthByType.get(lf.type) ?? 0;
+    }
+
+    const n = this.run.lifeForms.length;
+
+    const gain =
+      this.tuning.pointsBasePerTick +
+      n * this.tuning.pointsPerLifePerTick +
+      depthSum * this.tuning.pointsPerDepthPerTick;
+
+    this.run.addEvoPoints(gain);
   }
 
   public getTuning() {
