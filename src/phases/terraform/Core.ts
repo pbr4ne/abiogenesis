@@ -102,6 +102,13 @@ export default class Core extends TerraformingView {
     this.onPointsChanged();
   }
 
+  private coreHeat01() {
+    const start = 10;
+    const max = this.thermometerMax;
+    const t = Phaser.Math.Clamp((this.points - start) / Math.max(1, (max - start)), 0, 1);
+    return Phaser.Math.Easing.Cubic.Out(t);
+  }
+
   protected override getSlotTransform(slotIndex: number) {
     const cell =
       this.slotCells[slotIndex] ??
@@ -171,13 +178,28 @@ export default class Core extends TerraformingView {
           const d = this.map.getHoleDepth01(r, c);
 
           let col2 = blendTo(col, CORE_SURFACE, 0.98);
+          col2 = blendTo(col2, CORE_ABYSS, 0.85 * Math.pow(d, 0.55));
 
-          const shaped = Math.pow(d, 0.55);
-          col2 = blendTo(col2, CORE_ABYSS, 0.85 * shaped);
+          const heat = this.coreHeat01();
+          if (heat > 0.001) {
+            const band = d >= 0.82 ? 1.0 : d >= 0.66 ? 0.7 : d >= 0.50 ? 0.4 : 0.0;
 
+            if (band > 0) {
+              const tNow = this.scene.time.now;
+
+              const cellHash = ((r * 73856093) ^ (c * 19349663)) >>> 0;
+              const n01 = (cellHash % 1000) / 1000;
+              const wobble = 0.75 + 0.25 * Math.sin(tNow * 0.006 + n01 * 6.283);
+              const k = heat * band * wobble;
+
+              col2 = blendTo(col2, 0x3a0000, 0.55 * k);
+              col2 = blendTo(col2, 0xb01800, 0.35 * k);
+              col2 = blendTo(col2, 0xff5a1a, 0.25 * k);
+              col2 = blendTo(col2, 0xffcc33, 0.10 * k);
+            }
+          }
           col = col2;
         }
-
         g.fillStyle(col, 1);
         g.fillRect(x, y, stepX + 1, stepY + 1);
       }
@@ -202,5 +224,8 @@ export default class Core extends TerraformingView {
 
     if ((tf as any).setCoreLevel) (tf as any).setCoreLevel(level);
     else (tf as any).coreLevel = level;
+
+    this.drawGridLines();
+
   }
 }
