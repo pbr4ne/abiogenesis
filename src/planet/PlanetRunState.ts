@@ -8,6 +8,7 @@ export type TerraformLevels = {
   atmosphere: number;
   magnetosphere: number;
   hydrosphere: number;
+  core: number;
 };
 
 export default class PlanetRunState {
@@ -37,7 +38,8 @@ export default class PlanetRunState {
     this.terraform = {
       atmosphere: 5,
       magnetosphere: 5,
-      hydrosphere: 5
+      hydrosphere: 5,
+      core: 5
     };
   }
 

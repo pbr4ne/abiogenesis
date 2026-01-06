@@ -3,7 +3,6 @@ import PlanetBase from "../../planet/PlanetBase";
 import { latForIndex, lonForIndex, makeRotator, pickCellByNearestProjectedCenter, Vec3 } from "../../planet/PlanetMath";
 import MagnetosphereRenderer from "./MagnetosphereRenderer";
 import { drawAtmosphereGlow } from "./AtmosphereRenderer";
-import { log } from "../../utilities/GameUtils";
 import PlanetRunState from "../../planet/PlanetRunState";
 import { paintHydrosphere } from "./HydrosphereMap";
 import { getTerraforming } from "./getTerraformingState";
@@ -54,7 +53,7 @@ export default class TerraformingPlanet extends PlanetBase {
     this.buildHotspots();
     this.wireHotspotInput();
 
-    const onChange = (k: "atmosphere" | "magnetosphere" | "hydrosphere") => this.applyEffect(k);
+    const onChange = (k: "atmosphere" | "magnetosphere" | "hydrosphere" | "core") => this.applyEffect(k);
     tf.on("change", onChange);
 
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
@@ -245,9 +244,10 @@ export default class TerraformingPlanet extends PlanetBase {
     this.applyEffect("atmosphere");
     this.applyEffect("magnetosphere");
     this.applyEffect("hydrosphere");
+    this.applyEffect("core");
   }
 
-  private applyEffect(k: "atmosphere" | "magnetosphere" | "hydrosphere") {
+  private applyEffect(k: "atmosphere" | "magnetosphere" | "hydrosphere" | "core") {
     if (!this.enabledEffects[k]) {
       this.disableEffect(k);
       return;
@@ -257,7 +257,6 @@ export default class TerraformingPlanet extends PlanetBase {
 
     if (k === "atmosphere") {
       const strength01 = tf.ratio01("atmosphere");
-      log("TerraformPlanet: applyEffect atmosphere");
       this.applyAtmosphere(strength01);
       return;
     }
@@ -306,7 +305,7 @@ export default class TerraformingPlanet extends PlanetBase {
     this.redrawHotspotOutlines();
   }
 
-  private disableEffect(k: "magnetosphere" | "atmosphere" | "hydrosphere") {
+  private disableEffect(k: "magnetosphere" | "atmosphere" | "hydrosphere" | "core") {
     if (k === "magnetosphere") {
       this.magnetosphereRenderer?.destroy();
       this.magnetosphereRenderer = undefined;

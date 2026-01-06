@@ -82,7 +82,7 @@ export default class PlanetEdge extends Phaser.GameObjects.Container {
 
     apply();
 
-    const onChange = (k: "atmosphere" | "magnetosphere" | "hydrosphere") => {
+    const onChange = (k: "atmosphere" | "magnetosphere" | "hydrosphere" | "core") => {
       if (k !== "hydrosphere") return;
       apply();
     };

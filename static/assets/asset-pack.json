@@ -2,6 +2,11 @@
     "section1": {
         "files": [
             {
+                "url": "assets/images/air.png",
+                "type": "image",
+                "key": "air"
+            },
+            {
                 "url": "assets/images/algae.png",
                 "type": "image",
                 "key": "algae"
@@ -55,6 +60,21 @@
                 "url": "assets/images/check.png",
                 "type": "image",
                 "key": "check"
+            },
+            {
+                "url": "assets/images/coreDevice1.png",
+                "type": "image",
+                "key": "coreDevice1"
+            },
+            {
+                "url": "assets/images/coreDevice2.png",
+                "type": "image",
+                "key": "coreDevice2"
+            },
+            {
+                "url": "assets/images/coreDevice3.png",
+                "type": "image",
+                "key": "coreDevice3"
             },
             {
                 "url": "assets/images/crystal.png",
@@ -137,6 +157,11 @@
                 "key": "intelligence"
             },
             {
+                "url": "assets/images/land.png",
+                "type": "image",
+                "key": "land"
+            },
+            {
                 "url": "assets/images/life_form.png",
                 "type": "image",
                 "key": "life_form"
@@ -180,6 +205,11 @@
                 "url": "assets/images/mollusk.png",
                 "type": "image",
                 "key": "mollusk"
+            },
+            {
+                "url": "assets/images/ocean.png",
+                "type": "image",
+                "key": "ocean"
             },
             {
                 "url": "assets/images/octopus.png",

@@ -1,12 +1,13 @@
 import Phaser from "phaser";
 import PlanetRunState from "../../planet/PlanetRunState";
 
-export type TerraformKey = "atmosphere" | "magnetosphere" | "hydrosphere";
+export type TerraformKey = "atmosphere" | "magnetosphere" | "hydrosphere" | "core";
 
 export type TerraformLevels = {
   atmosphere: number;
   magnetosphere: number;
   hydrosphere: number;
+  core: number;
 };
 
 export default class TerraformingFacade extends Phaser.Events.EventEmitter {
@@ -22,7 +23,8 @@ export default class TerraformingFacade extends Phaser.Events.EventEmitter {
       this.run.terraform = {
         atmosphere: 5,
         magnetosphere: 5,
-        hydrosphere: 5
+        hydrosphere: 5,
+        core: 5
       };
     }
   }
@@ -39,6 +41,10 @@ export default class TerraformingFacade extends Phaser.Events.EventEmitter {
     return this.run.terraform.hydrosphere;
   }
 
+  public get coreLevel() {
+    return this.run.terraform.core;
+  }
+
   public setAtmosphereLevel(v: number) {
     this.setLevel("atmosphere", v);
   }
@@ -50,12 +56,16 @@ export default class TerraformingFacade extends Phaser.Events.EventEmitter {
   public setHydrosphereLevel(v: number) {
     this.setLevel("hydrosphere", v);
   }
+  public setCoreLevel(v: number) {
+    this.setLevel("core", v);
+  }
 
   public isComplete() {
     return (
       this.atmosphereLevel >= TerraformingFacade.MAX &&
       this.magnetosphereLevel >= TerraformingFacade.MAX &&
-      this.hydrosphereLevel >= TerraformingFacade.MAX
+      this.hydrosphereLevel >= TerraformingFacade.MAX &&
+      this.coreLevel >= TerraformingFacade.MAX
     );
   }
 

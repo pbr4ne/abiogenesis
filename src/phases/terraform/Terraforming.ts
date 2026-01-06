@@ -3,9 +3,8 @@ import Atmosphere from "./Atmosphere";
 import Magnetosphere from "./Magnetosphere";
 import PhaseScene from "../../scenes/PhaseScene";
 import Hydrosphere from "./Hydrosphere";
-import { getTerraformingState } from "./TerraformingState";
+import Core from "./Core";
 import TerraformingPlanet from "./TerraformingPlanet";
-import { log } from "../../utilities/GameUtils";
 import { getTerraforming } from "./getTerraformingState";
 
 
@@ -65,15 +64,21 @@ export default class Terraforming extends PhaseScene {
     this.add.existing(hydrosphere);
     this.bgCam.ignore(hydrosphere);
 
+    const core = new Core(this, 960, 540);
+    this.add.existing(core);
+    this.bgCam.ignore(core);
+
     atmosphere.setVisible(false);
     magnetosphere.setVisible(false);
     hydrosphere.setVisible(false);
+    core.setVisible(false);
     this.planet.setVisible(true);
 
     const onGoToPlanet = () => {
       atmosphere.setVisible(false);
       magnetosphere.setVisible(false);
       hydrosphere.setVisible(false);
+      core.setVisible(false);
       this.planet.setVisible(true);
     };
 
@@ -81,6 +86,7 @@ export default class Terraforming extends PhaseScene {
       this.planet.setVisible(false);
       magnetosphere.setVisible(false);
       hydrosphere.setVisible(false);
+      core.setVisible(false);
       atmosphere.setVisible(true);
     };
 
@@ -88,6 +94,7 @@ export default class Terraforming extends PhaseScene {
       this.planet.setVisible(false);
       atmosphere.setVisible(false);
       hydrosphere.setVisible(false);
+      core.setVisible(false);
       magnetosphere.setVisible(true);
     };
 
@@ -95,19 +102,30 @@ export default class Terraforming extends PhaseScene {
       this.planet.setVisible(false);
       atmosphere.setVisible(false);
       magnetosphere.setVisible(false);
+      core.setVisible(false);
       hydrosphere.setVisible(true);
+    }
+
+    const onGoToCore = () => {
+      this.planet.setVisible(false);
+      atmosphere.setVisible(false);
+      magnetosphere.setVisible(false);
+      hydrosphere.setVisible(false);
+      core.setVisible(true);
     }
 
     this.events.on("ui:goToPlanet", onGoToPlanet);
     this.events.on("ui:goToAtmosphere", onGoToAtmosphere);
     this.events.on("ui:goToMagnetosphere", onGoToMagnetosphere);
     this.events.on("ui:goToHydrosphere", onGoToHydrosphere);
+    this.events.on("ui:goToCore", onGoToCore);
 
     this.onShutdown(() => {
       this.events.off("ui:goToPlanet", onGoToPlanet);
       this.events.off("ui:goToAtmosphere", onGoToAtmosphere);
       this.events.off("ui:goToMagnetosphere", onGoToMagnetosphere);
       this.events.off("ui:goToHydrosphere", onGoToHydrosphere);
+      this.events.off("ui:goToCore", onGoToCore);
     });
   }
 }
