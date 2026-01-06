@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 import TerraformingView from "./TerraformingView";
-import { getTerraformingState } from "./TerraformingState";
 import MagnetosphereRenderer from "./MagnetosphereRenderer";
 import { getTerraforming } from "./getTerraformingState";
 
@@ -27,7 +26,7 @@ export default class Magnetosphere extends TerraformingView {
       buttonTopLocalY: 520,
       buttonRowLocalY: 0,
 
-      backButtonLocalX: -800,
+      backButtonLocalX: 800,
       backButtonLocalY: 230,
 
       thermoOrientation: "horizontal",
