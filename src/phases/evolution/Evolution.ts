@@ -20,6 +20,7 @@ export default class Evolution extends PhaseScene {
   private sim!: EvolutionSim;
   private simTimer?: Phaser.Time.TimerEvent;
   private pointsDish!: PetriDishPoints;
+  private lastEvoPts = -1;
 
   constructor() {
     super("Evolution");
@@ -48,6 +49,12 @@ export default class Evolution extends PhaseScene {
       loop: true,
       callback: () => {
         this.sim.tick();
+        const pts = this.run.getEvoPointsAvailable();
+        if (pts !== this.lastEvoPts) {
+          this.lastEvoPts = pts;
+          this.events.emit("evoPoints:changed", pts);
+        }
+
         this.planet.refreshFromRun();
         this.pointsDish.refresh();
         if (this.evoModal.isOpen()) this.evoModal.show(this.run.lifeForms);

@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
+import PlanetRunState from "../../planet/PlanetRunState";
 
 export type LifeHoverPayload = { lf: LifeFormInstance; def: LifeFormDef } | null;
 
@@ -34,6 +35,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   private current: LifeHoverPayload = null;
   private static readonly STAT_MAX = 5;
   private static readonly PLUS_SIZE = 50;
+  private onPointsChanged: (() => void) | null = null;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -159,6 +161,33 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     });
 
     scene.add.existing(this);
+
+    this.onPointsChanged = () => {
+      if (!this.visible) return;
+      const cur = this.current;
+      if (!cur) return;
+      const tint = rgbToHex(cur.def.colour.r, cur.def.colour.g, cur.def.colour.b);
+      this.applyRow("mutation", cur.def, cur.lf, tint);
+      this.applyRow("reproduction", cur.def, cur.lf, tint);
+      this.applyRow("survival", cur.def, cur.lf, tint);
+    };
+
+    this.scene.events.on("evoPoints:changed", this.onPointsChanged);
+
+    this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.onPointsChanged) this.scene.events.off("evoPoints:changed", this.onPointsChanged);
+      this.onPointsChanged = null;
+    });
+  }
+
+  private getRun(): PlanetRunState | null {
+    const run = this.scene.registry.get("run") as PlanetRunState | undefined;
+    return run ?? null;
+  }
+
+  private canAffordUpgrade() {
+    const run = this.getRun();
+    return !!run && run.getEvoPointsAvailable() > 0;
   }
 
   private lightenHex(hex: number, amt01: number) {
@@ -208,7 +237,9 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     const ticks = scene.add.graphics();
 
-    const plus = scene.add.image(barX + barW + 24 + LifeDetailsModal.PLUS_SIZE / 2, cy, "plus").setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+    const plus = scene.add.image(barX + barW + 24 + LifeDetailsModal.PLUS_SIZE / 2, cy, "plus")
+      .setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+
     plus.setInteractive({ useHandCursor: true });
     plus.on("pointerdown", (p: Phaser.Input.Pointer) => p.event.stopPropagation());
 
@@ -256,12 +287,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     const p01 = Phaser.Math.Clamp(v / 5, 0, 1);
 
-    row.left.setTexture("life_form").setTintFill(tint);
-    row.plus.setTintFill(tint);
-
     if (key === "mutation") {
       row.left.setTexture("life_form").setTintFill(tint);
-      row.plus.setTintFill(tint);
       row.mid.setTexture("arrow").setTintFill(tint);
       row.right.setTexture("life_form_mutated").setTintFill(tint);
     }
@@ -302,8 +329,11 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     row.plus.off("pointerover");
     row.plus.off("pointerout");
 
-    const canUpgrade = v < LifeDetailsModal.STAT_MAX;
+    const canUpgradeStat = v < LifeDetailsModal.STAT_MAX;
+    const canAfford = this.canAffordUpgrade();
+    const canUpgrade = canUpgradeStat && canAfford;
 
+    row.plus.setTintFill(tint);
     row.plus.setAlpha(canUpgrade ? 0.9 : 0.25);
     row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
 
@@ -335,14 +365,32 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       const cur = this.current;
       if (!cur) return;
 
+      const run = this.getRun();
+      if (!run) return;
+
+      row.plus.disableInteractive();
+      row.plus.setAlpha(0.25);
+
       const curV = this.getStat(cur.lf, key);
-      if (curV >= LifeDetailsModal.STAT_MAX) return;
+      if (curV >= LifeDetailsModal.STAT_MAX) {
+        this.scene.events.emit("evoPoints:changed");
+        return;
+      }
+
+      if (!run.trySpendEvoPoints(1)) {
+        this.scene.events.emit("evoPoints:changed");
+        return;
+      }
 
       this.setStat(cur.lf, key, curV + 1);
 
-      this.applyRow(key, cur.def, cur.lf, tint);
+      const tint2 = rgbToHex(cur.def.colour.r, cur.def.colour.g, cur.def.colour.b);
+      this.applyRow("mutation", cur.def, cur.lf, tint2);
+      this.applyRow("reproduction", cur.def, cur.lf, tint2);
+      this.applyRow("survival", cur.def, cur.lf, tint2);
 
       this.scene.events.emit("life:upgrade", { id: cur.lf.id, stat: key });
+      this.scene.events.emit("evoPoints:changed");
     });
   }
 }
