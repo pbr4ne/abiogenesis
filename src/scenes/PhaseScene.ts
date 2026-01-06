@@ -51,6 +51,10 @@ export default abstract class PhaseScene extends BaseScene {
     });
   }
 
+  public setBreadcrumbVisible(v: boolean) {
+    this.breadcrumb?.setVisible(v);
+  }
+
   private getPhaseActiveColor(): number {
     switch (this.phaseKey) {
       case "Terraforming":

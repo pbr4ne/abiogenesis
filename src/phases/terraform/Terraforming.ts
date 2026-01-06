@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import Planet from "./TerraformingPlanet";
 import Atmosphere from "./Atmosphere";
 import Magnetosphere from "./Magnetosphere";
@@ -68,51 +69,25 @@ export default class Terraforming extends PhaseScene {
     this.add.existing(core);
     this.bgCam.ignore(core);
 
-    atmosphere.setVisible(false);
-    magnetosphere.setVisible(false);
-    hydrosphere.setVisible(false);
-    core.setVisible(false);
-    this.planet.setVisible(true);
+    const setView = (v: "planet" | "atmo" | "mag" | "hydro" | "core") => {
+      const onPlanet = v === "planet";
 
-    const onGoToPlanet = () => {
-      atmosphere.setVisible(false);
-      magnetosphere.setVisible(false);
-      hydrosphere.setVisible(false);
-      core.setVisible(false);
-      this.planet.setVisible(true);
+      this.setBreadcrumbVisible(onPlanet);
+
+      atmosphere.setVisible(v === "atmo");
+      magnetosphere.setVisible(v === "mag");
+      hydrosphere.setVisible(v === "hydro");
+      core.setVisible(v === "core");
+      this.planet.setVisible(onPlanet);
     };
 
-    const onGoToAtmosphere = () => {
-      this.planet.setVisible(false);
-      magnetosphere.setVisible(false);
-      hydrosphere.setVisible(false);
-      core.setVisible(false);
-      atmosphere.setVisible(true);
-    };
+    setView("planet");
 
-    const onGoToMagnetosphere = () => {
-      this.planet.setVisible(false);
-      atmosphere.setVisible(false);
-      hydrosphere.setVisible(false);
-      core.setVisible(false);
-      magnetosphere.setVisible(true);
-    };
-
-    const onGoToHydrosphere = () => {
-      this.planet.setVisible(false);
-      atmosphere.setVisible(false);
-      magnetosphere.setVisible(false);
-      core.setVisible(false);
-      hydrosphere.setVisible(true);
-    }
-
-    const onGoToCore = () => {
-      this.planet.setVisible(false);
-      atmosphere.setVisible(false);
-      magnetosphere.setVisible(false);
-      hydrosphere.setVisible(false);
-      core.setVisible(true);
-    }
+    const onGoToPlanet = () => setView("planet");
+    const onGoToAtmosphere = () => setView("atmo");
+    const onGoToMagnetosphere = () => setView("mag");
+    const onGoToHydrosphere = () => setView("hydro");
+    const onGoToCore = () => setView("core");
 
     this.events.on("ui:goToPlanet", onGoToPlanet);
     this.events.on("ui:goToAtmosphere", onGoToAtmosphere);
