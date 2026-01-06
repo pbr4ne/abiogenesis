@@ -74,11 +74,11 @@ export default abstract class PhaseScene extends BaseScene {
     }
   }
 
-  private getPhaseGroup(): "planet" | "dna" | "dolphin" | "system" {
+  private getPhaseGroup(): "terraformed" | "dna" | "dolphin" | "system" {
     switch (this.phaseKey) {
       case "Terraforming":
       case "TerraformingComplete":
-        return "planet";
+        return "terraformed";
 
       case "PrimordialSoup":
       case "PrimordialSoupComplete":

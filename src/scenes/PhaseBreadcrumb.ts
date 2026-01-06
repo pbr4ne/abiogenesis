@@ -1,10 +1,10 @@
 import Phaser from "phaser";
 
-type PhaseGroup = "planet" | "dna" | "dolphin" | "system";
+type PhaseGroup = "terraformed" | "dna" | "dolphin" | "system";
 
 export default class PhaseBreadcrumb extends Phaser.GameObjects.Container {
   private icons: Phaser.GameObjects.Image[] = [];
-  private iconKeys: PhaseGroup[] = ["planet", "dna", "dolphin", "system"];
+  private iconKeys: PhaseGroup[] = ["terraformed", "dna", "dolphin", "system"];
 
   constructor(
     scene: Phaser.Scene,
