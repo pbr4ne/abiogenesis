@@ -123,7 +123,7 @@ export default class TerraformingPlanet extends PlanetBase {
         event: "ui:goToHydrosphere",
         baseA: 0.85,
         hoverA: 1,
-        colourHex: "#0084ff",
+        colourHex: "#09b674",
         centerUnit: hydroCenter,
         angRad: cellAng * 5
       },
