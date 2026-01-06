@@ -133,52 +133,6 @@ export default class CoreMap {
     return out;
   }
 
-  public getHoleEdgeCells(useDiagonals = true) {
-    const out: { r: number; c: number }[] = [];
-
-    const dirs4 = [
-      { dr: -1, dc: 0 },
-      { dr: 1, dc: 0 },
-      { dr: 0, dc: -1 },
-      { dr: 0, dc: 1 },
-    ];
-
-    const dirs8 = [
-      ...dirs4,
-      { dr: -1, dc: -1 },
-      { dr: -1, dc: 1 },
-      { dr: 1, dc: -1 },
-      { dr: 1, dc: 1 },
-    ];
-
-    const dirs = useDiagonals ? dirs8 : dirs4;
-
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
-        if (this.cells[r][c].inHole) continue;
-
-        let touchesHole = false;
-
-        for (const { dr, dc } of dirs) {
-          const rr = r + dr;
-          const cc = c + dc;
-
-          if (rr < 0 || rr >= this.rows) continue;
-          if (cc < 0 || cc >= this.cols) continue;
-
-          if (this.cells[rr][cc].inHole) {
-            touchesHole = true;
-            break;
-          }
-        }
-
-        if (touchesHole) out.push({ r, c });
-      }
-    }
-
-    return out;
-  }
-
   private distCells(r: number, c: number) {
     const dx = (c + 0.5) - this.holeCx;
     const dy = (r + 0.5) - this.holeCy;

@@ -103,7 +103,9 @@ export default class Core extends TerraformingView {
   }
 
   protected override getSlotTransform(slotIndex: number) {
-    const cell = this.slotCells[slotIndex] ?? this.slotCells[this.slotCells.length - 1];
+    const cell =
+      this.slotCells[slotIndex] ??
+      this.slotCells[this.slotCells.length - 1];
 
     const w = this.scene.scale.width;
     const h = this.scene.scale.height;
@@ -117,7 +119,16 @@ export default class Core extends TerraformingView {
     const x = left + (cell.c + 0.5) * stepX;
     const y = top + (cell.r + 0.5) * stepY;
 
-    return { x, y, rotation: 0 };
+    const hole = this.map.getHoleInfo();
+    const hx = left + hole.cx * stepX;
+    const hy = top + hole.cy * stepY;
+
+    const dx = hx - x;
+    const dy = hy - y;
+
+    const rotation = Math.atan2(dy, dx) + Math.PI / 2 + Math.PI;
+
+    return { x, y, rotation };
   }
 
   protected override getSlotCellSize(): number {
