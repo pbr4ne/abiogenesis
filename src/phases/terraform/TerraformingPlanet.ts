@@ -7,6 +7,7 @@ import PlanetRunState from "../../planet/PlanetRunState";
 import { paintHydrosphere } from "./HydrosphereMap";
 import { getTerraforming } from "./getTerraformingState";
 import { strokeProjectedSphereCircle, clamp, dot3 } from "./CircleProjection";
+import CoreExplosions from "./CoreExplosions";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere" | "core";
 
@@ -39,6 +40,8 @@ export default class TerraformingPlanet extends PlanetBase {
   private magnetosphereRenderer?: MagnetosphereRenderer;
   private atmosphereGlow?: Phaser.GameObjects.Graphics;
 
+  private coreFx?: CoreExplosions;
+
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
 
@@ -47,7 +50,7 @@ export default class TerraformingPlanet extends PlanetBase {
     this.run = scene.registry.get("run") as PlanetRunState;
     const tf = getTerraforming(scene);
 
-    this.enabledEffects = { atmosphere: true, magnetosphere: true, hydrosphere: true, core: false };
+    this.enabledEffects = { atmosphere: true, magnetosphere: true, hydrosphere: true, core: true };
     this.enabledHotspots = { atmosphere: true, magnetosphere: true, hydrosphere: true, core: true };
 
     this.buildHotspots();
@@ -60,6 +63,8 @@ export default class TerraformingPlanet extends PlanetBase {
       tf.off("change", onChange);
       this.magnetosphereRenderer?.destroy();
       this.magnetosphereRenderer = undefined;
+      this.coreFx?.destroy();
+      this.coreFx = undefined;
     });
 
     this.applyAllEffects();
@@ -273,6 +278,28 @@ export default class TerraformingPlanet extends PlanetBase {
       this.applyHydrosphere(water);
       return;
     }
+
+    if (k === "core") {
+      const strength01 = tf.ratio01("core");
+      this.applyCore(strength01);
+      return;
+    }
+  }
+
+  private applyCore(strength01: number) {
+    const s = Phaser.Math.Clamp(strength01, 0, 1);
+
+    if (!this.coreFx) {
+      this.coreFx = new CoreExplosions(this.scene, {
+        parent: this,
+        getRotate: () => this.getHotspotRotate(),
+        getR: () => this.r,
+        getDivisions: () => this.divisions,
+        delayMs: 250
+      });
+    }
+
+    this.coreFx.setStrength01(s);
   }
 
   private redrawHotspotOutlines() {
