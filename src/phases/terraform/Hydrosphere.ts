@@ -93,7 +93,8 @@ export default class Hydrosphere extends TerraformingView {
 
       onBackEvent: "ui:goToPlanet",
 
-      slotCount: Hydrosphere.SLOT_COUNT
+      slotCount: Hydrosphere.SLOT_COUNT,
+      thermoColour: 0x5fbf8a,
     });
 
     this.map = preMap;

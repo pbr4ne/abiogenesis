@@ -7,6 +7,7 @@ type TerraformingProgressCfg = {
   w: number;
   h: number;
   max: number;
+  colour?: number;
 };
 
 export default class TerraformingProgress {
@@ -17,6 +18,7 @@ export default class TerraformingProgress {
   private topY: number;
   private w: number;
   private h: number;
+  private colour: number;
 
   private max: number;
   private value = 0;
@@ -28,6 +30,7 @@ export default class TerraformingProgress {
     this.w = cfg.w;
     this.h = cfg.h;
     this.max = cfg.max;
+    this.colour = cfg.colour ?? 0xff0000;
 
     this.bg = scene.add.graphics();
     this.fill = scene.add.graphics();
@@ -78,7 +81,7 @@ export default class TerraformingProgress {
     this.fill.clear();
     if (ratio <= 0) return;
 
-    this.fill.fillStyle(0xff0000, 0.85);
+    this.fill.fillStyle(this.colour, 0.85);
 
     if (this.orientation === "horizontal") {
       const fillW = Math.floor(iw * ratio);

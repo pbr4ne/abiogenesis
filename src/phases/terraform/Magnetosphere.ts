@@ -48,7 +48,8 @@ export default class Magnetosphere extends TerraformingView {
         hoverStrokeMul: 0.35
       },
 
-      onBackEvent: "ui:goToPlanet"
+      onBackEvent: "ui:goToPlanet",
+      thermoColour: 0x3399ff,
     });
 
     this.world.x = 1620;

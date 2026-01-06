@@ -42,7 +42,7 @@ export type TerraformingViewConfig = {
   thermoTopLocalY: number;
   thermoH: number;
   thermoW: number;
-
+  thermoColour: number;
   thermoOrientation?: "vertical" | "horizontal";
 
   flipWorldY?: boolean;
@@ -91,6 +91,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected thermoTopLocalY: number;
   protected thermoH: number;
   protected thermoW: number;
+  protected thermoColour: number;
   protected thermoOrientation: "vertical" | "horizontal";
 
   protected buttonRowLocalY: number;
@@ -142,6 +143,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.thermoTopLocalY = cfg.thermoTopLocalY;
     this.thermoH = cfg.thermoH;
     this.thermoW = cfg.thermoW;
+    this.thermoColour = cfg.thermoColour;
     this.thermoOrientation = cfg.thermoOrientation ?? "vertical";
 
     this.backButtonLocalX = cfg.backButtonLocalX;
@@ -227,7 +229,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       topY: this.thermoTopLocalY,
       w: this.thermoW,
       h: this.thermoH,
-      max: this.thermometerMax
+      max: this.thermometerMax,
+      colour: this.thermoColour,
     });
 
     this.thermometer.setValue(this.points);

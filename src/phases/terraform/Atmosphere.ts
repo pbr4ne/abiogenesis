@@ -37,7 +37,8 @@ export default class Atmosphere extends TerraformingView {
         hoverStrokeMul: 0.35
       },
 
-      onBackEvent: "ui:goToPlanet"
+      onBackEvent: "ui:goToPlanet",
+      thermoColour: 0xff66cc,
     });
   }
 
