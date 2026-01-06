@@ -42,13 +42,13 @@ export default class Magnetosphere extends TerraformingView {
       deviceRates: { 0: 1, 1: 5, 2: 10 },
 
       deviceButtonTheme: {
-        stroke: [0x9fbcd6, 0x5fa8e8, 0x3aa0ff],
-        glow: [0xd6e6f3, 0xa6d4f5, 0x7ac6ff],
+        stroke: [0xd6a0a0, 0xe06666, 0xff3a3a],
+        glow: [0xf3d6d6, 0xf5a6a6, 0xff7a7a],
         hoverStrokeMul: 0.35
       },
 
       onBackEvent: "ui:goToPlanet",
-      thermoColour: 0x3399ff,
+      thermoColour: 0xff3a3a,
     });
 
     this.world.x = 1620;
