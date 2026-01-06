@@ -197,7 +197,11 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
       getCellSize: () => this.getSlotCellSize(),
 
-      onPlace: (i) => this.placeSelectedDevice(i)
+      onPlace: (i) => this.placeSelectedDevice(i),
+      fillCell: this.deviceSlotsFillCell(),
+      fillCellBg: this.deviceSlotsFillBg(),
+      fillCellBgAlpha: 1,
+      fillCellPadMul: 0.06,
     });
 
     this.placement.rebuildSprites();
@@ -365,5 +369,13 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
   protected getSlotCellSize(): number {
     return 100;
+  }
+
+  protected deviceSlotsFillCell(): boolean {
+    return false;
+  }
+
+  protected deviceSlotsFillBg(): number {
+    return 0x061a33;
   }
 }

@@ -21,6 +21,10 @@ type DeviceSlotsCfg = {
   onPlace: (slotIndex: number) => void;
 
   getCellSize: () => number;
+  fillCell?: boolean;
+  fillCellBg?: number;
+  fillCellBgAlpha?: number;
+  fillCellPadMul?: number;
 };
 
 export default class DeviceSlots {
@@ -40,6 +44,12 @@ export default class DeviceSlots {
   private sprites: Phaser.GameObjects.Image[] = [];
 
   private getCellSize: () => number;
+  private fillCell: boolean;
+  private fillCellBg: number;
+  private fillCellBgAlpha: number;
+  private fillCellPadMul: number;
+
+  private filledBgs: Phaser.GameObjects.Rectangle[] = [];
 
   private deviceColors: readonly [number, number, number];
 
@@ -58,6 +68,10 @@ export default class DeviceSlots {
     this.onPlace = cfg.onPlace;
 
     this.getCellSize = cfg.getCellSize;
+    this.fillCell = cfg.fillCell === true;
+    this.fillCellBg = cfg.fillCellBg ?? 0x061a33;
+    this.fillCellBgAlpha = cfg.fillCellBgAlpha ?? 1;
+    this.fillCellPadMul = cfg.fillCellPadMul ?? 0.08;
   }
 
   public clearMarkers() {
@@ -118,7 +132,11 @@ export default class DeviceSlots {
     for (const s of this.sprites) s.destroy();
     this.sprites = [];
 
+    for (const b of this.filledBgs) b.destroy();
+    this.filledBgs = [];
+
     const slots = this.getSlots();
+    const cellSize = this.getCellSize();
 
     for (let i = 0; i < this.slotCount; i++) {
       const slot = slots[i];
@@ -126,14 +144,21 @@ export default class DeviceSlots {
 
       const tr = this.getSlotTransform(i);
 
+      if (this.fillCell) {
+        const bg = this.scene.add.rectangle(tr.x, tr.y, cellSize, cellSize, this.fillCellBg, this.fillCellBgAlpha);
+        bg.setOrigin(0.5, 0.5);
+        this.world.add(bg);
+        this.filledBgs.push(bg);
+      }
+
       const key = this.deviceKeys[slot];
       const img = this.scene.add.image(tr.x, tr.y, key);
 
       const tint = this.deviceColors[slot];
       img.setTintFill(tint);
 
-      const cellSize = this.getCellSize();
-      const targetSize = cellSize * 0.75;
+      const pad = cellSize * this.fillCellPadMul;
+      const targetSize = cellSize - pad * 2;
 
       const scale = Math.min(
         targetSize / img.width,
@@ -152,5 +177,8 @@ export default class DeviceSlots {
     this.clearMarkers();
     for (const s of this.sprites) s.destroy();
     this.sprites = [];
+
+    for (const b of this.filledBgs) b.destroy();
+    this.filledBgs = [];
   }
 }

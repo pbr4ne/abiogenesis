@@ -12,8 +12,6 @@ export default class Hydrosphere extends TerraformingView {
 
   private slotCells: { r: number; c: number }[] = [];
 
-  private static readonly WATER_STEPS = 4;
-
   private static readonly SLOT_ROW_START_1 = 2;
   private static readonly SLOT_ROW_END_1 = 13;
 
@@ -107,16 +105,6 @@ export default class Hydrosphere extends TerraformingView {
     this.onPointsChanged();
   }
 
-  private static pointsToWaterLevel(points: number) {
-    const level = Phaser.Math.Clamp(Math.round(points), 0, 1000);
-    const ratio01 = Phaser.Math.Clamp(level / 1000, 0, 1);
-    return Phaser.Math.Clamp(
-      Math.floor(ratio01 * (Hydrosphere.WATER_STEPS + 1)),
-      0,
-      Hydrosphere.WATER_STEPS
-    );
-  }
-
   protected override getSlotTransform(slotIndex: number) {
     const cell = this.slotCells[slotIndex] ?? this.slotCells[this.slotCells.length - 1];
 
@@ -198,5 +186,13 @@ export default class Hydrosphere extends TerraformingView {
 
     this.map.waterLevel = nextWater;
     this.drawGridLines();
+  }
+
+  protected override deviceSlotsFillCell(): boolean {
+    return true;
+  }
+
+  protected override deviceSlotsFillBg(): number {
+    return 0x061a33;
   }
 }
