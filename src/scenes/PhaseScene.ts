@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import BaseScene from "./BaseScene";
 import { createStarfield, Starfield } from "../utilities/StarField";
+import PhaseBreadcrumb from "./PhaseBreadcrumb";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -16,6 +17,7 @@ export default abstract class PhaseScene extends BaseScene {
   protected starfield!: Starfield;
 
   private readonly phaseKey: PhaseKey;
+  private breadcrumb?: PhaseBreadcrumb;
 
   constructor(phaseKey: PhaseKey) {
     super(phaseKey);
@@ -30,6 +32,15 @@ export default abstract class PhaseScene extends BaseScene {
 
     this.createPhase();
 
+    this.breadcrumb = new PhaseBreadcrumb(this, 40, 70, this.getPhaseGroup(), this.getPhaseActiveColor());
+    this.add.existing(this.breadcrumb);
+    this.bgCam.ignore(this.breadcrumb);
+
+    this.onShutdown(() => {
+      this.breadcrumb?.destroy();
+      this.breadcrumb = undefined;
+    });
+
     this.events.on("ui:nextPhase", this.onNextPhase);
     this.events.on("ui:prevPhase", this.onPrevPhase);
 
@@ -38,6 +49,44 @@ export default abstract class PhaseScene extends BaseScene {
       this.events.off("ui:nextPhase", this.onNextPhase);
       this.events.off("ui:prevPhase", this.onPrevPhase);
     });
+  }
+
+  private getPhaseActiveColor(): number {
+    switch (this.phaseKey) {
+      case "Terraforming":
+      case "TerraformingComplete":
+        return 0x8fd3ff;
+
+      case "PrimordialSoup":
+      case "PrimordialSoupComplete":
+        return 0xf5b942;
+
+      case "Evolution":
+      case "EvolutionComplete":
+        return 0xff1cb7;
+
+      case "GalaxyMap":
+        return 0xffd27f;
+    }
+  }
+
+  private getPhaseGroup(): "planet" | "dna" | "dolphin" | "system" {
+    switch (this.phaseKey) {
+      case "Terraforming":
+      case "TerraformingComplete":
+        return "planet";
+
+      case "PrimordialSoup":
+      case "PrimordialSoupComplete":
+        return "dna";
+
+      case "Evolution":
+      case "EvolutionComplete":
+        return "dolphin";
+
+      case "GalaxyMap":
+        return "system";
+    }
   }
 
   protected abstract createPhase(): void;

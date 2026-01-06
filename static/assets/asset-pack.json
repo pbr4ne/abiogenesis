@@ -97,6 +97,11 @@
                 "key": "dna"
             },
             {
+                "url": "assets/images/dolphin.png",
+                "type": "image",
+                "key": "dolphin"
+            },
+            {
                 "url": "assets/images/eukaryote.png",
                 "type": "image",
                 "key": "eukaryote"
@@ -202,6 +207,11 @@
                 "key": "magnetosphereDevice3"
             },
             {
+                "url": "assets/images/medal.png",
+                "type": "image",
+                "key": "medal"
+            },
+            {
                 "url": "assets/images/mollusk.png",
                 "type": "image",
                 "key": "mollusk"
@@ -255,6 +265,11 @@
                 "url": "assets/images/sword.png",
                 "type": "image",
                 "key": "sword"
+            },
+            {
+                "url": "assets/images/system.png",
+                "type": "image",
+                "key": "system"
             },
             {
                 "url": "assets/images/terraformed.png",
