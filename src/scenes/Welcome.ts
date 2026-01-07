@@ -24,7 +24,7 @@ export default class Welcome extends BaseScene {
   editorCreate(): void {
     super.create();
 
-    this.playBtn = this.add.text(0, 0, "Play Autopoiesis", {
+    this.playBtn = this.add.text(0, 0, "Play Abiogenesis", {
       color: "#ffffffff",
       fontFamily: '"Courier New", monospace',
       fontSize: "25px",
