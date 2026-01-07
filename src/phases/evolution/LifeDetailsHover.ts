@@ -22,6 +22,8 @@ type VBar = {
 
 const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
 
+type DockMode = "right" | "manual";
+
 export default class LifeDetailsHover extends Phaser.GameObjects.Container {
   private bg: Phaser.GameObjects.Rectangle;
   private icon: Phaser.GameObjects.Image;
@@ -54,6 +56,8 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
   private summaryIntelRadius = 128;
   private summaryIntelThick = 14;
   private summaryIntelIconSize = 164;
+
+  private dockMode: DockMode = "right";
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -124,12 +128,6 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     ]);
   }
 
-  private dockRight() {
-    const x = this.scene.scale.width - this.wi / 2 - this.dockPadRight;
-    const y = this.scene.scale.height / 2;
-    this.setPosition(x, y);
-  }
-
   private makeVBar(scene: Phaser.Scene, x: number, y: number, w: number, h: number, bottomIconKey: string): VBar {
     const pad = 4;
 
@@ -151,13 +149,6 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     icon.setDisplaySize(iconSize, iconSize);
 
     return { bg, fill, ticks, icon, topY, botY, innerH, pad, w };
-  }
-
-  public hide() {
-    this.setVisible(false);
-    this.currentScale = this.instanceScale;
-    this.setScale(this.currentScale);
-    this.dockRight();
   }
 
   private drawIntelRing(tint: number, p01: number, alpha: number, radius: number, thick: number) {
@@ -306,16 +297,6 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.setVisible(true);
   }
 
-  public setLife(payload: LifePayload) {
-    if (!payload) {
-      this.hide();
-      return;
-    }
-
-    this.render(payload);
-    this.dockRight();
-  }
-
   public setLifeAt(payload: LifePayload, anchorX: number, anchorY: number, anchorSize = 70) {
     if (!payload) {
       this.setVisible(false);
@@ -379,5 +360,41 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
       b.ticks.lineTo(x1, y);
       b.ticks.strokePath();
     }
+  }
+
+  public setDockMode(mode: DockMode) {
+    this.dockMode = mode;
+    if (mode === "right") this.dockRight();
+  }
+
+  public dockManual(x: number, y: number) {
+    this.dockMode = "manual";
+    this.setPosition(x, y);
+  }
+
+  private dockRight() {
+    if (this.dockMode !== "right") return;
+
+    const x = this.scene.scale.width - this.wi / 2 - this.dockPadRight;
+    const y = this.scene.scale.height / 2;
+    this.setPosition(x, y);
+  }
+
+  public hide() {
+    this.setVisible(false);
+    this.currentScale = this.instanceScale;
+    this.setScale(this.currentScale);
+    if (this.dockMode === "right") this.dockRight();
+  }
+
+  public setLife(payload: LifePayload) {
+    if (!payload) {
+      this.hide();
+      return;
+    }
+
+    this.render(payload);
+
+    if (this.dockMode === "right") this.dockRight();
   }
 }

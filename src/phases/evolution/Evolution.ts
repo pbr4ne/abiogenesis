@@ -9,6 +9,7 @@ import EvolutionTreeButton from "./EvolutionTreeButton";
 import PlanetRunState from "../../planet/PlanetRunState";
 import EvolutionSim from "./EvolutionSim";
 import AbacusPoints from "./AbacusPoints";
+import EvolutionTop3Hud from "./EvolutionTop3Hud";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -61,16 +62,12 @@ export default class Evolution extends PhaseScene {
       }
     });
 
-    this.sim = new EvolutionSim(this.run, 40);
+    const topHud = new EvolutionTop3Hud(this, () => this.run.lifeForms);
 
-    this.simTimer = this.time.addEvent({
-      delay: 1000,
+    this.time.addEvent({
+      delay: 400,
       loop: true,
-      callback: () => {
-        this.sim.tick();
-        this.planet.refreshFromRun();
-        if (this.evoModal.isOpen()) this.evoModal.show(this.run.lifeForms);
-      }
+      callback: () => topHud.refresh()
     });
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
