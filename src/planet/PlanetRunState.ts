@@ -22,7 +22,7 @@ export default class PlanetRunState {
   public unlockedLifeTypes = new Set<LifeFormType>();
 
   public terraform: TerraformLevels;
-  public evoPointsBank = 0;
+  public evoPointsBank = 1;
 
   constructor(divisions: number, seed?: string) {
     this.seed = seed ?? Phaser.Math.RND.uuid();
