@@ -30,7 +30,8 @@ export default class EvolutionPlanet extends PlanetBase {
     ensureStartingProkaryotes(
       this.run,
       this.divisions,
-      (row, col) => this.run.hydroAlt[row][col] <= this.run.waterLevel
+      (row, col) => this.run.hydroAlt[row][col] <= this.run.waterLevel,
+      10
     );
 
     // sprinkleLifeFormsDebug(

@@ -20,11 +20,12 @@ const pickRandomWaterCells = (divisions: number, isWater: (r: number, c: number)
 export const ensureStartingProkaryotes = (
   run: PlanetRunState,
   divisions: number,
-  isWaterCell: (row: number, col: number) => boolean
+  isWaterCell: (row: number, col: number) => boolean,
+  numProkaryotes: number
 ) => {
   if (run.lifeForms.length > 0) return;
 
-  const spots = pickRandomWaterCells(divisions, isWaterCell, 10);
+  const spots = pickRandomWaterCells(divisions, isWaterCell, numProkaryotes);
 
   for (const s of spots) {
     const lf: LifeFormInstance = {
