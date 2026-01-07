@@ -105,6 +105,11 @@ export default class Evolution extends PhaseScene {
       getPoints: () => this.run.getEvoPointsAvailable(),
       minPointsToShow: 1,
       onClick: () => {
+        if (this.cometArmed) {
+          this.setCometArmed(false);
+          return;
+        }
+
         if (this.run.getEvoPointsAvailable() < 1) return;
         this.setCometArmed(true);
       }
@@ -210,6 +215,7 @@ export default class Evolution extends PhaseScene {
       }
 
       this.cometBtn.setUseHandCursor(false);
+      this.cometBtn.setArmedVisual(true);
 
       (this.planet as any).setCometMode?.(true);
 
@@ -238,6 +244,7 @@ export default class Evolution extends PhaseScene {
       }
 
       this.cometBtn.setUseHandCursor(true);
+      this.cometBtn.setArmedVisual(false);
 
       if (canvas) canvas.style.cursor = this.prevCanvasCursor ?? "";
       this.prevCanvasCursor = null;
