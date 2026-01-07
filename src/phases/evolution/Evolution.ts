@@ -13,6 +13,7 @@ import EvolutionTop3Hud from "./EvolutionTop3Hud";
 import EvolutionCometButton from "./EvolutionCometButton";
 import { scoreByType100 } from "./EvolutionIntelligence";
 import { LIFEFORMS } from "./LifeForms";
+import { log } from "../../utilities/GameUtils";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -220,7 +221,7 @@ export default class Evolution extends PhaseScene {
 
     for (const [type, score100] of scores) {
       if (score100 < 100) continue;
-
+      log(`Launching rocket for lifeform type: ${type} (score: ${score100})`);
       const alive = this.run.lifeForms.some(lf => lf.type === type);
       if (!alive) continue;
 

@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import PhaseScene from "../../scenes/PhaseScene";
 import { log } from "../../utilities/GameUtils";
+import { LifeFormType } from "../evolution/EvolutionTypes";
+import { LIFEFORMS } from "../evolution/LifeForms";
 
 type PlanetDef = {
   id: string;
@@ -10,6 +12,9 @@ type PlanetDef = {
 
 export default class GalaxyMap extends PhaseScene {
   private planetG!: Phaser.GameObjects.Graphics;
+  private lfPlanetId: string | null = null;
+  private lfMarker?: Phaser.GameObjects.GameObject;
+  private lfType: LifeFormType = "prokaryote";
 
   private planets: {
     def: PlanetDef;
@@ -19,6 +24,11 @@ export default class GalaxyMap extends PhaseScene {
 
   constructor() {
     super("GalaxyMap");
+  }
+
+  public init(data: any) {
+    const t = data?.lfType as LifeFormType | undefined;
+    if (t && (t in LIFEFORMS)) this.lfType = t;
   }
 
   protected createPhase() {
@@ -38,22 +48,55 @@ export default class GalaxyMap extends PhaseScene {
     this.bgCam.ignore(this.planetG);
 
     const defs: PlanetDef[] = [
-      { id: "p1", r: 22 },
-      { id: "p2", r: 36 },
-      { id: "p3", r: 18 },
-      { id: "p4", r: 48 },
-      { id: "p5", r: 28 },
-      { id: "p6", r: 60 },
-      { id: "p7", r: 20 },
-      { id: "p8", r: 40 },
-      { id: "p9", r: 26 },
-      { id: "p10", r: 54 },
+      { id: "p1", r: 30 },
+      { id: "p2", r: 40 },
+      { id: "p3", r: 28 },
+      { id: "p4", r: 52 },
+      { id: "p5", r: 34 },
+      { id: "p6", r: 64 },
+      { id: "p7", r: 30 },
+      { id: "p8", r: 46 },
+      { id: "p9", r: 32 },
+      { id: "p10", r: 56 },
     ];
 
     this.planets = this.placePlanetsHardcoded(defs, w, h);
 
+    this.pickLfPlanet();
     this.drawPlanets();
+    this.renderLfPlanetMarker();
     this.enablePlanetInput();
+  }
+
+  private pickLfPlanet() {
+    if (!this.planets.length) return;
+    const idx = Phaser.Math.Between(0, this.planets.length - 1);
+    this.lfPlanetId = this.planets[idx].def.id;
+  }
+
+  private renderLfPlanetMarker() {
+    if (!this.lfPlanetId) return;
+
+    const p = this.planets.find(pp => pp.def.id === this.lfPlanetId);
+    if (!p) return;
+
+    this.lfMarker?.destroy();
+
+    const lfDef = LIFEFORMS[this.lfType];
+    if (!lfDef) return;
+
+    const iconKey = lfDef.type;
+
+    log(iconKey);
+    const img = this.add.image(p.x, p.y, iconKey);
+    img.setScrollFactor(0);
+    img.setDepth(10);
+    this.bgCam.ignore(img);
+
+    const size = Math.max(16, Math.floor(p.def.r * 1.15));
+    img.setDisplaySize(size, size);
+
+    this.lfMarker = img;
   }
 
   private placePlanetsHardcoded(defs: PlanetDef[], w: number, h: number) {
@@ -87,13 +130,21 @@ export default class GalaxyMap extends PhaseScene {
 
     for (let i = 0; i < this.planets.length; i++) {
       const p = this.planets[i];
+
+      const isLfPlanet = p.def.id === this.lfPlanetId;
+      const lfCol = isLfPlanet ? LIFEFORMS[this.lfType].colour : null;
+
       const { x, y } = p;
       const base = this.rainbowColor(i, this.planets.length);
 
       g.fillStyle(0x000000, 0.22);
       g.fillCircle(x + p.def.r * 0.12, y + p.def.r * 0.12, p.def.r * 1.03);
 
-      g.fillStyle(this.darkenColor(base, 0.65), 0.95);
+      const baseCol = lfCol
+        ? Phaser.Display.Color.GetColor(lfCol.r, lfCol.g, lfCol.b)
+        : this.rainbowColor(i, this.planets.length);
+
+      g.fillStyle(this.darkenColor(baseCol, 0.65), 0.95);
       g.fillCircle(x, y, p.def.r);
 
       g.fillStyle(0xffffff, 0.10);
@@ -114,7 +165,7 @@ export default class GalaxyMap extends PhaseScene {
         g.fillStyle(0x000000, 0.22);
         g.fillCircle(x + p.def.r * 0.12, y + p.def.r * 0.12, p.def.r * 1.03);
 
-        g.fillStyle(this.darkenColor(base, 0.65), 0.95);
+        g.fillStyle(this.darkenColor(baseCol, 0.65), 0.95);
 
         g.fillCircle(x, y, p.def.r);
 
@@ -151,9 +202,17 @@ export default class GalaxyMap extends PhaseScene {
     this.bgCam.ignore(hoverG);
 
     for (const p of this.planets) {
+
+      const locked = this.lfPlanetId && p.def.id === this.lfPlanetId;
+
       const hitCircle = this.add.circle(p.x, p.y, p.def.r, 0xffffff, 0.001);
       hitCircle.setScrollFactor(0);
       this.bgCam.ignore(hitCircle);
+
+      if (locked) {
+        hitCircle.disableInteractive();
+        continue;
+      }
 
       hitCircle.setInteractive({ useHandCursor: true });
 

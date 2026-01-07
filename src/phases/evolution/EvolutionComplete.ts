@@ -73,7 +73,7 @@ export default class EvolutionComplete extends PhaseScene {
     });
 
     check.on(Phaser.Input.Events.POINTER_DOWN, () => {
-      this.scene.start("GalaxyMap");
+      this.scene.start("GalaxyMap", { lfType: this.lfType });
     });
   }
 }
