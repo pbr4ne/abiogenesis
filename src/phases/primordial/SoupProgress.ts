@@ -136,7 +136,7 @@ export default class SoupProgress {
   }
 
   public spawnDelayMs() {
-    return Math.round(Phaser.Math.Linear(1000, 50, this.avg01));
+    return Math.round(Phaser.Math.Linear(500, 25, this.avg01));
   }
 
   public spawnBloomChance01() {
