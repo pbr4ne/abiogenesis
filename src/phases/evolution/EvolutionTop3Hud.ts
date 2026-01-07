@@ -95,22 +95,9 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
 
     const shouldShow = top.length >= 3;
 
-    if (!shouldShow) {
-      this.lastKey = "";
-      this.hasShown = false;
-      this.fadeTween?.stop();
-      this.fadeTween = undefined;
+    if (shouldShow && !this.hasShown) this.hasShown = true;
 
-      this.setVisible(false);
-      this.setAlpha(0);
-
-      for (const h of this.hovers) {
-        h.setLife(null);
-        h.setVisible(false);
-      }
-      this.medal.setVisible(false);
-      return;
-    }
+    if (!this.hasShown) return;
 
     if (!this.visible) {
       this.setVisible(true);
@@ -124,6 +111,8 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
         ease: "Sine.easeOut"
       });
     }
+
+    if (!shouldShow) return;
 
     const key = top.map(t => `${t.type}:${t.score100}:${t.count}`).join("|");
     if (key === this.lastKey) return;
