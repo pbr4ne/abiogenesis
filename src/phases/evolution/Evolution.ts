@@ -34,11 +34,11 @@ export default class Evolution extends PhaseScene {
     this.run = this.registry.get("run") as PlanetRunState;
 
     this.abacusPoints = new AbacusPoints(this, {
-      x: 240,
+      x: 250,
       y: 360,
       getPoints: (): number => this.run.getEvoPointsAvailable(),
-      maxPoints: 100,
-      width: 320
+      maxPoints: 999,
+      width: 350
     });
     this.add.existing(this.abacusPoints);
 
