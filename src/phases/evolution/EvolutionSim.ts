@@ -29,7 +29,7 @@ const DEFAULT_TUNING: SimTuning = {
   attackKillChance: 0.35,
 
   pointsBasePerTick: 0.015,
-  pointsPerLifePerTick: 0.006,
+  pointsPerLifePerTick: 0.018,
   pointsPerDepthPerTick: 0.004
 };
 
