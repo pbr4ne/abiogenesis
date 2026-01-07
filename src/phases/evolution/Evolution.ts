@@ -43,7 +43,7 @@ export default class Evolution extends PhaseScene {
     const onLaunchRocket = (p: { type: LifeFormType; tint: number }) => {
       if (this.rocketLaunched) return;
       this.rocketLaunched = true;
-      this.launchRocketBurstAndComplete(p.tint);
+      this.launchRocketBurstAndComplete(p.tint, p.type);
     };
 
     this.events.on("evo:launchRocket", onLaunchRocket);
@@ -228,13 +228,13 @@ export default class Evolution extends PhaseScene {
       const tint = (def.colour.r << 16) | (def.colour.g << 8) | def.colour.b;
 
       this.rocketLaunched = true;
-      this.launchRocketBurstAndComplete(tint);
+      this.launchRocketBurstAndComplete(tint, type);
 
       return;
     }
   }
 
-  private launchRocketBurstAndComplete(tint: number) {
+  private launchRocketBurstAndComplete(tint: number, type: LifeFormType) {
     const cx = this.planet.x;
     const cy = this.planet.y;
 
@@ -249,7 +249,7 @@ export default class Evolution extends PhaseScene {
     const finish = () => {
       done++;
       if (done < count) return;
-      this.scene.start("EvolutionComplete");
+      this.scene.start("EvolutionComplete", { lfType: type });
     };
 
     for (let i = 0; i < count; i++) {
