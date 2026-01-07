@@ -318,6 +318,11 @@ export default class Evolution extends PhaseScene {
         const boom = this.add.graphics();
         boom.setDepth(20001);
 
+        this.cameras.main.shake(90, 0.009);
+        this.time.delayedCall(90, () => {
+          this.cameras.main.shake(120, 0.004);
+        });
+
         this.tweens.add({
           targets: { t: 0 },
           t: 1,
@@ -337,7 +342,6 @@ export default class Evolution extends PhaseScene {
           },
           onComplete: () => {
             boom.destroy();
-            this.cameras.main.shake(160, 0.006);
             done();
           }
         });
