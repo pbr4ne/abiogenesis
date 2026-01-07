@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { GalaxyMemory } from "../../utilities/GalaxyMemory";
 import PhaseScene from "../../scenes/PhaseScene";
 import { log } from "../../utilities/GameUtils";
 import { LifeFormType } from "../evolution/EvolutionTypes";
@@ -15,6 +16,7 @@ export default class GalaxyMap extends PhaseScene {
   private lfPlanetId: string | null = null;
   private lfMarker?: Phaser.GameObjects.GameObject;
   private lfType: LifeFormType = "prokaryote";
+  private completedMarkers: Phaser.GameObjects.Image[] = [];
 
   private planets: {
     def: PlanetDef;
@@ -64,14 +66,35 @@ export default class GalaxyMap extends PhaseScene {
 
     this.pickLfPlanet();
     this.drawPlanets();
+    this.renderCompletedPlanetMarkers();
     this.renderLfPlanetMarker();
     this.enablePlanetInput();
   }
 
   private pickLfPlanet() {
-    if (!this.planets.length) return;
-    const idx = Phaser.Math.Between(0, this.planets.length - 1);
-    this.lfPlanetId = this.planets[idx].def.id;
+    const allIds = this.planets.map(p => p.def.id);
+
+    if (allIds.every(id => GalaxyMemory.completed[id] != null)) {
+      this.scene.start("EndGame");
+      return;
+    }
+
+    const pending = GalaxyMemory.pendingPlanetId;
+
+    let targetId: string;
+
+    if (pending && GalaxyMemory.completed[pending] == null) {
+      targetId = pending;
+    } else {
+      const available = allIds.filter(id => GalaxyMemory.completed[id] == null);
+      targetId = Phaser.Utils.Array.GetRandom(available);
+    }
+
+    this.lfPlanetId = targetId;
+
+    GalaxyMemory.completed[targetId] = this.lfType;
+
+    GalaxyMemory.pendingPlanetId = null;
   }
 
   private renderLfPlanetMarker() {
@@ -203,7 +226,7 @@ export default class GalaxyMap extends PhaseScene {
 
     for (const p of this.planets) {
 
-      const locked = this.lfPlanetId && p.def.id === this.lfPlanetId;
+      const locked = GalaxyMemory.completed[p.def.id] != null;
 
       const hitCircle = this.add.circle(p.x, p.y, p.def.r, 0xffffff, 0.001);
       hitCircle.setScrollFactor(0);
@@ -227,14 +250,35 @@ export default class GalaxyMap extends PhaseScene {
       });
 
       hitCircle.on(Phaser.Input.Events.POINTER_DOWN, () => {
-        log("Clicked planet: " + p.def.id);
+        GalaxyMemory.pendingPlanetId = p.def.id;
         this.scene.start("Terraforming");
+
       });
     }
 
     const onResize = () => hoverG.clear();
     this.scale.on("resize", onResize);
     this.onShutdown(() => this.scale.off("resize", onResize));
+  }
+
+  private renderCompletedPlanetMarkers() {
+    for (const m of this.completedMarkers) m.destroy();
+    this.completedMarkers = [];
+
+    for (const p of this.planets) {
+      const lfType = GalaxyMemory.completed[p.def.id];
+      if (!lfType) continue;
+
+      const img = this.add.image(p.x, p.y, lfType);
+      img.setScrollFactor(0);
+      img.setDepth(10);
+      this.bgCam.ignore(img);
+
+      const size = Math.max(16, Math.floor(p.def.r * 1.15));
+      img.setDisplaySize(size, size);
+
+      this.completedMarkers.push(img);
+    }
   }
 
   private strokeEllipseArc(
