@@ -11,7 +11,7 @@ export type TerraformLevels = {
 };
 
 export default class TerraformingFacade extends Phaser.Events.EventEmitter {
-  public static readonly MAX = 1000;
+  public static readonly MAX = 6000;
 
   private run: PlanetRunState;
 

@@ -45,6 +45,8 @@ export type TerraformingViewConfig = {
   thermoW: number;
   thermoColour: number;
   thermoOrientation?: "vertical" | "horizontal";
+  thermoMax?: number;
+  points?: number;
 
   flipWorldY?: boolean;
 
@@ -62,7 +64,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected r: number;
   protected offsetRatio: number;
 
-  protected atmoCount: number;
+  protected slotCount: number;
   protected arcStartDeg: number;
   protected arcEndDeg: number;
   protected radiusOffset: number;
@@ -77,8 +79,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected deviceSlots: (0 | 1 | 2 | null)[] = [];
   protected selectedDevice: 0 | 1 | 2 | null = null;
 
-  protected points = 5;
-  protected thermometerMax = 1000;
+  protected points: number;
+  protected thermometerMax: number;
 
   protected readonly deviceKeys: readonly [string, string, string];
   protected readonly deviceCosts: Record<0 | 1 | 2, number>;
@@ -126,8 +128,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
     this.radiusOffset = cfg.radiusOffset;
 
-    this.atmoCount = cfg.slotCount ?? 20;
-    this.deviceSlots = Array(this.atmoCount).fill(null);
+    this.slotCount = cfg.slotCount ?? 20;
+    this.deviceSlots = Array(this.slotCount).fill(null);
 
     this.deviceKeys = cfg.deviceKeys;
     this.deviceCosts = cfg.deviceCosts;
@@ -146,6 +148,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.thermoW = cfg.thermoW;
     this.thermoColour = cfg.thermoColour;
     this.thermoOrientation = cfg.thermoOrientation ?? "vertical";
+    this.thermometerMax = cfg.thermoMax ?? 1000;
+    this.points = cfg.points ?? 5;
 
     this.backButtonLocalX = cfg.backButtonLocalX;
     this.backButtonLocalY = cfg.backButtonLocalY;
@@ -188,7 +192,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       scene: this.scene,
       world: this.world,
 
-      slotCount: this.atmoCount,
+      slotCount: this.slotCount,
       deviceKeys: this.deviceKeys,
       deviceColors: this.deviceButtonTheme?.stroke ?? [0xffffff, 0xffffff, 0xffffff],
 
@@ -282,7 +286,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
     const radius = this.r + this.radiusOffset;
 
-    const t = this.atmoCount === 1 ? 0.5 : slotIndex / (this.atmoCount - 1);
+    const t = this.slotCount === 1 ? 0.5 : slotIndex / (this.slotCount - 1);
     const ang = Phaser.Math.Linear(arcStart, arcEnd, t);
 
     const x = localCenterX + Math.cos(ang) * radius;

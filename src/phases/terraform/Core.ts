@@ -75,8 +75,11 @@ export default class Core extends TerraformingView {
 
       deviceKeys: ["coreDevice1", "coreDevice2", "coreDevice3"],
 
-      deviceCosts: { 0: 5, 1: 20, 2: 100 },
-      deviceRates: { 0: 1, 1: 5, 2: 10 },
+      slotCount: Core.SLOT_COUNT,
+      thermoMax: 6000,
+      points: 5,
+      deviceCosts: { 0: 5, 1: 50, 2: 250 },
+      deviceRates: { 0: 1, 1: 2, 2: 8 },
 
       deviceButtonTheme: {
         stroke: [0xc9a24d, 0xf0c75e, 0xffe08a],
@@ -86,7 +89,6 @@ export default class Core extends TerraformingView {
 
       onBackEvent: "ui:goToPlanet",
 
-      slotCount: Core.SLOT_COUNT,
       thermoColour: 0xffe08a
     });
 

@@ -3,7 +3,7 @@ import Phaser from "phaser";
 export type TerraformKey = "atmosphere" | "magnetosphere" | "hydrosphere" | "core";
 
 export default class TerraformingState extends Phaser.Events.EventEmitter {
-  public static readonly MAX = 1000;
+  public static readonly MAX = 6000;
 
   private _atmosphereLevel = 0;
   private _magnetosphereLevel = 0;

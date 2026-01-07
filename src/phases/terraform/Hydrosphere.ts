@@ -80,8 +80,11 @@ export default class Hydrosphere extends TerraformingView {
 
       deviceKeys: ["hydrosphereDevice1", "hydrosphereDevice2", "hydrosphereDevice3"],
 
-      deviceCosts: { 0: 5, 1: 20, 2: 100 },
-      deviceRates: { 0: 1, 1: 5, 2: 10 },
+      slotCount: Hydrosphere.SLOT_COUNT,
+      thermoMax: 6000,
+      points: 5,
+      deviceCosts: { 0: 5, 1: 50, 2: 250 },
+      deviceRates: { 0: 1, 1: 2, 2: 8 },
 
       deviceButtonTheme: {
         stroke: [0xa8d5ba, 0x5fbf8a, 0x2ecc71],
@@ -91,7 +94,6 @@ export default class Hydrosphere extends TerraformingView {
 
       onBackEvent: "ui:goToPlanet",
 
-      slotCount: Hydrosphere.SLOT_COUNT,
       thermoColour: 0x5fbf8a,
     });
 

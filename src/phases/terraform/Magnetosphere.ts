@@ -38,8 +38,12 @@ export default class Magnetosphere extends TerraformingView {
       arcEndDeg: 220,
 
       deviceKeys: ["magnetosphereDevice1", "magnetosphereDevice2", "magnetosphereDevice3"],
-      deviceCosts: { 0: 5, 1: 20, 2: 100 },
-      deviceRates: { 0: 1, 1: 5, 2: 10 },
+
+      slotCount: 20,
+      thermoMax: 6000,
+      points: 5,
+      deviceCosts: { 0: 5, 1: 50, 2: 250 },
+      deviceRates: { 0: 1, 1: 2, 2: 8 },
 
       deviceButtonTheme: {
         stroke: [0xd6a0a0, 0xe06666, 0xff3a3a],

@@ -28,8 +28,11 @@ export default class Atmosphere extends TerraformingView {
 
       deviceKeys: ["atmosphereDevice1", "atmosphereDevice2", "atmosphereDevice3"],
 
-      deviceCosts: { 0: 5, 1: 20, 2: 100 },
-      deviceRates: { 0: 1, 1: 5, 2: 10 },
+      slotCount: 20,
+      thermoMax: 6000,
+      points: 5,
+      deviceCosts: { 0: 5, 1: 50, 2: 250 },
+      deviceRates: { 0: 1, 1: 2, 2: 8 },
 
       deviceButtonTheme: {
         stroke: [0xf2b7d8, 0xf06fb4, 0xff2f9f],
