@@ -216,7 +216,7 @@ export default class Evolution extends PhaseScene {
     if (this.rocketLaunched) return;
 
     const scores = scoreByType100(this.run.lifeForms);
-    scores.set("prokaryote", 100);
+    //scores.set("prokaryote", 100);
 
     for (const [type, score100] of scores) {
       if (score100 < 100) continue;
