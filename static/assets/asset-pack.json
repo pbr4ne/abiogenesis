@@ -62,6 +62,11 @@
                 "key": "check"
             },
             {
+                "url": "assets/images/comet.png",
+                "type": "image",
+                "key": "comet"
+            },
+            {
                 "url": "assets/images/coreDevice1.png",
                 "type": "image",
                 "key": "coreDevice1"

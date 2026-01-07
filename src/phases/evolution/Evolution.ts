@@ -23,6 +23,8 @@ export default class Evolution extends PhaseScene {
   private abacusPoints!: AbacusPoints;
   private lastEvoPts = -1;
 
+  private cometBtn!: Phaser.GameObjects.Image;
+
   constructor() {
     super("Evolution");
   }
@@ -84,12 +86,35 @@ export default class Evolution extends PhaseScene {
       if (this.evoModal.isOpen()) {
         this.evoModal.hide();
         this.hoverPanel.hide();
+        this.setCometVisibleForMainHover(false);
       } else {
         this.evoModal.show(this.run.lifeForms);
+        this.cometBtn.setVisible(true);
       }
     });
-
     this.add.existing(this.evoBtn);
+
+    this.cometBtn = this.add.image(0, 0, "comet");
+    this.cometBtn.setScrollFactor(0);
+    this.cometBtn.setDepth(9999);
+    this.cometBtn.setInteractive({ useHandCursor: true });
+
+    const layoutComet = () => {
+      const pad = 22;
+      const size = 200;
+      this.cometBtn.setDisplaySize(size, size);
+      this.cometBtn.setPosition(this.scale.width - pad - size / 2 - 200, this.scale.height / 2 - 50);
+    };
+
+    layoutComet();
+    this.scale.on(Phaser.Scale.Events.RESIZE, layoutComet);
+
+    this.cometBtn.on("pointerdown", () => {
+    });
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off(Phaser.Scale.Events.RESIZE, layoutComet);
+    });
 
     this.events.on(
       "life:hoverAt",
@@ -106,11 +131,17 @@ export default class Evolution extends PhaseScene {
     this.events.on("life:hover", (p: { lf: LifeFormInstance; def: LifeFormDef } | null) => {
       if (this.evoModal.isOpen()) return;
       this.hoverPanel.setLife(p);
+      this.setCometVisibleForMainHover(!!p);
     });
 
     this.events.on("life:select", (payload: { lf: LifeFormInstance; def: LifeFormDef }) => {
       this.hoverPanel.setLife(null);
+      this.setCometVisibleForMainHover(false);
       this.modal.show(payload);
     });
+  }
+
+  private setCometVisibleForMainHover(isHoverActive: boolean) {
+    this.cometBtn.setVisible(!isHoverActive);
   }
 }
