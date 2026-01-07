@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { Rotator, projectLatLon, latForIndex, lonForIndex, projectCellCorners } from "./PlanetMath";
+import { Rotator, projectLatLon, latForIndex, lonForIndex, projectCellCorners, latLonToXYZ } from "./PlanetMath";
 import type { RGBA } from "./PlanetGrid";
 
 export const drawBaseGradient = (g: Phaser.GameObjects.Graphics, r: number, centerY: number) => {
@@ -163,23 +163,6 @@ export const drawWireGrid = (
   }
 };
 
-const shadeHex = (hex: number, mul: number) => {
-  const r = Math.max(0, Math.min(255, Math.round(((hex >> 16) & 0xff) * mul)));
-  const g = Math.max(0, Math.min(255, Math.round(((hex >> 8) & 0xff) * mul)));
-  const b = Math.max(0, Math.min(255, Math.round((hex & 0xff) * mul)));
-  return (r << 16) | (g << 8) | b;
-};
-
-const fillQuad = (g: Phaser.GameObjects.Graphics, a: { x: number; y: number }, b: { x: number; y: number }, c: { x: number; y: number }, d: { x: number; y: number }) => {
-  g.beginPath();
-  g.moveTo(a.x, a.y);
-  g.lineTo(b.x, b.y);
-  g.lineTo(c.x, c.y);
-  g.lineTo(d.x, d.y);
-  g.closePath();
-  g.fillPath();
-};
-
 export const drawCellBump = (
   g: Phaser.GameObjects.Graphics,
   row: number,
@@ -191,30 +174,70 @@ export const drawCellBump = (
   heightPx: number,
   alpha = 1
 ) => {
-  const base = projectCellCorners(row, col, r, divisions, rotate);
-  if (!base) return;
+  const lat0 = latForIndex(row, divisions);
+  const lat1 = latForIndex(row + 1, divisions);
+  const lon0 = lonForIndex(col, divisions);
+  const lon1 = lonForIndex(col + 1, divisions);
 
-  const latC = latForIndex(row, divisions) * 0.5 + latForIndex(row + 1, divisions) * 0.5;
-  const lonC = lonForIndex(col, divisions) * 0.5 + lonForIndex(col + 1, divisions) * 0.5;
+  const latC = (lat0 + lat1) * 0.5;
+  const lonC = (lon0 + lon1) * 0.5;
+  const n0 = latLonToXYZ(1, latC, lonC);
 
-  const c = projectLatLon(1, latC, lonC, rotate);
-  if (c.z <= 0) return;
+  const off = heightPx / r;
 
-  const cx = c.x * r;
-  const cy = c.y * r;
+  const corners0 = [
+    latLonToXYZ(1, lat0, lon0),
+    latLonToXYZ(1, lat0, lon1),
+    latLonToXYZ(1, lat1, lon1),
+    latLonToXYZ(1, lat1, lon0),
+  ];
 
-  const nLen = Math.sqrt(cx * cx + cy * cy) || 1;
-  const nx = cx / nLen;
-  const ny = cy / nLen;
+  const base = corners0.map(v => {
+    const p = rotate(v.x, v.y, v.z);
+    return { x: p.x * r, y: p.y * r, z: p.z };
+  });
 
-  const offX = nx * heightPx;
-  const offY = ny * heightPx;
+  if (base[0].z <= 0 && base[1].z <= 0 && base[2].z <= 0 && base[3].z <= 0) return;
 
-  const top = base.map(p => ({ x: p.x + offX, y: p.y + offY }));
+  const top = corners0.map(v => {
+    const vx = v.x + n0.x * off;
+    const vy = v.y + n0.y * off;
+    const vz = v.z + n0.z * off;
+    const p = rotate(vx, vy, vz);
+    return { x: p.x * r, y: p.y * r, z: p.z };
+  });
+
+  const shadeHex = (hex: number, mul: number) => {
+    const rr = Math.max(0, Math.min(255, Math.round(((hex >> 16) & 0xff) * mul)));
+    const gg = Math.max(0, Math.min(255, Math.round(((hex >> 8) & 0xff) * mul)));
+    const bb = Math.max(0, Math.min(255, Math.round((hex & 0xff) * mul)));
+    return (rr << 16) | (gg << 8) | bb;
+  };
+
+  const fillQuad = (
+    a: { x: number; y: number },
+    b: { x: number; y: number },
+    c: { x: number; y: number },
+    d: { x: number; y: number }
+  ) => {
+    g.beginPath();
+    g.moveTo(a.x, a.y);
+    g.lineTo(b.x, b.y);
+    g.lineTo(c.x, c.y);
+    g.lineTo(d.x, d.y);
+    g.closePath();
+    g.fillPath();
+  };
 
   const topCol = shadeHex(baseHex, 1.10);
   const sideDark = shadeHex(baseHex, 0.55);
   const sideLight = shadeHex(baseHex, 0.80);
+
+  const cx = (base[0].x + base[1].x + base[2].x + base[3].x) * 0.25;
+  const cy = (base[0].y + base[1].y + base[2].y + base[3].y) * 0.25;
+  const cLen = Math.sqrt(cx * cx + cy * cy) || 1;
+  const nx2 = cx / cLen;
+  const ny2 = cy / cLen;
 
   for (let i = 0; i < 4; i++) {
     const j = (i + 1) & 3;
@@ -230,11 +253,11 @@ export const drawCellBump = (
     const ex = edgeNx / edgeLen;
     const ey = edgeNy / edgeLen;
 
-    const facing = ex * nx + ey * ny;
+    const facing = ex * nx2 + ey * ny2;
     const sideCol = facing > 0 ? sideLight : sideDark;
 
     g.fillStyle(sideCol, alpha);
-    fillQuad(g, a, b, c2, d);
+    fillQuad(a, b, c2, d);
   }
 
   g.fillStyle(topCol, alpha);
@@ -245,12 +268,4 @@ export const drawCellBump = (
   g.lineTo(top[3].x, top[3].y);
   g.closePath();
   g.fillPath();
-
-  g.beginPath();
-  g.moveTo(top[0].x, top[0].y);
-  g.lineTo(top[1].x, top[1].y);
-  g.lineTo(top[2].x, top[2].y);
-  g.lineTo(top[3].x, top[3].y);
-  g.closePath();
-  g.strokePath();
 };

@@ -268,7 +268,7 @@ export default class EvolutionPlanet extends PlanetBase {
         (def.colour.g << 8) |
         def.colour.b;
 
-      const heightPx = 6;
+      const heightPx = 20;
 
       drawCellBump(
         this.lifeBumps,
