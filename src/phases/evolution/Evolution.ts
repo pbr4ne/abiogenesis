@@ -8,7 +8,7 @@ import EvolutionTreeModal from "./EvolutionTreeModal";
 import EvolutionTreeButton from "./EvolutionTreeButton";
 import PlanetRunState from "../../planet/PlanetRunState";
 import EvolutionSim from "./EvolutionSim";
-import FlaskPoints from "./FlaskPoints";
+import AbacusPoints from "./AbacusPoints";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -19,7 +19,7 @@ export default class Evolution extends PhaseScene {
   private evoBtn!: EvolutionTreeButton;
   private sim!: EvolutionSim;
   private simTimer?: Phaser.Time.TimerEvent;
-  private pointsDish!: FlaskPoints;
+  private abacusPoints!: AbacusPoints;
   private lastEvoPts = -1;
 
   constructor() {
@@ -33,16 +33,14 @@ export default class Evolution extends PhaseScene {
 
     this.run = this.registry.get("run") as PlanetRunState;
 
-    this.pointsDish = new FlaskPoints(this, {
-      x: 270,
-      y: 420,
+    this.abacusPoints = new AbacusPoints(this, {
+      x: 240,
+      y: 360,
       getPoints: (): number => this.run.getEvoPointsAvailable(),
-      maxFillPoints: 60,
-      maxShownNuggets: 140,
-      displayW: 360,
-      displayH: 360
+      maxPoints: 100,
+      width: 320
     });
-    this.add.existing(this.pointsDish);
+    this.add.existing(this.abacusPoints);
 
     this.sim = new EvolutionSim(this.run, 40);
 
@@ -58,7 +56,7 @@ export default class Evolution extends PhaseScene {
         }
 
         this.planet.refreshFromRun();
-        this.pointsDish.refresh();
+        this.abacusPoints.refresh();
         if (this.evoModal.isOpen()) this.evoModal.show(this.run.lifeForms);
       }
     });

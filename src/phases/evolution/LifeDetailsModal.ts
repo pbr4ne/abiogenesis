@@ -14,6 +14,7 @@ type StatRow = {
   barFill: Phaser.GameObjects.Rectangle;
   ticks: Phaser.GameObjects.Graphics;
   plus: Phaser.GameObjects.Image;
+  costG: Phaser.GameObjects.Graphics;
   barW: number;
   barX: number;
   barH: number;
@@ -36,7 +37,18 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   private static readonly STAT_MAX = 5;
   private static readonly PLUS_SIZE = 50;
   private onPointsChanged: (() => void) | null = null;
-  private flaskTip: Phaser.GameObjects.Image;
+
+  private clickLock: Record<StatKey, boolean> = {
+    mutation: false,
+    reproduction: false,
+    survival: false
+  };
+
+  private plusHover: Record<StatKey, boolean> = {
+    mutation: false,
+    reproduction: false,
+    survival: false
+  };
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -76,14 +88,6 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       fontSize: "44px",
       color: "#ffffff"
     }).setOrigin(0.5, 0.5);
-
-    this.flaskTip = scene.add.image(0, 0, "flask");
-    this.flaskTip.setVisible(false);
-    this.flaskTip.setAlpha(0.92);
-    this.flaskTip.setOrigin(0.5, 1);
-    this.flaskTip.setDisplaySize(58, 58);
-    this.flaskTip.setTintFill(0xffffff);
-    this.flaskTip.setDepth(10002);
 
     const leftColX = cx - w / 2 + pad;
 
@@ -129,6 +133,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       this.rows.mutation.barFill,
       this.rows.mutation.ticks,
       this.rows.mutation.plus,
+      this.rows.mutation.costG,
 
       this.rows.reproduction.left,
       this.rows.reproduction.mid,
@@ -137,6 +142,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       this.rows.reproduction.barFill,
       this.rows.reproduction.ticks,
       this.rows.reproduction.plus,
+      this.rows.reproduction.costG,
 
       this.rows.survival.left,
       this.rows.survival.mid,
@@ -145,10 +151,10 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       this.rows.survival.barFill,
       this.rows.survival.ticks,
       this.rows.survival.plus,
+      this.rows.survival.costG,
 
       this.closeHit,
-      this.closeText,
-      this.flaskTip,
+      this.closeText
     ]);
 
     this.setScrollFactor(0);
@@ -190,37 +196,9 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     });
   }
 
-  private showFlaskTipAt(x: number, y: number) {
-    const sw = this.scene.scale.width;
-    const sh = this.scene.scale.height;
-
-    const pad = 12;
-
-    const w = this.flaskTip.displayWidth;
-    const h = this.flaskTip.displayHeight;
-
-    const tx = x + 46;
-    const ty = y - 34;
-
-    const cx = Phaser.Math.Clamp(tx, pad + w / 2, sw - pad - w / 2);
-    const cy = Phaser.Math.Clamp(ty, pad + h, sh - pad);
-
-    this.flaskTip.setPosition(cx, cy);
-    this.flaskTip.setVisible(true);
-  }
-
-  private hideFlaskTip() {
-    this.flaskTip.setVisible(false);
-  }
-
   private getRun(): PlanetRunState | null {
     const run = this.scene.registry.get("run") as PlanetRunState | undefined;
     return run ?? null;
-  }
-
-  private canAffordUpgrade() {
-    const run = this.getRun();
-    return !!run && run.getEvoPointsAvailable() > 0;
   }
 
   private lightenHex(hex: number, amt01: number) {
@@ -236,15 +214,20 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   }
 
   private getStat(lf: LifeFormInstance, key: StatKey) {
-    return key === "mutation" ? lf.mutationRate :
-      key === "reproduction" ? lf.reproductionRate :
-        lf.survivalRate;
+    const v =
+      key === "mutation" ? lf.mutationRate :
+        key === "reproduction" ? lf.reproductionRate :
+          lf.survivalRate;
+
+    return Phaser.Math.Clamp(v, 0, LifeDetailsModal.STAT_MAX);
   }
 
   private setStat(lf: LifeFormInstance, key: StatKey, v: number) {
-    if (key === "mutation") lf.mutationRate = v;
-    else if (key === "reproduction") lf.reproductionRate = v;
-    else lf.survivalRate = v;
+    const vv = Phaser.Math.Clamp(v, 0, LifeDetailsModal.STAT_MAX);
+
+    if (key === "mutation") lf.mutationRate = vv;
+    else if (key === "reproduction") lf.reproductionRate = vv;
+    else lf.survivalRate = vv;
   }
 
   private makeStatRow(scene: Phaser.Scene, x: number, topY: number, rowH: number): StatRow {
@@ -257,26 +240,84 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const mid = scene.add.image(x + iconSize * 1.5 + gap, cy, "arrow").setDisplaySize(iconSize, iconSize);
     const right = scene.add.image(x + iconSize * 2.5 + gap * 2, cy, "life_form_mutated").setDisplaySize(iconSize, iconSize);
 
-    let barX = x + iconSize * 3.5 + gap * 3 - 30;
+    const barX = x + iconSize * 3.5 + gap * 3 - 30;
     const barW = 220;
     const barH = 25;
 
     const barBg = scene.add.rectangle(barX + barW / 2, cy, barW, barH, 0x1a1a1a, 1);
     barBg.setStrokeStyle(2, 0xffffff, 0.2);
 
-
     const barFill = scene.add.rectangle(barX + 2, cy, 0, barH - 4, 0xffffff, 1);
     barFill.setOrigin(0, 0.5);
 
     const ticks = scene.add.graphics();
 
-    const plus = scene.add.image(barX + barW + 24 + LifeDetailsModal.PLUS_SIZE / 2, cy, "plus")
-      .setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+    const plusX = barX + barW + 24 + LifeDetailsModal.PLUS_SIZE / 2;
+    const plus = scene.add.image(plusX, cy, "plus").setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
 
-    plus.setInteractive({ useHandCursor: true });
-    plus.on("pointerdown", (p: Phaser.Input.Pointer) => p.event.stopPropagation());
+    const costG = scene.add.graphics();
+    costG.setPosition(plusX + 68, cy);
+    costG.setDepth(10001);
+    costG.setVisible(false);
 
-    return { left, mid, right, barBg, barFill, ticks, plus, barW, barX, barH };
+    return { left, mid, right, barBg, barFill, ticks, plus, costG, barW, barX, barH };
+  }
+
+  private drawCostDots(
+    g: Phaser.GameObjects.Graphics,
+    cost: number,
+    tint: number,
+    alpha: number
+  ) {
+    g.clear();
+
+    const total = LifeDetailsModal.STAT_MAX;
+    const c = Phaser.Math.Clamp(cost, 0, total);
+
+    const dotR = 4.2;
+    const gap = dotR * 2.55;
+    const startX = -((total - 1) * gap) / 2;
+    const y = 0;
+
+    const contentW = (total - 1) * gap + dotR * 2;
+    const contentH = dotR * 2;
+
+    const padX = 10;
+    const padY = 8;
+
+    const boxW = contentW + padX * 2;
+    const boxH = contentH + padY * 2;
+
+    const boxX = -boxW / 2;
+    const boxY = -boxH / 2;
+
+    g.fillStyle(0x000000, 0.55 * alpha);
+    g.fillRoundedRect(boxX, boxY, boxW, boxH, 10);
+
+    g.lineStyle(2, tint, 0.55 * alpha);
+    g.strokeRoundedRect(boxX, boxY, boxW, boxH, 10);
+
+    const outlineW = 2;
+    const outlineA = 0.85 * alpha;
+
+    const filledA = 0.55 * alpha;
+    const emptyA = 0.06 * alpha;
+
+    for (let i = 0; i < total; i++) {
+      const xx = startX + i * gap;
+      const isFilled = i < c;
+
+      if (isFilled) {
+        g.fillStyle(tint, filledA);
+        g.fillCircle(xx, y, dotR);
+      } else {
+        g.fillStyle(0xffffff, emptyA);
+        g.fillCircle(xx, y, dotR);
+      }
+
+      g.lineStyle(outlineW, tint, outlineA);
+      g.strokeCircle(xx, y, dotR);
+    }
   }
 
   public show(payload: LifeHoverPayload) {
@@ -285,7 +326,6 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     this.current = payload;
 
     const { lf, def } = payload;
-
     const tint = rgbToHex(def.colour.r, def.colour.g, def.colour.b);
 
     this.panel.setStrokeStyle(3, tint, 0.9);
@@ -304,7 +344,10 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   public hide() {
     this.current = null;
     this.setVisible(false);
-    this.hideFlaskTip();
+    for (const k of ["mutation", "reproduction", "survival"] as const) {
+      this.rows[k].costG.setVisible(false);
+    }
+
   }
 
   public isOpen() {
@@ -312,15 +355,13 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   }
 
   private applyRow(key: StatKey, def: LifeFormDef, lf: LifeFormInstance, tint: number) {
-    this.hideFlaskTip();
     const row = this.rows[key];
 
-    const v =
-      key === "mutation" ? lf.mutationRate :
-        key === "reproduction" ? lf.reproductionRate :
-          lf.survivalRate;
+    const v = this.getStat(lf, key);
+    const p01 = Phaser.Math.Clamp(v / LifeDetailsModal.STAT_MAX, 0, 1);
 
-    const p01 = Phaser.Math.Clamp(v / 5, 0, 1);
+    const nextStep = Math.floor(v) + 1;
+    const cost = Phaser.Math.Clamp(nextStep, 1, LifeDetailsModal.STAT_MAX);
 
     if (key === "mutation") {
       row.left.setTexture("life_form").setTintFill(tint);
@@ -360,88 +401,136 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       row.ticks.strokePath();
     }
 
-    row.plus.off("pointerdown");
+    const canUpgradeStat = v < LifeDetailsModal.STAT_MAX;
+
+    if (!canUpgradeStat) {
+      row.costG.setVisible(false);
+    }
+
+    const run = this.getRun();
+    const available = run ? run.getEvoPointsAvailable() : 0;
+
+    const canAfford = available >= cost;
+    const canClick = canUpgradeStat && canAfford;
+
     row.plus.off("pointerover");
     row.plus.off("pointerout");
-
-    const canUpgradeStat = v < LifeDetailsModal.STAT_MAX;
-    const canAfford = this.canAffordUpgrade();
-    const canUpgrade = canUpgradeStat && canAfford;
+    row.plus.off("pointerdown");
+    row.plus.disableInteractive();
 
     row.plus.setTintFill(tint);
-    row.plus.setAlpha(canUpgrade ? 0.9 : 0.25);
+    row.plus.setAlpha(canClick ? 0.9 : 0.35);
     row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
 
-    if (!canUpgrade) {
-      row.plus.setInteractive({ useHandCursor: false });
-
-      row.plus.on("pointerover", () => {
-        this.showFlaskTipAt(row.plus.x, row.plus.y);
-        this.scene.input.setDefaultCursor("default");
-      });
-
-      row.plus.on("pointerout", () => {
-        this.hideFlaskTip();
-      });
-
-      row.plus.on("pointerdown", (p: Phaser.Input.Pointer) => {
-        p.event.stopPropagation();
-        this.hideFlaskTip();
-      });
-
+    if (!canUpgradeStat) {
+      row.costG.setVisible(false);
+      this.plusHover[key] = false;
       return;
     }
 
-    row.plus.setInteractive({ useHandCursor: true });
+    row.plus.setInteractive({ useHandCursor: canClick });
 
     const basePlusTint = tint;
     const hoverPlusTint = this.lightenHex(tint, 0.35);
 
+    const showCost = () => {
+      row.costG.setVisible(true);
+      this.drawCostDots(row.costG, cost, tint, 1);
+    };
+
+    const hideCost = () => {
+      row.costG.setVisible(false);
+    };
+
+    const applyHoverVisuals = () => {
+      showCost();
+
+      if (canClick) {
+        row.plus.setTintFill(hoverPlusTint);
+        row.plus.setAlpha(1);
+        row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE * 1.1, LifeDetailsModal.PLUS_SIZE * 1.1);
+        this.scene.input.setDefaultCursor("pointer");
+      } else {
+        row.plus.setTintFill(basePlusTint);
+        row.plus.setAlpha(0.35);
+        row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+        this.scene.input.setDefaultCursor("default");
+      }
+    };
+
+    const clearHoverVisuals = () => {
+      hideCost();
+
+      row.plus.setTintFill(basePlusTint);
+      row.plus.setAlpha(canClick ? 0.9 : 0.35);
+      row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+      this.scene.input.setDefaultCursor("default");
+    };
+
     row.plus.on("pointerover", () => {
-      row.plus.setTintFill(hoverPlusTint);
-      row.plus.setAlpha(1);
-      row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE * 1.1, LifeDetailsModal.PLUS_SIZE * 1.1);
+      this.plusHover[key] = true;
+      applyHoverVisuals();
     });
 
     row.plus.on("pointerout", () => {
-      row.plus.setTintFill(basePlusTint);
-      row.plus.setAlpha(0.9);
-      row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
+      this.plusHover[key] = false;
+      clearHoverVisuals();
     });
 
     row.plus.on("pointerdown", (p: Phaser.Input.Pointer) => {
       p.event.stopPropagation();
-      this.hideFlaskTip();
+
+      if (!canClick) return;
+
+      if (this.clickLock[key]) return;
+      this.clickLock[key] = true;
 
       const cur = this.current;
-      if (!cur) return;
+      if (!cur) {
+        this.clickLock[key] = false;
+        return;
+      }
 
       const run = this.getRun();
-      if (!run) return;
-
-      row.plus.disableInteractive();
-      row.plus.setAlpha(0.25);
+      if (!run) {
+        this.clickLock[key] = false;
+        return;
+      }
 
       const curV = this.getStat(cur.lf, key);
       if (curV >= LifeDetailsModal.STAT_MAX) {
         this.scene.events.emit("evoPoints:changed");
+        this.clickLock[key] = false;
         return;
       }
 
-      if (!run.trySpendEvoPoints(1)) {
+      const nextStep = Math.floor(curV) + 1;
+      const cost2 = Phaser.Math.Clamp(nextStep, 1, LifeDetailsModal.STAT_MAX);
+
+      if (!run.trySpendEvoPoints(cost2)) {
         this.scene.events.emit("evoPoints:changed");
+        this.clickLock[key] = false;
         return;
       }
 
       this.setStat(cur.lf, key, curV + 1);
 
       const tint2 = rgbToHex(cur.def.colour.r, cur.def.colour.g, cur.def.colour.b);
+
       this.applyRow("mutation", cur.def, cur.lf, tint2);
       this.applyRow("reproduction", cur.def, cur.lf, tint2);
       this.applyRow("survival", cur.def, cur.lf, tint2);
 
       this.scene.events.emit("life:upgrade", { id: cur.lf.id, stat: key });
       this.scene.events.emit("evoPoints:changed");
+
+      this.scene.time.delayedCall(0, () => {
+        this.clickLock[key] = false;
+      });
     });
+
+    if (this.plusHover[key]) {
+      applyHoverVisuals();
+    }
   }
 }
