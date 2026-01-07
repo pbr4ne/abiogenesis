@@ -37,7 +37,7 @@ export default class Evolution extends PhaseScene {
       x: 250,
       y: 360,
       getPoints: (): number => this.run.getEvoPointsAvailable(),
-      maxPoints: 999,
+      maxPoints: 1000,
       width: 350
     });
     this.add.existing(this.abacusPoints);
