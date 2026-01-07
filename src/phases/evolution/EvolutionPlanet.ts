@@ -248,6 +248,28 @@ export default class EvolutionPlanet extends PlanetBase {
     this.renderLifeBumps();
   }
 
+  private clamp01(t: number) {
+    return Math.max(0, Math.min(1, t));
+  }
+
+  private lifeScore(lf: LifeFormInstance) {
+    return lf.mutationRate + lf.reproductionRate + lf.survivalRate;
+  }
+
+  private bumpHeightPxFor(lf: LifeFormInstance) {
+    const minH = 5;
+    const maxH = 28;
+    const cap = 60;
+    const exponent = 10
+
+    const s = this.lifeScore(lf);
+    let t = this.clamp01(s / cap);
+
+    t = 1 - Math.pow(1 - t, exponent);
+
+    return Phaser.Math.Linear(minH, maxH, t);
+  }
+
   private renderLifeBumps() {
     this.lifeBumps.clear();
 
@@ -268,7 +290,7 @@ export default class EvolutionPlanet extends PlanetBase {
         (def.colour.g << 8) |
         def.colour.b;
 
-      const heightPx = 20;
+      const heightPx = this.bumpHeightPxFor(lf);
 
       drawCellBump(
         this.lifeBumps,
