@@ -28,9 +28,9 @@ const DEFAULT_TUNING: SimTuning = {
   baseAttackPerNeighbor: 0.015,
   attackKillChance: 0.35,
 
-  pointsBasePerTick: 0.015,
-  pointsPerLifePerTick: 0.018,
-  pointsPerDepthPerTick: 0.004
+  pointsBasePerTick: 0.045,
+  pointsPerLifePerTick: 0.054,
+  pointsPerDepthPerTick: 0.012
 };
 
 const computeDepthByType = () => {
