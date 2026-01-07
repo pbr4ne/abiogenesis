@@ -102,7 +102,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     this.bigIcon.setDisplaySize(bigSize, bigSize);
 
-    this.bigIconBorder = scene.add.rectangle(this.bigIcon.x, this.bigIcon.y, bigSize + 114, bigSize + 114, 0x000000, 0);
+    this.bigIconBorder = scene.add.rectangle(this.bigIcon.x, this.bigIcon.y, bigSize + 114, bigSize + 114, 0x000000, 0x000000);
     this.bigIconBorder.setStrokeStyle(3, 0xffffff, 0.25);
 
     const rightPad = 34;
@@ -256,7 +256,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const plus = scene.add.image(plusX, cy, "plus").setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
 
     const costG = scene.add.graphics();
-    costG.setPosition(plusX + 68, cy);
+    costG.setPosition(plusX + 78, cy);
     costG.setDepth(10001);
     costG.setVisible(false);
 
@@ -272,7 +272,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     g.clear();
 
     const total = LifeDetailsModal.STAT_MAX;
-    const c = Phaser.Math.Clamp(cost, 0, total);
+    const c = Phaser.Math.Clamp(cost, 0, total - 1);
 
     const dotR = 4.2;
     const gap = dotR * 2.55;
@@ -320,6 +320,11 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     }
   }
 
+  private getUpgradeCostForNextStep(nextStep: number) {
+    const maxCost = LifeDetailsModal.STAT_MAX - 1;
+    return Phaser.Math.Clamp(nextStep - 1, 0, maxCost);
+  }
+
   public show(payload: LifeHoverPayload) {
     if (!payload) return;
 
@@ -361,7 +366,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const p01 = Phaser.Math.Clamp(v / LifeDetailsModal.STAT_MAX, 0, 1);
 
     const nextStep = Math.floor(v) + 1;
-    const cost = Phaser.Math.Clamp(nextStep, 1, LifeDetailsModal.STAT_MAX);
+    const cost = this.getUpgradeCostForNextStep(nextStep);
 
     if (key === "mutation") {
       row.left.setTexture("life_form").setTintFill(tint);
@@ -393,8 +398,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     row.barBg.setStrokeStyle(4, tint, 0.9);
 
-    for (let i = 1; i < 5; i++) {
-      const x = (row.barX + 2) + (innerW * i) / 5;
+    for (let i = 1; i < LifeDetailsModal.STAT_MAX; i++) {
+      const x = (row.barX + 2) + (innerW * i) / LifeDetailsModal.STAT_MAX;
       row.ticks.beginPath();
       row.ticks.moveTo(x, y0);
       row.ticks.lineTo(x, y1);
@@ -505,9 +510,9 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       }
 
       const nextStep = Math.floor(curV) + 1;
-      const cost2 = Phaser.Math.Clamp(nextStep, 1, LifeDetailsModal.STAT_MAX);
+      const cost2 = this.getUpgradeCostForNextStep(nextStep);
 
-      if (!run.trySpendEvoPoints(cost2)) {
+      if (cost2 > 0 && !run.trySpendEvoPoints(cost2)) {
         this.scene.events.emit("evoPoints:changed");
         this.clickLock[key] = false;
         return;
