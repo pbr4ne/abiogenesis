@@ -22,6 +22,9 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
 
   private lastKey = "";
 
+  private hasShown = false;
+  private fadeTween?: Phaser.Tweens.Tween;
+
   constructor(scene: Phaser.Scene, getLifeForms: () => LifeFormInstance[]) {
     super(scene, 0, 0);
 
@@ -49,6 +52,8 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
     this.add(this.medal);
 
     scene.add.existing(this);
+    this.setVisible(false);
+    this.setAlpha(0);
 
     this.layout();
 
@@ -88,6 +93,38 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
     const lifeForms = this.getLifeForms();
     const top = this.computeTop3(lifeForms);
 
+    const shouldShow = top.length >= 3;
+
+    if (!shouldShow) {
+      this.lastKey = "";
+      this.hasShown = false;
+      this.fadeTween?.stop();
+      this.fadeTween = undefined;
+
+      this.setVisible(false);
+      this.setAlpha(0);
+
+      for (const h of this.hovers) {
+        h.setLife(null);
+        h.setVisible(false);
+      }
+      this.medal.setVisible(false);
+      return;
+    }
+
+    if (!this.visible) {
+      this.setVisible(true);
+      this.setAlpha(0);
+
+      this.fadeTween?.stop();
+      this.fadeTween = this.scene.tweens.add({
+        targets: this,
+        alpha: 1,
+        duration: 1000,
+        ease: "Sine.easeOut"
+      });
+    }
+
     const key = top.map(t => `${t.type}:${t.score100}:${t.count}`).join("|");
     if (key === this.lastKey) return;
     this.lastKey = key;
@@ -107,12 +144,10 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
       const def = LIFEFORMS[e.type];
       h.setVisible(true);
       h.setLife({ lf: null, def, mode: "summary", score100: e.score100, extinct: false });
-
-      h.setScale(this.evoScale);
     }
 
     this.layout();
-    this.placeMedal(top.length > 0);
+    this.placeMedal(true);
   }
 
   private placeMedal(visible: boolean) {
