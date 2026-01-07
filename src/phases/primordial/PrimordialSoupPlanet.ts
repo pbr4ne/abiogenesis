@@ -208,7 +208,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     if (isClickable(base.row, base.col)) return base;
 
-    const slopPx = 24;
+    const slopPx = 48;
     const searchR = 2;
 
     let best: { row: number; col: number } | null = null;

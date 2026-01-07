@@ -185,13 +185,21 @@ export default class SoupProgress {
     const base = this.baseRGBFor(key);
     const baseFill = this.fill[key];
 
-    const spread = Phaser.Math.Linear(0, 80, baseFill);
+    const hsv = Phaser.Display.Color.RGBToHSV(base.r, base.g, base.b) as any;
+    const h0 = hsv.h ?? 0;
+    const s0 = hsv.s ?? 1;
+    const v0 = hsv.v ?? 1;
 
-    const r = Phaser.Math.Clamp(Math.round(base.r + Phaser.Math.FloatBetween(-spread, spread)), 0, 255);
-    const g = Phaser.Math.Clamp(Math.round(base.g + Phaser.Math.FloatBetween(-spread, spread)), 0, 255);
-    const b = Phaser.Math.Clamp(Math.round(base.b + Phaser.Math.FloatBetween(-spread, spread)), 0, 255);
+    const hueSpread = Phaser.Math.Linear(0.03, 0.14, Phaser.Math.Clamp(baseFill, 0, 1));
+    const satWobble = Phaser.Math.Linear(0.00, 0.08, baseFill);
+    const valWobble = Phaser.Math.Linear(0.00, 0.06, baseFill);
 
-    return { r, g, b };
+    const h = Phaser.Math.Wrap(h0 + Phaser.Math.FloatBetween(-hueSpread, hueSpread), 0, 1);
+    const s = Phaser.Math.Clamp(s0 + Phaser.Math.FloatBetween(-satWobble, satWobble), 0, 1);
+    const v = Phaser.Math.Clamp(v0 + Phaser.Math.FloatBetween(-valWobble, valWobble), 0, 1);
+
+    const c = Phaser.Display.Color.HSVToRGB(h, s, v) as Phaser.Types.Display.ColorObject;
+    return { r: c.r, g: c.g, b: c.b };
   }
 
   public setAllFill01(v01: number) {
