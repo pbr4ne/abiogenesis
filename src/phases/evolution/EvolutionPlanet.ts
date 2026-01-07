@@ -18,6 +18,7 @@ export default class EvolutionPlanet extends PlanetBase {
   private lifeByCell = new Map<string, LifeFormInstance>();
   private hoveredLifeId: string | null = null;
   private deathPoof: DeathPoof;
+  private cometMode = false;
 
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
@@ -51,6 +52,18 @@ export default class EvolutionPlanet extends PlanetBase {
     this.enableLifeClick();
   }
 
+  public setCometMode(on: boolean) {
+    this.cometMode = on;
+    if (on) {
+      this.setCursorDefault();
+      this.emitHover(null);
+    }
+  }
+
+  private pickAnyCell(dx: number, dy: number) {
+    return pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+  }
+
   private keyOf(row: number, col: number) {
     return `${row},${col}`;
   }
@@ -64,6 +77,11 @@ export default class EvolutionPlanet extends PlanetBase {
 
   public enableLifeHover() {
     this.onPlanetPointerMove(pointer => {
+      if (this.cometMode) {
+        this.emitHover(null);
+        return;
+      }
+
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
 
@@ -91,6 +109,7 @@ export default class EvolutionPlanet extends PlanetBase {
     });
 
     const clearHover = () => {
+      if (this.cometMode) return;
       this.setCursorDefault();
       this.emitHover(null);
     };
@@ -217,6 +236,23 @@ export default class EvolutionPlanet extends PlanetBase {
     this.onPlanetPointerDown(pointer => {
       const dx = pointer.worldX - this.x;
       const dy = pointer.worldY - this.y;
+
+      if (this.cometMode) {
+        const cell = this.pickAnyCell(dx, dy);
+        if (!cell) return;
+
+        const p = this.cellCenterWorld(cell.row, cell.col);
+        if (!p.visible) return;
+
+        this.scene.events.emit("comet:target", {
+          row: cell.row,
+          col: cell.col,
+          x: p.x,
+          y: p.y
+        });
+
+        return;
+      }
 
       const cell = this.pickLifeCellForgiving(dx, dy);
       if (!cell) return;

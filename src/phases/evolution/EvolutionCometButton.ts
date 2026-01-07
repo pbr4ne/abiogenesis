@@ -29,6 +29,9 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
   private hoverHidden = false;
   private pointsVisible = false;
 
+  private baseScale = 1;
+  private hoverTween?: Phaser.Tweens.Tween;
+
   constructor(cfg: EvolutionCometButtonCfg) {
     super(cfg.scene, 0, 0, "comet");
 
@@ -46,8 +49,17 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
     this.setDepth(this.depthN);
     this.setInteractive({ useHandCursor: true });
 
-    this.on("pointerdown", () => {
+    this.on(Phaser.Input.Events.POINTER_DOWN, () => {
       this.onClick?.();
+    });
+
+    this.on(Phaser.Input.Events.POINTER_OVER, () => {
+      if (!this.visible) return;
+      this.setHoverFx(true);
+    });
+
+    this.on(Phaser.Input.Events.POINTER_OUT, () => {
+      this.setHoverFx(false);
     });
 
     this.layout();
@@ -61,6 +73,8 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
 
   public destroy(fromScene?: boolean) {
     this.scene.scale.off(Phaser.Scale.Events.RESIZE, this.layout, this);
+    this.hoverTween?.remove();
+    this.hoverTween = undefined;
     super.destroy(fromScene);
   }
 
@@ -70,6 +84,37 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
       this.scene.scale.width - this.xPad - this.size / 2 - this.xExtra,
       this.scene.scale.height / 2 + this.yOffset
     );
+
+    this.baseScale = this.scale;
+  }
+
+  private setHoverFx(on: boolean) {
+    this.hoverTween?.remove();
+    this.hoverTween = undefined;
+
+    if (on) {
+      this.clearTint();
+      this.setTint(0xffffff);
+
+      this.setAlpha(1);
+
+      this.hoverTween = this.scene.tweens.add({
+        targets: this,
+        scale: this.baseScale * 1.08,
+        duration: 120,
+        ease: "Quad.easeOut"
+      });
+    } else {
+      this.clearTint();
+      this.setAlpha(1);
+
+      this.hoverTween = this.scene.tweens.add({
+        targets: this,
+        scale: this.baseScale,
+        duration: 140,
+        ease: "Quad.easeOut"
+      });
+    }
   }
 
   public setHiddenForMainHover(isHoverActive: boolean) {
@@ -84,6 +129,16 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
   }
 
   private applyVisibility() {
-    this.setVisible(this.pointsVisible && !this.hoverHidden);
+    const vis = this.pointsVisible && !this.hoverHidden;
+    this.setVisible(vis);
+
+    if (!vis) {
+      this.setHoverFx(false);
+    }
+  }
+
+  public setUseHandCursor(on: boolean) {
+    if (!this.input) return;
+    (this.input as any).useHandCursor = on;
   }
 }

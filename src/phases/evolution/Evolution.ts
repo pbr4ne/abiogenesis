@@ -24,6 +24,9 @@ export default class Evolution extends PhaseScene {
   private abacusPoints!: AbacusPoints;
   private lastEvoPts = -1;
   private cometBtn!: EvolutionCometButton;
+  private cometArmed = false;
+  private prevCanvasCursor: string | null = null;
+  private forceCrosshair?: () => void;
 
   constructor() {
     super("Evolution");
@@ -100,12 +103,36 @@ export default class Evolution extends PhaseScene {
     this.cometBtn = new EvolutionCometButton({
       scene: this,
       getPoints: () => this.run.getEvoPointsAvailable(),
-      minPointsToShow: 5,
-      onClick: () => { }
+      minPointsToShow: 1,
+      onClick: () => {
+        if (this.run.getEvoPointsAvailable() < 1) return;
+        this.setCometArmed(true);
+      }
     });
     this.add.existing(this.cometBtn);
 
     this.cometBtn.refresh();
+
+    const cancelCometOnOutsideClick = (pointer: Phaser.Input.Pointer) => {
+      if (!this.cometArmed) return;
+
+      const cometBounds = this.cometBtn.getBounds();
+      if (cometBounds.contains(pointer.worldX, pointer.worldY)) return;
+
+      const dx = pointer.worldX - this.planet.x;
+      const dy = pointer.worldY - this.planet.y;
+      const r = (this.planet as any).r ?? 384;
+      const isPlanetClick = dx * dx + dy * dy <= r * r;
+      if (isPlanetClick) return;
+
+      this.setCometArmed(false);
+    };
+
+    this.input.on(Phaser.Input.Events.POINTER_DOWN, cancelCometOnOutsideClick);
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.off(Phaser.Input.Events.POINTER_DOWN, cancelCometOnOutsideClick);
+    });
 
     const layoutComet = () => {
       const pad = 22;
@@ -117,11 +144,9 @@ export default class Evolution extends PhaseScene {
     layoutComet();
     this.scale.on(Phaser.Scale.Events.RESIZE, layoutComet);
 
-    this.cometBtn.on("pointerdown", () => {
-    });
-
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, layoutComet);
+      this.setCometArmed(false);
     });
 
     this.events.on(
@@ -146,6 +171,177 @@ export default class Evolution extends PhaseScene {
       this.hoverPanel.setLife(null);
       this.cometBtn.setHiddenForMainHover(false);
       this.modal.show(payload);
+    });
+
+    this.events.on(
+      "comet:target",
+      (e: { row: number; col: number; x: number; y: number }) => {
+        if (!this.cometArmed) return;
+
+        this.setCometArmed(false);
+
+        const fromX = this.scale.width + 120;
+        const fromY = -120;
+
+        this.playCometStrike(fromX, fromY, e.x, e.y, () => {
+          this.kill3x3At(e.row, e.col);
+          this.planet.refreshFromRun();
+          this.abacusPoints.refresh();
+          this.cometBtn.refresh();
+        });
+      }
+    );
+  }
+
+  public setUseHandCursor(on: boolean) {
+    if (!this.input) return;
+    (this.input as any).useHandCursor = on;
+  }
+
+  private setCometArmed(on: boolean) {
+    if (this.cometArmed === on) return;
+    this.cometArmed = on;
+
+    const canvas = this.game.canvas as HTMLCanvasElement | undefined;
+
+    if (on) {
+      if (canvas && this.prevCanvasCursor === null) {
+        this.prevCanvasCursor = canvas.style.cursor || "";
+      }
+
+      this.cometBtn.setUseHandCursor(false);
+
+      (this.planet as any).setCometMode?.(true);
+
+      this.input.setDefaultCursor("crosshair");
+      if (canvas) canvas.style.cursor = "crosshair";
+
+      const force = () => {
+        if (!this.cometArmed) return;
+        this.input.setDefaultCursor("crosshair");
+        if (canvas) canvas.style.cursor = "crosshair";
+      };
+
+      this.forceCrosshair = force;
+      this.input.on(Phaser.Input.Events.POINTER_MOVE, force);
+      this.input.on(Phaser.Input.Events.POINTER_OVER, force);
+
+      this.hoverPanel.setLife(null);
+      this.cometBtn.setHiddenForMainHover(false);
+    } else {
+      (this.planet as any).setCometMode?.(false);
+
+      if (this.forceCrosshair) {
+        this.input.off(Phaser.Input.Events.POINTER_MOVE, this.forceCrosshair);
+        this.input.off(Phaser.Input.Events.POINTER_OVER, this.forceCrosshair);
+        this.forceCrosshair = undefined;
+      }
+
+      this.cometBtn.setUseHandCursor(true);
+
+      if (canvas) canvas.style.cursor = this.prevCanvasCursor ?? "";
+      this.prevCanvasCursor = null;
+
+      this.input.setDefaultCursor("default");
+    }
+  }
+
+  private kill3x3At(row: number, col: number) {
+    const div = (this.planet as any).divisions ?? 40;
+
+    const keys = new Set<string>();
+
+    for (let dr = -1; dr <= 1; dr++) {
+      const rr = row + dr;
+      if (rr < 0 || rr >= div) continue;
+
+      for (let dc = -1; dc <= 1; dc++) {
+        const cc = (col + dc + div) % div;
+        keys.add(`${rr},${cc}`);
+      }
+    }
+
+    const runAny = this.run as any;
+    if (!Array.isArray(runAny.lifeForms)) return;
+
+    runAny.lifeForms = runAny.lifeForms.filter((lf: any) => !keys.has(`${lf.row},${lf.col}`));
+  }
+
+  private playCometStrike(fromX: number, fromY: number, toX: number, toY: number, done: () => void) {
+    const g = this.add.graphics();
+    g.setDepth(20000);
+
+    const payload = { x: fromX, y: fromY, t: 0 };
+
+    const draw = () => {
+      g.clear();
+
+      const steps = 10;
+      for (let i = 0; i < steps; i++) {
+        const tt = Math.max(0, payload.t - i * 0.06);
+        const x = Phaser.Math.Linear(fromX, toX, tt);
+        const y = Phaser.Math.Linear(fromY, toY, tt);
+
+        const a = 0.22 * (1 - i / steps);
+        const r = Phaser.Math.Linear(28, 6, i / steps);
+
+        g.fillStyle(0xffaa33, a);
+        g.fillCircle(x, y, r);
+        g.fillStyle(0xff4422, a * 0.7);
+        g.fillCircle(x, y, r * 0.65);
+      }
+
+      g.fillStyle(0xffee88, 0.95);
+      g.fillCircle(payload.x, payload.y, 10);
+      g.fillStyle(0xff5522, 0.75);
+      g.fillCircle(payload.x, payload.y, 16);
+    };
+
+    const tw = this.tweens.add({
+      targets: payload,
+      x: toX,
+      y: toY,
+      t: 1,
+      duration: 650,
+      ease: "Cubic.easeIn",
+      onUpdate: draw,
+      onComplete: () => {
+        g.destroy();
+
+        const boom = this.add.graphics();
+        boom.setDepth(20001);
+
+        this.tweens.add({
+          targets: { t: 0 },
+          t: 1,
+          duration: 360,
+          ease: "Quad.easeOut",
+          onUpdate: tween => {
+            const t = (tween.targets[0] as any).t as number;
+
+            const r = Phaser.Math.Linear(10, 110, t);
+            const a = 0.85 * (1 - t);
+
+            boom.clear();
+            boom.fillStyle(0xffcc55, a);
+            boom.fillCircle(toX, toY, r);
+            boom.fillStyle(0xff3322, a * 0.55);
+            boom.fillCircle(toX, toY, r * 0.62);
+          },
+          onComplete: () => {
+            boom.destroy();
+            this.cameras.main.shake(160, 0.006);
+            done();
+          }
+        });
+      }
+    });
+
+    draw();
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      tw.remove();
+      g.destroy();
     });
   }
 }
