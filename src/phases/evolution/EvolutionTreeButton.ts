@@ -33,7 +33,7 @@ export default class EvolutionTreeButton extends Phaser.GameObjects.Container {
     const max = this.size - innerPad * 2;
     const scale = Math.min(max / this.img.width, max / this.img.height);
     this.img.setScale(scale);
-    this.img.setTintFill(0xd9acde);
+    this.img.setTintFill(0xff1cb7);
 
     this.img.y += 2;
 
