@@ -10,6 +10,7 @@ import PlanetRunState from "../../planet/PlanetRunState";
 import EvolutionSim from "./EvolutionSim";
 import AbacusPoints from "./AbacusPoints";
 import EvolutionTop3Hud from "./EvolutionTop3Hud";
+import EvolutionCometButton from "./EvolutionCometButton";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -22,8 +23,7 @@ export default class Evolution extends PhaseScene {
   private simTimer?: Phaser.Time.TimerEvent;
   private abacusPoints!: AbacusPoints;
   private lastEvoPts = -1;
-
-  private cometBtn!: Phaser.GameObjects.Image;
+  private cometBtn!: EvolutionCometButton;
 
   constructor() {
     super("Evolution");
@@ -52,10 +52,12 @@ export default class Evolution extends PhaseScene {
       loop: true,
       callback: () => {
         this.sim.tick();
+
         const pts = this.run.getEvoPointsAvailable();
         if (pts !== this.lastEvoPts) {
           this.lastEvoPts = pts;
           this.events.emit("evoPoints:changed", pts);
+          this.cometBtn.refresh();
         }
 
         this.planet.refreshFromRun();
@@ -86,18 +88,24 @@ export default class Evolution extends PhaseScene {
       if (this.evoModal.isOpen()) {
         this.evoModal.hide();
         this.hoverPanel.hide();
-        this.setCometVisibleForMainHover(false);
+        this.cometBtn.setHiddenForMainHover(false);
       } else {
         this.evoModal.show(this.run.lifeForms);
-        this.cometBtn.setVisible(true);
+        this.cometBtn.refresh();
       }
     });
+
     this.add.existing(this.evoBtn);
 
-    this.cometBtn = this.add.image(0, 0, "comet");
-    this.cometBtn.setScrollFactor(0);
-    this.cometBtn.setDepth(9999);
-    this.cometBtn.setInteractive({ useHandCursor: true });
+    this.cometBtn = new EvolutionCometButton({
+      scene: this,
+      getPoints: () => this.run.getEvoPointsAvailable(),
+      minPointsToShow: 5,
+      onClick: () => { }
+    });
+    this.add.existing(this.cometBtn);
+
+    this.cometBtn.refresh();
 
     const layoutComet = () => {
       const pad = 22;
@@ -131,17 +139,13 @@ export default class Evolution extends PhaseScene {
     this.events.on("life:hover", (p: { lf: LifeFormInstance; def: LifeFormDef } | null) => {
       if (this.evoModal.isOpen()) return;
       this.hoverPanel.setLife(p);
-      this.setCometVisibleForMainHover(!!p);
+      this.cometBtn.setHiddenForMainHover(!!p);
     });
 
     this.events.on("life:select", (payload: { lf: LifeFormInstance; def: LifeFormDef }) => {
       this.hoverPanel.setLife(null);
-      this.setCometVisibleForMainHover(false);
+      this.cometBtn.setHiddenForMainHover(false);
       this.modal.show(payload);
     });
-  }
-
-  private setCometVisibleForMainHover(isHoverActive: boolean) {
-    this.cometBtn.setVisible(!isHoverActive);
   }
 }
