@@ -262,6 +262,11 @@
                 "key": "rocket"
             },
             {
+                "url": "assets/images/rocketfull.png",
+                "type": "image",
+                "key": "rocketfull"
+            },
+            {
                 "url": "assets/images/rodent.png",
                 "type": "image",
                 "key": "rodent"

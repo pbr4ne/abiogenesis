@@ -191,7 +191,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     this.scene.events.on("evoPoints:changed", this.onPointsChanged);
 
     this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      if (this.onPointsChanged) this.scene.events.off("evoPoints:changed", this.onPointsChanged);
+      if (this.onPointsChanged) this.scene?.events?.off("evoPoints:changed", this.onPointsChanged);
       this.onPointsChanged = null;
     });
   }

@@ -59,6 +59,8 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
     this.rotate = makeRotator(this.tiltRad, this.yawRad);
   }
 
+  public getRadius() { return this.r; }
+
   private onUpdate = (_time: number, dt: number) => {
     if (!this.isRotating) return;
 

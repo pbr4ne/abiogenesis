@@ -3,7 +3,7 @@ import PhaseScene from "../../scenes/PhaseScene";
 import Planet from "./EvolutionPlanet";
 import LifePanel from "./LifeDetailsHover";
 import LifeDetailsModal from "./LifeDetailsModal";
-import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
+import { LifeFormDef, LifeFormInstance, LifeFormType } from "./EvolutionTypes";
 import EvolutionTreeModal from "./EvolutionTreeModal";
 import EvolutionTreeButton from "./EvolutionTreeButton";
 import PlanetRunState from "../../planet/PlanetRunState";
@@ -11,6 +11,8 @@ import EvolutionSim from "./EvolutionSim";
 import AbacusPoints from "./AbacusPoints";
 import EvolutionTop3Hud from "./EvolutionTop3Hud";
 import EvolutionCometButton from "./EvolutionCometButton";
+import { scoreByType100 } from "./EvolutionIntelligence";
+import { LIFEFORMS } from "./LifeForms";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -27,6 +29,7 @@ export default class Evolution extends PhaseScene {
   private cometArmed = false;
   private prevCanvasCursor: string | null = null;
   private forceCrosshair?: () => void;
+  private rocketLaunched = false;
 
   constructor() {
     super("Evolution");
@@ -36,6 +39,15 @@ export default class Evolution extends PhaseScene {
     this.planet = new Planet(this, 960, 540);
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);
+
+    const onLaunchRocket = (p: { type: LifeFormType; tint: number }) => {
+      if (this.rocketLaunched) return;
+      this.rocketLaunched = true;
+      this.launchRocketBurstAndComplete(p.tint);
+    };
+
+    this.events.on("evo:launchRocket", onLaunchRocket);
+    this.onShutdown(() => this.events.off("evo:launchRocket", onLaunchRocket));
 
     this.run = this.registry.get("run") as PlanetRunState;
 
@@ -55,6 +67,8 @@ export default class Evolution extends PhaseScene {
       loop: true,
       callback: () => {
         this.sim.tick();
+
+        this.maybeLaunchRocket();
 
         const pts = this.run.getEvoPointsAvailable();
         if (pts !== this.lastEvoPts) {
@@ -196,6 +210,95 @@ export default class Evolution extends PhaseScene {
         });
       }
     );
+  }
+
+  private maybeLaunchRocket() {
+    if (this.rocketLaunched) return;
+
+    const scores = scoreByType100(this.run.lifeForms);
+    scores.set("prokaryote", 100);
+
+    for (const [type, score100] of scores) {
+      if (score100 < 100) continue;
+
+      const alive = this.run.lifeForms.some(lf => lf.type === type);
+      if (!alive) continue;
+
+      const def = LIFEFORMS[type];
+      const tint = (def.colour.r << 16) | (def.colour.g << 8) | def.colour.b;
+
+      this.rocketLaunched = true;
+      this.launchRocketBurstAndComplete(tint);
+
+      return;
+    }
+  }
+
+  private launchRocketBurstAndComplete(tint: number) {
+    const cx = this.planet.x;
+    const cy = this.planet.y;
+
+    const r = (this.planet as any).r ?? 280;
+
+    const sw = this.scale.width;
+    const sh = this.scale.height;
+
+    const count = 50;
+
+    let done = 0;
+    const finish = () => {
+      done++;
+      if (done < count) return;
+      this.scene.start("EvolutionComplete");
+    };
+
+    for (let i = 0; i < count; i++) {
+      const theta = Phaser.Math.FloatBetween(0, Math.PI * 2);
+      const rad = r * Math.sqrt(Phaser.Math.FloatBetween(0.08, 1));
+      const sx = cx + Math.cos(theta) * rad;
+      const sy = cy + Math.sin(theta) * rad;
+
+      const rocket = this.add.image(sx, sy, "rocketfull");
+      rocket.setTintFill(tint);
+      rocket.setScrollFactor(0);
+      rocket.setDepth(20000);
+
+      const targetW = 60;
+      const texW = rocket.width || 1;
+      const s = targetW / texW;
+      rocket.setScale(s);
+
+      const upAngle = -Math.PI / 2;
+
+      const cone = Phaser.Math.FloatBetween(-0.65, 0.65);
+
+      const radialBias = Phaser.Math.Clamp((sx - cx) / Math.max(1, r), -1, 1) * 0.35;
+
+      const dirTheta = upAngle + cone + radialBias;
+
+      const dir = new Phaser.Math.Vector2(Math.cos(dirTheta), Math.sin(dirTheta)).normalize();
+
+      const dist = Phaser.Math.FloatBetween(sh * 0.6, sh * 0.9);
+      const dur = Phaser.Math.FloatBetween(1800, 2600);
+
+      const endX = sx + dir.x * dist;
+      const endY = sy + dir.y * dist;
+
+      rocket.setRotation(dir.angle() + Math.PI / 2);
+
+      this.tweens.add({
+        targets: rocket,
+        x: endX,
+        y: endY,
+        alpha: 0,
+        duration: dur,
+        ease: "Cubic.easeIn",
+        onComplete: () => {
+          rocket.destroy();
+          finish();
+        }
+      });
+    }
   }
 
   public setUseHandCursor(on: boolean) {
