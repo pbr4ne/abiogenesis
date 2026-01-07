@@ -131,11 +131,11 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
     const w = wi * this.evoScale;
     const h = hh * this.evoScale;
 
-    const medalSize = Math.max(96, Math.floor(w * 0.35));
+    const medalSize = 48;
     this.medal.setDisplaySize(medalSize, medalSize);
 
-    const x = topHover.x;
-    const y = topHover.y - h / 2 - medalSize * 0.8;
+    const x = topHover.x + 57;
+    const y = topHover.y - h / 2 - medalSize * 0.8 + 63;
 
     this.medal.setPosition(x, y);
   }
