@@ -39,6 +39,8 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
   private haloDx = -48;
   private haloDy = 44;
 
+  private unlocked = false;
+
   constructor(cfg: EvolutionCometButtonCfg) {
     super(cfg.scene, 0, 0, "comet");
 
@@ -211,7 +213,7 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
       yoyo: true,
       loop: -1,
       ease: "Sine.easeInOut",
-            onUpdate: () => {
+      onUpdate: () => {
         if (!this.halo) return;
 
         const cx = this.x + this.haloDx;
@@ -234,7 +236,12 @@ export default class EvolutionCometButton extends Phaser.GameObjects.Image {
 
   public refresh() {
     const pts = this.getPoints();
-    this.pointsVisible = pts >= this.minPointsToShow;
+
+    if (!this.unlocked && pts >= this.minPointsToShow) {
+      this.unlocked = true;
+    }
+
+    this.pointsVisible = this.unlocked;
     this.applyVisibility();
   }
 

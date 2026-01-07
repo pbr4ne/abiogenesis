@@ -118,7 +118,7 @@ export default class Evolution extends PhaseScene {
     this.cometBtn = new EvolutionCometButton({
       scene: this,
       getPoints: () => this.run.getEvoPointsAvailable(),
-      minPointsToShow: 1,
+      minPointsToShow: 5,
       onClick: () => {
         if (this.cometArmed) {
           this.setCometArmed(false);
