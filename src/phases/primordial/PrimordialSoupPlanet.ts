@@ -19,6 +19,10 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   private soupData: PlanetGrid;
   private terrainCells: ReturnType<PlanetGrid["getCellsRef"]>;
 
+  private halos: Phaser.GameObjects.Arc[] = [];
+  private haloCooldownUntil = 0;
+  private haloActiveCount = 0;
+
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
 
@@ -38,6 +42,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
       this.scene.input.setDefaultCursor("default");
       this.spawnEvent?.remove(false);
       this.spawnEvent = undefined;
+      this.clearHalos();
     });
 
     paintHydrosphere(this.gridData, this.run.hydroAlt, this.run.waterLevel);
@@ -45,6 +50,56 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     this.terrainCells = this.cloneCells(this.gridData.getCellsRef());
 
     this.redrawCompositeTiles();
+  }
+
+  private clearHalos() {
+    for (const h of this.halos) h.destroy();
+    this.halos = [];
+    this.haloActiveCount = 0;
+  }
+
+  private trySpawnHalo(row: number, col: number, rgb: { r: number; g: number; b: number }) {
+    const now = this.scene.time.now;
+    if (now < this.haloCooldownUntil) return;
+    if (this.haloActiveCount >= 6) return;
+
+    const p = this.cellCenterLocal(row, col);
+    if (!p.visible) return;
+
+    const base = Phaser.Math.Clamp((Math.PI * this.r) / this.divisions, 10, 26);
+    const r0 = base * 0.35;
+    const r1 = base * 1.15;
+
+    const colHex = (rgb.r << 16) | (rgb.g << 8) | rgb.b;
+
+    const halo = this.scene.add.circle(p.x, p.y, r0, 0, 0);
+    halo.setStrokeStyle(2, colHex, 0.9);
+    halo.setAlpha(0.9);
+    halo.setDepth(9999);
+
+    halo.setData("row", row);
+    halo.setData("col", col);
+    halo.setData("r0", r0);
+
+    this.add(halo);
+
+    this.halos.push(halo);
+    this.haloActiveCount++;
+    this.haloCooldownUntil = now + 180;
+
+    this.scene.tweens.add({
+      targets: halo,
+      scale: r1 / r0,
+      alpha: 0,
+      duration: 850,
+      ease: "Sine.easeOut",
+      onComplete: () => {
+        halo.destroy();
+        this.haloActiveCount = Math.max(0, this.haloActiveCount - 1);
+        const idx = this.halos.indexOf(halo);
+        if (idx >= 0) this.halos.splice(idx, 1);
+      }
+    });
   }
 
   public startSoup() {
@@ -78,7 +133,15 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   }
 
   private spawnOne(): boolean {
-    const pos = this.spawner.trySpawn(this.rotate, (r, c) => this.field.hasCell(r, c) && this.isWaterCell(r, c));
+    const pos = this.spawner.trySpawn(this.rotate, (r, c) => {
+      if (!this.isWaterCell(r, c)) return true;
+      if (this.field.hasCell(r, c)) return true;
+
+      const cell = this.soupData.getCell(r, c);
+      if (cell && cell.a > 0) return true;
+
+      return false;
+    });
     if (!pos) return false;
 
     const now = this.scene.time.now;
@@ -95,6 +158,8 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     this.soupData.setCell(pos.row, pos.col, { r: rgb.r, g: rgb.g, b: rgb.b, a: 1 });
     this.redrawCompositeTiles();
+
+    this.trySpawnHalo(pos.row, pos.col, rgb);
 
     const targetDelay = this.progress.spawnDelayMs();
     if (this.spawnEvent && this.spawnEvent.delay !== targetDelay) {
@@ -281,6 +346,18 @@ export default class PrimordialSoupPlanet extends PlanetBase {
     this.progress.computeHelixBinsFromGrid(() => this.iterVisibleGridColours());
 
     if (changed) this.redrawCompositeTiles();
+
+    for (const halo of this.halos) {
+      const row = halo.getData("row") as number;
+      const col = halo.getData("col") as number;
+
+      const p = this.cellCenterLocal(row, col);
+      halo.setVisible(p.visible);
+
+      if (p.visible) {
+        halo.setPosition(p.x, p.y);
+      }
+    }
   }
 
   private * iterVisibleGridColours() {
