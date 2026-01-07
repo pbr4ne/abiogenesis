@@ -88,6 +88,17 @@ export default class EvolutionPlanet extends PlanetBase {
         this.emitHover(lf);
       }
     });
+
+    const clearHover = () => {
+      this.setCursorDefault();
+      this.emitHover(null);
+    };
+
+    this.hitZone.on("pointerout", clearHover);
+
+    this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.hitZone.off("pointerout", clearHover);
+    });
   }
 
   public refreshFromRun() {
