@@ -101,17 +101,17 @@ export default class GalaxyMap extends PhaseScene {
 
   private placePlanetsHardcoded(defs: PlanetDef[], w: number, h: number) {
     const slots = [
-      { nx: 0.18, ny: 0.28 },
-      { nx: 0.34, ny: 0.18 },
-      { nx: 0.46, ny: 0.33 },
-      { nx: 0.63, ny: 0.22 },
-      { nx: 0.78, ny: 0.34 },
+      { nx: 0.18, ny: 0.33 },
+      { nx: 0.34, ny: 0.23 },
+      { nx: 0.46, ny: 0.38 },
+      { nx: 0.63, ny: 0.27 },
+      { nx: 0.78, ny: 0.39 },
 
-      { nx: 0.22, ny: 0.62 },
-      { nx: 0.40, ny: 0.52 },
-      { nx: 0.58, ny: 0.68 },
-      { nx: 0.70, ny: 0.54 },
-      { nx: 0.86, ny: 0.62 },
+      { nx: 0.22, ny: 0.67 },
+      { nx: 0.40, ny: 0.57 },
+      { nx: 0.58, ny: 0.73 },
+      { nx: 0.70, ny: 0.59 },
+      { nx: 0.86, ny: 0.67 },
     ];
 
     const pad = 18;
