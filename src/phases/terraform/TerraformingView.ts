@@ -208,10 +208,18 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       getCellSize: () => this.getSlotCellSize(),
 
       onPlace: (i) => this.placeSelectedDevice(i),
+
+      onUpgrade: (i) => this.upgradeDevice(i),
+      canUpgrade: (i) => this.canUpgradeDevice(i),
+
       fillCell: this.deviceSlotsFillCell(),
       fillCellBg: this.deviceSlotsFillBg(),
       fillCellBgAlpha: 1,
       fillCellPadMul: 0.06,
+
+      plusKey: "plus",
+      plusMode: this.getPlusMode(),
+
     });
 
     this.placement.rebuildSprites();
@@ -270,6 +278,8 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
         this.thermometer.setValue(this.points);
         this.palette.updateEnabled();
 
+        this.placement.rebuildSprites();
+
         this.onPointsChanged();
         this.onTick();
       }
@@ -286,6 +296,41 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
 
   protected getName() {
     return "Unknown TerraformingView";
+  }
+
+  protected getPlusMode(): "rotate" | "straight" {
+    return "rotate";
+  }
+
+  protected canUpgradeDevice(slotIndex: number) {
+    const cur = this.deviceSlots[slotIndex];
+    if (cur === null) return false;
+    if (cur === 2) return false;
+
+    const next = (cur + 1) as 1 | 2;
+    const cost = this.deviceCosts[next] - this.deviceCosts[cur];
+
+    return this.points >= cost;
+  }
+
+  protected upgradeDevice(slotIndex: number) {
+    const cur = this.deviceSlots[slotIndex];
+    if (cur === null) return;
+    if (cur === 2) return;
+
+    const next = (cur + 1) as 1 | 2;
+    const cost = this.deviceCosts[next] - this.deviceCosts[cur];
+    if (this.points < cost) return;
+
+    this.points -= cost;
+    this.deviceSlots[slotIndex] = next;
+
+    this.placement.rebuildSprites();
+
+    this.thermometer.setValue(this.points);
+    this.palette.updateEnabled();
+
+    this.onTick();
   }
 
   protected getSlotTransform(slotIndex: number) {

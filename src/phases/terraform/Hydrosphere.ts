@@ -171,6 +171,10 @@ export default class Hydrosphere extends TerraformingView {
     }
   }
 
+  protected override getPlusMode(): "rotate" | "straight" {
+    return "straight";
+  }
+
   protected override getSlotCellSize(): number {
     const w = this.scene.scale.width;
     const h = this.scene.scale.height;

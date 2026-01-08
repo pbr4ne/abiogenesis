@@ -109,6 +109,10 @@ export default class Core extends TerraformingView {
     return "Core";
   }
 
+  protected override getPlusMode(): "rotate" | "straight" {
+    return "straight";
+  }
+
   private coreHeat01() {
     const start = 10;
     const max = this.thermometerMax;
