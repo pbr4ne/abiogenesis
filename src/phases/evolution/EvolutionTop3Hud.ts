@@ -89,6 +89,17 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
     }
   }
 
+  private clearHud() {
+    this.lastKey = "";
+
+    for (const h of this.hovers) {
+      h.setLife(null);
+      h.setVisible(false);
+    }
+
+    this.placeMedal(false);
+  }
+
   public refresh() {
     const lifeForms = this.getLifeForms();
     const top = this.computeTop3(lifeForms);
@@ -112,7 +123,10 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
       });
     }
 
-    if (!shouldShow) return;
+    if (!shouldShow) {
+      this.clearHud();
+      return;
+    }
 
     const key = top.map(t => `${t.type}:${t.score100}:${t.count}`).join("|");
     if (key === this.lastKey) return;
