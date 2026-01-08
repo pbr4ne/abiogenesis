@@ -60,6 +60,10 @@ export default class Magnetosphere extends TerraformingView {
     this.onPointsChanged();
   }
 
+  protected override getName() {
+    return "Magnetosphere";
+  }
+
   private updateMagStrength() {
     const tf = getTerraforming(this.scene);
     const s = Phaser.Math.Clamp(tf.ratio01("magnetosphere"), 0, 1);

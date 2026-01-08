@@ -104,6 +104,10 @@ export default class Core extends TerraformingView {
     this.onPointsChanged();
   }
 
+  protected override getName() {
+    return "Core";
+  }
+
   private coreHeat01() {
     const start = 10;
     const max = this.thermometerMax;

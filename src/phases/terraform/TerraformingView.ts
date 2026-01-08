@@ -258,7 +258,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       callback: () => {
         this.points = Math.min(this.thermometerMax, this.points + this.getPointsPerSecond());
 
-        log(`Points: ${this.points}`);
+        log(`${this.getName()} Points: ${this.points}`);
 
         this.thermometer.setValue(this.points);
         this.palette.updateEnabled();
@@ -275,6 +275,10 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       this.palette?.destroy();
       this.placement?.destroy();
     });
+  }
+
+  protected getName() {
+    return "Unknown TerraformingView";
   }
 
   protected getSlotTransform(slotIndex: number) {

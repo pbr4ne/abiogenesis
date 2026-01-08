@@ -107,6 +107,10 @@ export default class Hydrosphere extends TerraformingView {
     this.onPointsChanged();
   }
 
+  protected override getName() {
+    return "Hydrosphere";
+  }
+
   protected override getSlotTransform(slotIndex: number) {
     const cell = this.slotCells[slotIndex] ?? this.slotCells[this.slotCells.length - 1];
 
