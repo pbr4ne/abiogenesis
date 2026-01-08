@@ -67,6 +67,7 @@ export default class Magnetosphere extends TerraformingView {
   }
 
   private updateMagStrength() {
+    if (!this.scene) return;
     const tf = getTerraforming(this.scene);
     const s = Phaser.Math.Clamp(tf.ratio01("magnetosphere"), 0, 1);
     this.magField?.setStrength01(s);
@@ -104,6 +105,8 @@ export default class Magnetosphere extends TerraformingView {
     this.updateMagStrength();
 
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      tf.off("change", onChange);
+
       this.magField?.destroy();
       this.magField = undefined;
     });

@@ -50,6 +50,7 @@ export default class Atmosphere extends TerraformingView {
   }
 
   protected onPointsChanged() {
+    if (!this.scene) return;
     const tf = getTerraforming(this.scene);
     const level = Phaser.Math.Clamp(Math.round(this.points), 0, this.thermometerMax);
     tf.setAtmosphereLevel(level);
