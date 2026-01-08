@@ -42,7 +42,7 @@ export default class DeviceSlots {
   private getSlotTransform: (slotIndex: number) => SlotTransform;
 
   private emptySlotColor: number;
-private emptySlotHoverColor: number;
+  private emptySlotHoverColor: number;
 
   private onPlace: (slotIndex: number) => void;
 
@@ -71,7 +71,7 @@ private emptySlotHoverColor: number;
     this.getSlots = cfg.getSlots;
     this.getSlotTransform = cfg.getSlotTransform;
     this.emptySlotColor = cfg.emptySlotColor ?? 0xffff00;
-this.emptySlotHoverColor = cfg.emptySlotHoverColor ?? 0xffd84d;
+    this.emptySlotHoverColor = cfg.emptySlotHoverColor ?? 0xffd84d;
 
     this.onPlace = cfg.onPlace;
 
@@ -110,7 +110,7 @@ this.emptySlotHoverColor = cfg.emptySlotHoverColor ?? 0xffd84d;
     dot.lineStyle(4, this.emptySlotColor, 0.85);
     dot.strokeCircle(0, 0, 16);
 
-    const hitRadius = 26;
+    const hitRadius = 48;
     const hit = this.scene.add.zone(0, 0, hitRadius * 2, hitRadius * 2).setOrigin(0.5, 0.5);
     hit.setInteractive(new Phaser.Geom.Circle(hitRadius, hitRadius, hitRadius), Phaser.Geom.Circle.Contains);
 
