@@ -25,6 +25,9 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
   private hasShown = false;
   private fadeTween?: Phaser.Tweens.Tween;
 
+  private onResize?: () => void;
+  private cleanedUp = false;
+
   constructor(scene: Phaser.Scene, getLifeForms: () => LifeFormInstance[]) {
     super(scene, 0, 0);
 
@@ -57,11 +60,39 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
 
     this.layout();
 
-    scene.scale.on("resize", () => this.layout());
+    this.onResize = () => this.layout();
+    scene.scale.on("resize", this.onResize);
+
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
+    scene.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanup());
+  }
+
+  private cleanup() {
+    if (this.cleanedUp) return;
+    this.cleanedUp = true;
+
+    const sc = this.scene;
+    if (sc && this.onResize) {
+      sc.scale.off("resize", this.onResize);
+    }
+    this.onResize = undefined;
+
+    this.fadeTween?.stop();
+    this.fadeTween = undefined;
+
+    for (const h of this.hovers) h.destroy();
+    this.hovers = [];
+
+    this.medal?.destroy();
+
+    this.destroy();
   }
 
   private layout() {
-    const sh = this.scene.scale.height;
+    const sc = this.scene;
+    if (!sc || !sc.scale) return;
+
+    const sh = sc.scale.height;
 
     const baseLeft = this.padL;
     const baseBottom = sh - this.padB;
@@ -101,6 +132,8 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
   }
 
   public refresh() {
+    if (!this.scene || this.cleanedUp) return;
+
     const lifeForms = this.getLifeForms();
     const top = this.computeTop3(lifeForms);
 
@@ -166,7 +199,6 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
     const wi = (topHover as any).wi as number;
     const hh = (topHover as any).h as number;
 
-    const w = wi * this.evoScale;
     const h = hh * this.evoScale;
 
     const medalSize = 48;

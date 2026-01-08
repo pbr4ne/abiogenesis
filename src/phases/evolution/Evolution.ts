@@ -95,6 +95,8 @@ export default class Evolution extends PhaseScene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.simTimer?.remove(false);
       this.simTimer = undefined;
+
+      topHud?.destroy();
     });
 
     this.hoverPanel = new LifePanel(this);
