@@ -294,6 +294,14 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.applyBar("reproduction", lf.reproductionRate, tint);
     this.applyBar("survival", lf.survivalRate, tint);
 
+    const mutationHasNext = (def.mutatesTo?.length ?? 0) > 0;
+    if (!mutationHasNext) {
+      const b = this.bars.mutation;
+      b.bg.setAlpha(0.55);
+      b.icon.setAlpha(0.55);
+      b.fill.setAlpha(0.4);
+      b.ticks.setAlpha(0.35);
+    }
     this.setVisible(true);
   }
 

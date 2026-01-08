@@ -368,35 +368,42 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const nextStep = Math.floor(v) + 1;
     const cost = this.getUpgradeCostForNextStep(nextStep);
 
+    const mutationHasNext = (def.mutatesTo?.length ?? 0) > 0;
+    const statMeaningful = key !== "mutation" || mutationHasNext;
+
+    const aMul = statMeaningful ? 1 : 0.28;
+
     if (key === "mutation") {
-      row.left.setTexture("life_form").setTintFill(tint);
-      row.mid.setTexture("arrow").setTintFill(tint);
-      row.right.setTexture("life_form_mutated").setTintFill(tint);
+      row.left.setTexture("life_form").setTintFill(tint).setAlpha(aMul);
+      row.mid.setTexture("arrow").setTintFill(tint).setAlpha(aMul);
+      row.right.setTexture("life_form_mutated").setTintFill(tint).setAlpha(aMul);
     }
 
     if (key === "reproduction") {
-      row.left.setTexture("life_form").setTintFill(tint);
-      row.mid.setTexture("arrow").setTintFill(tint);
-      row.right.setTexture("life_form_reproduced").setTintFill(tint);
+      row.left.setTexture("life_form").setTintFill(tint).setAlpha(aMul);
+      row.mid.setTexture("arrow").setTintFill(tint).setAlpha(aMul);
+      row.right.setTexture("life_form_reproduced").setTintFill(tint).setAlpha(aMul);
     }
 
     if (key === "survival") {
-      row.left.setTexture("life_form_heart").setTintFill(tint);
-      row.mid.setTexture("arrow").setTintFill(tint);
-      row.right.setTexture("life_form_hearts").setTintFill(tint);
+      row.left.setTexture("life_form_heart").setTintFill(tint).setAlpha(aMul);
+      row.mid.setTexture("arrow").setTintFill(tint).setAlpha(aMul);
+      row.right.setTexture("life_form_hearts").setTintFill(tint).setAlpha(aMul);
     }
 
     const innerW = row.barW - 4;
     row.barFill.width = Math.max(0, Math.floor(innerW * p01));
     row.barFill.setFillStyle(tint, p01 > 0 ? 1 : 0);
+    row.barFill.setAlpha(aMul);
 
     row.ticks.clear();
-    row.ticks.lineStyle(4, tint, 0.35);
+    row.ticks.setAlpha(1);
+    row.ticks.lineStyle(4, tint, 0.35 * aMul);
 
     const y0 = row.barBg.y - row.barH / 2 + 2;
     const y1 = row.barBg.y + row.barH / 2 - 2;
 
-    row.barBg.setStrokeStyle(4, tint, 0.9);
+    row.barBg.setStrokeStyle(4, tint, 0.9 * aMul);
 
     for (let i = 1; i < LifeDetailsModal.STAT_MAX; i++) {
       const x = (row.barX + 2) + (innerW * i) / LifeDetailsModal.STAT_MAX;
@@ -406,7 +413,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       row.ticks.strokePath();
     }
 
-    const canUpgradeStat = v < LifeDetailsModal.STAT_MAX;
+    const canUpgradeStat = statMeaningful && v < LifeDetailsModal.STAT_MAX;
 
     if (!canUpgradeStat) {
       row.costG.setVisible(false);
@@ -424,7 +431,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     row.plus.disableInteractive();
 
     row.plus.setTintFill(tint);
-    row.plus.setAlpha(canClick ? 0.9 : 0.35);
+    row.plus.setAlpha((canClick ? 0.9 : 0.35) * aMul);
     row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
 
     if (!canUpgradeStat) {
@@ -435,12 +442,12 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     row.plus.setInteractive({ useHandCursor: canClick });
 
-    const basePlusTint = tint;
-    const hoverPlusTint = this.lightenHex(tint, 0.35);
+    const basePlusAlpha = 0.9 * aMul;
+    const hoverPlusAlpha = 1.0 * aMul;
 
     const showCost = () => {
       row.costG.setVisible(true);
-      this.drawCostDots(row.costG, cost, tint, 1);
+      this.drawCostDots(row.costG, cost, tint, aMul);
     };
 
     const hideCost = () => {
@@ -451,13 +458,11 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       showCost();
 
       if (canClick) {
-        row.plus.setTintFill(hoverPlusTint);
-        row.plus.setAlpha(1);
+        row.plus.setAlpha(hoverPlusAlpha);
         row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE * 1.1, LifeDetailsModal.PLUS_SIZE * 1.1);
         this.scene.input.setDefaultCursor("pointer");
       } else {
-        row.plus.setTintFill(basePlusTint);
-        row.plus.setAlpha(0.35);
+        row.plus.setAlpha(0.35 * aMul);
         row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
         this.scene.input.setDefaultCursor("default");
       }
@@ -466,8 +471,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const clearHoverVisuals = () => {
       hideCost();
 
-      row.plus.setTintFill(basePlusTint);
-      row.plus.setAlpha(canClick ? 0.9 : 0.35);
+      row.plus.setAlpha((canClick ? basePlusAlpha : 0.35 * aMul));
       row.plus.setDisplaySize(LifeDetailsModal.PLUS_SIZE, LifeDetailsModal.PLUS_SIZE);
       this.scene.input.setDefaultCursor("default");
     };
