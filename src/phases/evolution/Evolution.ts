@@ -245,21 +245,31 @@ export default class Evolution extends PhaseScene {
   }
 
   private launchRocketBurstAndComplete(tint: number, type: LifeFormType) {
+    this.hoverPanel?.hide?.();
+    this.modal?.hide?.();
+    this.evoModal?.hide?.();
+    this.setCometArmed(false);
+    this.cometBtn?.setHiddenForMainHover?.(false);
+
     const cx = this.planet.x;
     const cy = this.planet.y;
 
     const r = (this.planet as any).r ?? 280;
 
-    const sw = this.scale.width;
     const sh = this.scale.height;
 
     const count = 50;
 
     let done = 0;
-    const finish = () => {
+    let postDelayEvt: Phaser.Time.TimerEvent | undefined;
+
+    const finishOne = () => {
       done++;
       if (done < count) return;
-      this.scene.start("EvolutionComplete", { lfType: type });
+
+      postDelayEvt = this.time.delayedCall(2000, () => {
+        this.scene.start("EvolutionComplete", { lfType: type });
+      });
     };
 
     for (let i = 0; i < count; i++) {
@@ -275,21 +285,19 @@ export default class Evolution extends PhaseScene {
 
       const targetW = 60;
       const texW = rocket.width || 1;
-      const s = targetW / texW;
-      rocket.setScale(s);
+      rocket.setScale(targetW / texW);
 
       const upAngle = -Math.PI / 2;
-
       const cone = Phaser.Math.FloatBetween(-0.65, 0.65);
-
       const radialBias = Phaser.Math.Clamp((sx - cx) / Math.max(1, r), -1, 1) * 0.35;
-
       const dirTheta = upAngle + cone + radialBias;
 
       const dir = new Phaser.Math.Vector2(Math.cos(dirTheta), Math.sin(dirTheta)).normalize();
 
-      const dist = Phaser.Math.FloatBetween(sh * 0.6, sh * 0.9);
-      const dur = Phaser.Math.FloatBetween(1800, 2600);
+      const dist = Phaser.Math.FloatBetween(sh * 0.65, sh * 1.0);
+
+      const delay = Phaser.Math.FloatBetween(0, 650);
+      const dur = Phaser.Math.FloatBetween(2600, 3800);
 
       const endX = sx + dir.x * dist;
       const endY = sy + dir.y * dist;
@@ -301,14 +309,20 @@ export default class Evolution extends PhaseScene {
         x: endX,
         y: endY,
         alpha: 0,
+        delay,
         duration: dur,
         ease: "Cubic.easeIn",
         onComplete: () => {
           rocket.destroy();
-          finish();
+          finishOne();
         }
       });
     }
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      postDelayEvt?.remove(false);
+      postDelayEvt = undefined;
+    });
   }
 
   public setUseHandCursor(on: boolean) {
