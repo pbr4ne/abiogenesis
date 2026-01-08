@@ -101,6 +101,7 @@ export default class DeviceButtons {
   }
 
   private rebuild() {
+    for (const btn of this.buttons.values()) btn.destroy();
     this.buttons.clear();
 
     for (let i = 0; i < 3; i++) {
@@ -117,7 +118,7 @@ export default class DeviceButtons {
         y = this.y;
       }
 
-      const btn = this.makeCircleImageButton(x, y, this.radius, this.imageKeys[i], device);
+      const btn = this.makeRoundedRectImageButton(x, y, this.radius, this.imageKeys[i], device);
       this.parent.add(btn);
       this.buttons.set(device, btn);
     }
@@ -132,33 +133,33 @@ export default class DeviceButtons {
 
       btn.setAlpha(affordable ? 1 : 0.4);
 
-      const hit = btn.list[btn.list.length - 1] as Phaser.GameObjects.Zone;
-      if (affordable) {
-        hit.setInteractive(new Phaser.Geom.Circle(this.radius, this.radius, this.radius), Phaser.Geom.Circle.Contains);
-      } else {
-        hit.disableInteractive();
-      }
+      const hit = btn.getData("hit") as Phaser.GameObjects.Zone | undefined;
+      if (!hit) continue;
+
+      if (affordable) hit.setInteractive();
+      else hit.disableInteractive();
     }
   }
 
-  private drawButtonGlow(g: Phaser.GameObjects.Graphics, radius: number, color: number) {
+  private drawButtonGlow(g: Phaser.GameObjects.Graphics, radius: number, color: number, cornerR: number) {
     g.clear();
 
     const layers = 18;
     const inner = radius * 1.02;
-    const outer = radius * 1.20;
+    const outer = radius * 1.22;
 
     for (let i = 0; i < layers; i++) {
       const t = i / (layers - 1);
-      const rad = Phaser.Math.Linear(inner, outer, t);
-      const a = 0.22 * Math.pow(1 - t, 2.0);
+      const r = Phaser.Math.Linear(inner, outer, t);
+      const a = 0.16 * Math.pow(1 - t, 2.15);
 
-      g.lineStyle(10, color, a);
-      g.strokeCircle(0, 0, rad);
+      const size = r * 2;
+      g.lineStyle(8, color, a);
+      g.strokeRoundedRect(-size / 2, -size / 2, size, size, cornerR);
     }
   }
 
-  private makeCircleImageButton(localX: number, localY: number, radius: number, imageKey: string, deviceIndex: 0 | 1 | 2) {
+  private makeRoundedRectImageButton(localX: number, localY: number, radius: number, imageKey: string, deviceIndex: 0 | 1 | 2) {
     const btn = this.scene.add.container(localX, localY);
 
     const strokeIdle = this.theme?.stroke?.[deviceIndex] ?? (this.theme?.idleStrokeFallback ?? 0x494949);
@@ -167,38 +168,41 @@ export default class DeviceButtons {
     const hoverMul = this.theme?.hoverStrokeMul ?? 0.40;
     const strokeHover = lighten(strokeIdle, hoverMul);
 
+    const size = radius * 2;
+
+    const cornerR = Math.max(12, Math.round(size * 0.12));
+
     const bg = this.scene.add.graphics();
 
     const draw = (strokeColor: number) => {
       bg.clear();
       bg.fillStyle(bgFill, 1);
-      bg.fillCircle(0, 0, radius);
-      bg.lineStyle(6, strokeColor, 1);
-      bg.strokeCircle(0, 0, radius);
+      bg.fillRoundedRect(-size / 2, -size / 2, size, size, cornerR);
+      bg.lineStyle(4, strokeColor, 1);
+      bg.strokeRoundedRect(-size / 2, -size / 2, size, size, cornerR);
     };
 
     draw(strokeIdle);
 
     const glow = this.scene.add.graphics();
-    this.drawButtonGlow(glow, radius, glowCol);
+    this.drawButtonGlow(glow, radius, glowCol, cornerR);
 
     const img = this.scene.add.image(0, 0, imageKey);
     img.setTintFill(this.theme?.stroke?.[deviceIndex] ?? 0xffffff);
 
-    const pad = 28;
-    const max = radius * 2 - pad * 2;
+    const pad = 36;
+    const max = size - pad * 2;
     const scale = Math.min(max / img.width, max / img.height);
     img.setScale(scale);
 
-    const diameter = radius * 2;
-    const hit = this.scene.add.zone(0, 0, diameter, diameter).setOrigin(0.5, 0.5);
-    hit.setInteractive(new Phaser.Geom.Circle(radius, radius, radius), Phaser.Geom.Circle.Contains);
+    const hit = this.scene.add.zone(0, 0, size, size).setOrigin(0.5, 0.5);
+    hit.setInteractive();
 
     hit.on("pointerover", () => {
       if (!hit.input?.enabled) return;
       this.scene.input.setDefaultCursor("pointer");
       draw(strokeHover);
-      btn.setScale(1.03);
+      btn.setScale(1.02);
     });
 
     hit.on("pointerout", () => {
@@ -211,6 +215,8 @@ export default class DeviceButtons {
       if (!hit.input?.enabled) return;
       this.onSelect(deviceIndex);
     });
+
+    btn.setData("hit", hit);
 
     btn.add(glow);
     btn.add(bg);
