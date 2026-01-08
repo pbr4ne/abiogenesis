@@ -112,6 +112,11 @@
                 "key": "eukaryote"
             },
             {
+                "url": "assets/images/evolution.png",
+                "type": "image",
+                "key": "evolution"
+            },
+            {
                 "url": "assets/images/evolution_tree.png",
                 "type": "image",
                 "key": "evolution_tree"
@@ -160,6 +165,11 @@
                 "url": "assets/images/hydrosphereDevice3.png",
                 "type": "image",
                 "key": "hydrosphereDevice3"
+            },
+            {
+                "url": "assets/images/infinity.png",
+                "type": "image",
+                "key": "infinity"
             },
             {
                 "url": "assets/images/insect.png",

@@ -6,9 +6,9 @@ import PhaseBreadcrumb from "./PhaseBreadcrumb";
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
 
-export type PhaseKey = "Terraforming" | "TerraformingComplete" | "PrimordialSoup" | "PrimordialSoupComplete" | "Evolution" | "EvolutionComplete" | "GalaxyMap";
+export type PhaseKey = "Terraforming" | "TerraformingComplete" | "PrimordialSoup" | "PrimordialSoupComplete" | "Evolution" | "EvolutionComplete" | "GalaxyMap" | "EndGame";
 
-const PHASES: readonly PhaseKey[] = ["Terraforming", "TerraformingComplete", "PrimordialSoup", "PrimordialSoupComplete", "Evolution", "EvolutionComplete", "GalaxyMap"];
+const PHASES: readonly PhaseKey[] = ["Terraforming", "TerraformingComplete", "PrimordialSoup", "PrimordialSoupComplete", "Evolution", "EvolutionComplete", "GalaxyMap", "EndGame"];
 
 export default abstract class PhaseScene extends BaseScene {
   protected bgCam!: Phaser.Cameras.Scene2D.Camera;
@@ -71,10 +71,13 @@ export default abstract class PhaseScene extends BaseScene {
 
       case "GalaxyMap":
         return 0xffd27f;
+
+      case "EndGame":
+        return 0xffffff;
     }
   }
 
-  private getPhaseGroup(): "terraformed" | "dna" | "dolphin" | "system" {
+  private getPhaseGroup(): "terraformed" | "dna" | "evolution" | "system" {
     switch (this.phaseKey) {
       case "Terraforming":
       case "TerraformingComplete":
@@ -86,9 +89,12 @@ export default abstract class PhaseScene extends BaseScene {
 
       case "Evolution":
       case "EvolutionComplete":
-        return "dolphin";
+        return "evolution";
 
       case "GalaxyMap":
+        return "system";
+        
+      case "EndGame":
         return "system";
     }
   }
