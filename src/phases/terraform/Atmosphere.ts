@@ -22,7 +22,7 @@ export default class Atmosphere extends TerraformingView {
       backButtonLocalY: -1080,
 
       thermoLocalX: -820,
-      thermoTopLocalY: -1000,
+      thermoTopLocalY: -990,
       thermoH: 700,
       thermoW: 60,
 

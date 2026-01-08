@@ -74,7 +74,7 @@ export default class Hydrosphere extends TerraformingView {
       backButtonLocalY: -400,
 
       thermoLocalX: -840,
-      thermoTopLocalY: -200,
+      thermoTopLocalY: -300,
       thermoH: 700,
       thermoW: 60,
 

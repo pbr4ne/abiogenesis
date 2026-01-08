@@ -35,6 +35,7 @@ export type TerraformingViewConfig = {
   buttonLayout?: "row" | "col";
   buttonLocalX?: number;
   buttonTopLocalY?: number;
+  buttonSpacing?: number;
 
   backButtonLocalX: number;
   backButtonLocalY: number;
@@ -101,6 +102,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
   protected buttonLayout: "row" | "col";
   protected buttonLocalX: number;
   protected buttonTopLocalY: number;
+  protected buttonSpacing?: number;
 
   protected backButtonLocalX: number;
   protected backButtonLocalY: number;
@@ -141,6 +143,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
     this.buttonLayout = cfg.buttonLayout ?? "row";
     this.buttonLocalX = cfg.buttonLocalX ?? -850;
     this.buttonTopLocalY = cfg.buttonTopLocalY ?? 260;
+    this.buttonSpacing = cfg.buttonSpacing;
 
     this.thermoLocalX = cfg.thermoLocalX;
     this.thermoTopLocalY = cfg.thermoTopLocalY;
@@ -215,6 +218,7 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
         layout: "col",
         x: this.buttonLocalX,
         topY: this.buttonTopLocalY,
+        spacing: this.buttonSpacing,
         imageKeys: this.deviceKeys,
         costs: this.deviceCosts,
         getPoints: () => this.points,

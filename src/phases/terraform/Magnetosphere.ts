@@ -23,8 +23,9 @@ export default class Magnetosphere extends TerraformingView {
 
       buttonLayout: "col",
       buttonLocalX: -800,
-      buttonTopLocalY: 520,
+      buttonTopLocalY: 460,
       buttonRowLocalY: 0,
+      buttonSpacing: 260,
 
       backButtonLocalX: 800,
       backButtonLocalY: 230,
@@ -34,6 +35,7 @@ export default class Magnetosphere extends TerraformingView {
       thermoTopLocalY: 200,
       thermoW: 700,
       thermoH: 60,
+      
       arcStartDeg: 140,
       arcEndDeg: 220,
 

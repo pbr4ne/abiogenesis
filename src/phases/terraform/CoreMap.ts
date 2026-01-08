@@ -48,7 +48,7 @@ export default class CoreMap {
     );
 
     this.holeCx = opts?.holeCenter?.c ?? (cols / 2);
-    this.holeCy = opts?.holeCenter?.r ?? (rows / 2);
+    this.holeCy = opts?.holeCenter?.r ?? (rows / 2) - 1;
 
     this.holeR = (opts?.holeRadiusCells ?? Math.min(cols, rows) * 0.22) + 0.15;
 

@@ -68,10 +68,11 @@ export default class Core extends TerraformingView {
       backButtonLocalX: 800,
       backButtonLocalY: -400,
 
-      thermoLocalX: -840,
-      thermoTopLocalY: -200,
-      thermoH: 700,
-      thermoW: 60,
+      thermoOrientation: "horizontal",
+      thermoLocalX: 0,
+      thermoTopLocalY: -450,
+      thermoW: 700,
+      thermoH: 60,
 
       deviceKeys: ["coreDevice1", "coreDevice2", "coreDevice3"],
 
