@@ -23,13 +23,16 @@ export default class TerraformingProgress {
   private max: number;
   private value = 0;
 
+  private inset = 4;
+  private radius = 14;
+
   constructor(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, cfg: TerraformingProgressCfg) {
     this.orientation = cfg.orientation;
     this.x = cfg.x;
     this.topY = cfg.topY;
     this.w = cfg.w;
     this.h = cfg.h;
-    this.max = cfg.max;
+    this.max = Math.max(1, cfg.max);
     this.colour = cfg.colour ?? 0xff0000;
 
     this.bg = scene.add.graphics();
@@ -52,18 +55,8 @@ export default class TerraformingProgress {
     this.redrawFill();
   }
 
-  private drawFrame() {
-    const x = this.x;
-    const y = this.topY;
-    const w = this.w;
-    const h = this.h;
-
-    this.bg.clear();
-    this.bg.fillStyle(0x11111a, 0.65);
-    this.bg.fillRect(x - w / 2, y, w, h);
-
-    this.bg.lineStyle(4, 0xffffff, 0.55);
-    this.bg.strokeRect(x - w / 2, y, w, h);
+  private clampRadius(w: number, h: number, r: number) {
+    return Math.max(0, Math.min(r, Math.floor(w / 2), Math.floor(h / 2)));
   }
 
   private redrawFill() {
@@ -75,6 +68,8 @@ export default class TerraformingProgress {
     const h = this.h;
 
     const inset = 4;
+    const ix = x - w / 2 + inset;
+    const iy = y + inset;
     const iw = w - inset * 2;
     const ih = h - inset * 2;
 
@@ -83,25 +78,109 @@ export default class TerraformingProgress {
 
     this.fill.fillStyle(this.colour, 0.85);
 
-    if (this.orientation === "horizontal") {
-      const fillW = Math.floor(iw * ratio);
-      this.fill.fillRect(
-        x - w / 2 + inset,
-        y + inset,
-        fillW,
-        ih
+    const rBase = Math.max(2, Math.min(12, Math.floor(iw / 2), Math.floor(ih / 2)));
+    const capPx = rBase * 2;
+
+    const isFull = ratio >= 0.999;
+
+    const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
+
+    const minWidthFactor = 0.7;
+
+    if (this.orientation === "vertical") {
+      const rawH = ih * ratio;
+      const bottom = iy + ih;
+
+      if (rawH < capPx) {
+        const t = Phaser.Math.Clamp(rawH / capPx, 0, 1);
+        const e = easeOut(t);
+
+        const puddleH = Math.max(3, Math.floor(capPx * e));
+
+        const puddleW = Math.floor(
+          iw * (minWidthFactor + (1 - minWidthFactor) * e)
+        );
+
+        const cx = ix + iw / 2;
+        const cy = bottom - puddleH / 2;
+
+        this.fill.fillEllipse(cx, cy, puddleW, puddleH);
+        return;
+      }
+
+      const fillH = Math.floor(rawH);
+      const fy = bottom - fillH;
+
+      this.fill.fillRoundedRect(
+        ix,
+        fy,
+        iw,
+        fillH,
+        {
+          bl: rBase,
+          br: rBase,
+          tl: isFull ? rBase : 0,
+          tr: isFull ? rBase : 0
+        }
       );
     } else {
-      const fillH = Math.floor(ih * ratio);
-      const fillY = y + inset + (ih - fillH);
+      const rawW = iw * ratio;
+      const left = ix;
 
-      this.fill.fillRect(
-        x - iw / 2,
-        fillY,
-        iw,
-        fillH
+      if (rawW < capPx) {
+        const t = Phaser.Math.Clamp(rawW / capPx, 0, 1);
+        const e = easeOut(t);
+
+        const puddleW = Math.max(3, Math.floor(capPx * e));
+        const puddleH = Math.floor(
+          ih * (minWidthFactor + (1 - minWidthFactor) * e)
+        );
+
+        const cx = left + puddleW / 2;
+        const cy = iy + ih / 2;
+
+        this.fill.fillEllipse(cx, cy, puddleW, puddleH);
+        return;
+      }
+
+      const fillW = Math.floor(rawW);
+
+      this.fill.fillRoundedRect(
+        ix,
+        iy,
+        fillW,
+        ih,
+        {
+          tl: rBase,
+          bl: rBase,
+          tr: isFull ? rBase : 0,
+          br: isFull ? rBase : 0
+        }
       );
     }
+  }
+
+  private drawFrame() {
+    const x = this.x;
+    const y = this.topY;
+    const w = this.w;
+    const h = this.h;
+
+    const inset = this.inset;
+    const ix = x - w / 2 + inset;
+    const iy = y + inset;
+    const iw = w - inset * 2;
+    const ih = h - inset * 2;
+
+    const r = this.clampRadius(iw, ih, this.radius);
+
+    this.bg.clear();
+
+    this.bg.fillStyle(0x11111a, 0.65);
+    this.bg.fillRoundedRect(ix, iy, iw, ih, r);
+
+    this.bg.lineStyle(4, 0xffffff, 0.55);
+    this.bg.strokeRoundedRect(ix, iy, iw, ih, r);
   }
 
   public destroy() {
