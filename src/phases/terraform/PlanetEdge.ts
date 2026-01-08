@@ -5,6 +5,7 @@ import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { paintHydrosphere } from "./HydrosphereMap";
 import { getTerraforming } from "./getTerraformingState";
 import { checkUrlParam } from "../../utilities/GameUtils";
+import MagnetosphereRenderer from "./MagnetosphereRenderer";
 
 type PlanetEdgeConfig = {
   diameter?: number;
@@ -18,6 +19,8 @@ type PlanetEdgeConfig = {
 };
 
 class PlanetCapPlanet extends PlanetBase {
+  private magField?: MagnetosphereRenderer;
+
   constructor(scene: Phaser.Scene, diameter: number, cfg: PlanetEdgeConfig) {
     super(scene, 0, 0, {
       diameter,
@@ -37,6 +40,47 @@ class PlanetCapPlanet extends PlanetBase {
   public applyHydrosphere(run: PlanetRunState, waterLevel: number) {
     paintHydrosphere(this.getGridData(), run.hydroAlt, waterLevel);
     this.redrawTiles();
+  }
+
+  public applyMagnetosphere(strength01: number) {
+    const s = Phaser.Math.Clamp(strength01, 0, 1);
+
+    if (!this.magField) {
+      this.magField = new MagnetosphereRenderer(this.scene, this.behind, {
+        r: this.diameter / 2,
+        centerX: 0,
+        centerY: 0,
+
+        lineAlpha: 0.18,
+        lineWidth: 2,
+        perSideLines: 6,
+
+        loopCenterOffsetMul: 1,
+        innerRadiusMul: 0.15,
+        outerRadiusMul: 1.35,
+
+        loopCenterOffsetMulMin: 0.85,
+        loopCenterOffsetMulMax: 1,
+
+        innerRadiusMulMin: 0.12,
+        innerRadiusMulMax: 0.18,
+
+        outerRadiusMulMin: 1.15,
+        outerRadiusMulMax: 1.75,
+
+        strengthOverride01: null
+      });
+
+      (this.behind as any).list?.[this.behind.length - 1]?.setBlendMode?.(Phaser.BlendModes.ADD);
+    }
+
+    this.magField.setStrength01(s);
+  }
+
+  public override destroy(fromScene?: boolean) {
+    this.magField?.destroy();
+    this.magField = undefined;
+    super.destroy(fromScene);
   }
 }
 
@@ -72,25 +116,24 @@ export default class PlanetEdge extends Phaser.GameObjects.Container {
     const tf = getTerraforming(scene);
 
     const apply = () => {
-
       let water = tf.waterStep10();
-      if (checkUrlParam("overrideAll", "true")) {
-        water = 1000;
-      }
+      if (checkUrlParam("overrideAll", "true")) water = 10;
       this.run.waterLevel = water;
       this.planet.applyHydrosphere(this.run, water);
 
+      let mag = tf.ratio01("magnetosphere");
+      if (checkUrlParam("overrideAll", "true")) mag = 1;
+      this.planet.applyMagnetosphere(mag);
+
       let atmo = tf.ratio01("atmosphere");
-      if (checkUrlParam("overrideAll", "true")) {
-        atmo = 1;
-      }
+      if (checkUrlParam("overrideAll", "true")) atmo = 1;
       drawAtmosphereGlow(this.glow, this.r, centerY, atmo);
     };
 
     apply();
 
     const onChange = (k: "atmosphere" | "magnetosphere" | "hydrosphere" | "core") => {
-      if (k !== "hydrosphere" && k !== "atmosphere") return;
+      if (k !== "hydrosphere" && k !== "atmosphere" && k !== "magnetosphere") return;
       apply();
     };
 
