@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import LifeDetailsHover from "./LifeDetailsHover";
 import { LifeFormInstance, LifeFormType } from "./EvolutionTypes";
 import { LIFEFORMS } from "./LifeForms";
+import { scoreByType100 } from "./EvolutionIntelligence";
 
 type TopEntry = {
   type: LifeFormType;
@@ -212,28 +213,16 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
 
   private computeTop3(lifeForms: LifeFormInstance[]): TopEntry[] {
     const counts = new Map<LifeFormType, number>();
-    const sum15 = new Map<LifeFormType, number>();
-
     for (const lf of lifeForms) {
       counts.set(lf.type, (counts.get(lf.type) ?? 0) + 1);
-
-      const s =
-        (lf.mutationRate ?? 0) +
-        (lf.reproductionRate ?? 0) +
-        (lf.survivalRate ?? 0);
-
-      sum15.set(lf.type, (sum15.get(lf.type) ?? 0) + s);
     }
 
-    const PERFECT_LF_FOR_100 = 12;
-    const TARGET_POINTS = PERFECT_LF_FOR_100 * 15;
+    const score100ByType = scoreByType100(lifeForms);
 
     const entries: TopEntry[] = [];
-    for (const [type, total] of sum15) {
+    for (const [type, score100] of score100ByType) {
       const count = counts.get(type) ?? 0;
       if (count <= 0) continue;
-
-      const score100 = Phaser.Math.Clamp(Math.round((total / TARGET_POINTS) * 100), 0, 100);
       entries.push({ type, score100, count });
     }
 
