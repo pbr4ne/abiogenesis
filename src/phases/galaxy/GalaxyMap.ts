@@ -128,6 +128,23 @@ export default class GalaxyMap extends PhaseScene {
     this.lfMarker = img;
   }
 
+  private planetBaseColor(i: number) {
+    const palette = [
+      0x2f6bff,
+      0xff2fb3,
+      0x29ff7a,
+      0xffc52a,
+      0xa62fff,
+      0x00e5ff,
+      0xff3b30,
+      0xbfff2a,
+      0x2ad7ff,
+      0xff7a1a
+    ];
+
+    return palette[i % palette.length];
+  }
+
   private placePlanetsHardcoded(defs: PlanetDef[], w: number, h: number) {
     const slots = [
       { nx: 0.18, ny: 0.33 },
@@ -160,18 +177,20 @@ export default class GalaxyMap extends PhaseScene {
     for (let i = 0; i < this.planets.length; i++) {
       const p = this.planets[i];
 
-      const isLfPlanet = p.def.id === this.lfPlanetId;
-      const lfCol = isLfPlanet ? LIFEFORMS[this.lfType].colour : null;
+      const completedType = GalaxyMemory.completed[p.def.id] as LifeFormType | undefined;
+
+      const baseCol = completedType
+        ? Phaser.Display.Color.GetColor(
+          LIFEFORMS[completedType].colour.r,
+          LIFEFORMS[completedType].colour.g,
+          LIFEFORMS[completedType].colour.b
+        )
+        : this.planetBaseColor(i);
 
       const { x, y } = p;
-      const base = this.rainbowColor(i, this.planets.length);
 
       g.fillStyle(0x000000, 0.22);
       g.fillCircle(x + p.def.r * 0.12, y + p.def.r * 0.12, p.def.r * 1.03);
-
-      const baseCol = lfCol
-        ? Phaser.Display.Color.GetColor(lfCol.r, lfCol.g, lfCol.b)
-        : this.rainbowColor(i, this.planets.length);
 
       g.fillStyle(this.darkenColor(baseCol, 0.65), 0.95);
       g.fillCircle(x, y, p.def.r);
@@ -181,6 +200,14 @@ export default class GalaxyMap extends PhaseScene {
 
       g.lineStyle(Math.max(2, Math.floor(p.def.r * 0.08)), 0xffffff, 0.10);
       g.strokeCircle(x, y, p.def.r);
+
+      if (p.def.id === this.lfPlanetId) {
+        g.lineStyle(Math.max(4, Math.floor(p.def.r * 0.11)), 0x00ffff, 0.28);
+        g.strokeCircle(x, y, p.def.r + 7);
+
+        g.lineStyle(Math.max(2, Math.floor(p.def.r * 0.06)), 0x00ffff, 0.18);
+        g.strokeCircle(x, y, p.def.r + 12);
+      }
 
       if (p.def.r >= 40 && Math.random() < 0.6) {
 
@@ -217,12 +244,6 @@ export default class GalaxyMap extends PhaseScene {
       Math.floor(c.green * mul),
       Math.floor(c.blue * mul)
     );
-  }
-
-  private rainbowColor(i: number, n: number) {
-    const h = (i / Math.max(1, n)) * 360;
-    const c = Phaser.Display.Color.HSVToRGB(h / 360, 0.55, 1.0) as Phaser.Types.Display.ColorObject;
-    return Phaser.Display.Color.GetColor(c.r, c.g, c.b);
   }
 
   private enablePlanetInput() {
