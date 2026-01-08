@@ -7,8 +7,8 @@ import { stepBloom5x5 } from "./BloomPattern";
 import SoupProgress from "./SoupProgress";
 import { paintHydrosphere } from "../terraform/HydrosphereMap";
 import PlanetRunState from "../../planet/PlanetRunState";
-
 import PlanetGrid from "../../planet/PlanetGrid";
+import { getRun } from "../../utilities/GameSession";
 
 export default class PrimordialSoupPlanet extends PlanetBase {
   private spawnEvent?: Phaser.Time.TimerEvent;
@@ -26,7 +26,7 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
 
-    this.run = scene.registry.get("run") as PlanetRunState;
+    this.run = getRun();
     this.field = new CellLayerField(this.divisions);
     this.spawner = new SoupSpawner(this.divisions, this.r);
 

@@ -7,6 +7,7 @@ import Hydrosphere from "./Hydrosphere";
 import Core from "./Core";
 import TerraformingPlanet from "./TerraformingPlanet";
 import { getTerraforming } from "./getTerraformingState";
+import { enableDebugNext } from "../../utilities/DebugNav";
 
 
 export default class Terraforming extends PhaseScene {
@@ -17,6 +18,11 @@ export default class Terraforming extends PhaseScene {
   }
 
   protected createPhase() {
+    enableDebugNext({
+      scene: this,
+      next: "TerraformingComplete"
+    });
+
     const tf = getTerraforming(this);
 
     let transitioning = false;

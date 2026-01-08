@@ -9,6 +9,7 @@ import { getTerraforming } from "./getTerraformingState";
 import { strokeProjectedSphereCircle, clamp, dot3 } from "./CircleProjection";
 import CoreExplosions from "./CoreExplosions";
 import { checkUrlParam } from "../../utilities/GameUtils";
+import { getRun } from "../../utilities/GameSession";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere" | "core";
 
@@ -48,7 +49,7 @@ export default class TerraformingPlanet extends PlanetBase {
 
     this.hotspotRotate = this.rotate;
 
-    this.run = scene.registry.get("run") as PlanetRunState;
+    this.run = getRun();
     const tf = getTerraforming(scene);
 
     this.enabledEffects = { atmosphere: true, magnetosphere: true, hydrosphere: true, core: true };

@@ -4,6 +4,7 @@ import PhaseScene from "../../scenes/PhaseScene";
 import { log } from "../../utilities/GameUtils";
 import { LifeFormType } from "../evolution/EvolutionTypes";
 import { LIFEFORMS } from "../evolution/LifeForms";
+import { resetRun } from "../../utilities/GameSession";
 
 type PlanetDef = {
   id: string;
@@ -74,11 +75,6 @@ export default class GalaxyMap extends PhaseScene {
   private pickLfPlanet() {
     const allIds = this.planets.map(p => p.def.id);
 
-    if (allIds.every(id => GalaxyMemory.completed[id] != null)) {
-      this.scene.start("EndGame");
-      return;
-    }
-
     const pending = GalaxyMemory.pendingPlanetId;
 
     let targetId: string;
@@ -87,6 +83,12 @@ export default class GalaxyMap extends PhaseScene {
       targetId = pending;
     } else {
       const available = allIds.filter(id => GalaxyMemory.completed[id] == null);
+
+      if (available.length === 0) {
+        this.scene.start("EndGame");
+        return;
+      }
+
       targetId = Phaser.Utils.Array.GetRandom(available);
     }
 
@@ -95,6 +97,10 @@ export default class GalaxyMap extends PhaseScene {
     GalaxyMemory.completed[targetId] = this.lfType;
 
     GalaxyMemory.pendingPlanetId = null;
+
+    if (allIds.every(id => GalaxyMemory.completed[id] != null)) {
+      this.scene.start("EndGame");
+    }
   }
 
   private renderLfPlanetMarker() {
@@ -251,6 +257,9 @@ export default class GalaxyMap extends PhaseScene {
 
       hitCircle.on(Phaser.Input.Events.POINTER_DOWN, () => {
         GalaxyMemory.pendingPlanetId = p.def.id;
+
+        resetRun();
+
         this.scene.start("Terraforming");
 
       });

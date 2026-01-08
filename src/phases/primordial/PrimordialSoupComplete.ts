@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import PhaseScene from "../../scenes/PhaseScene";
+import { enableDebugNext } from "../../utilities/DebugNav";
 
 export default class PrimordialSoupComplete extends PhaseScene {
   constructor() {
@@ -7,6 +8,10 @@ export default class PrimordialSoupComplete extends PhaseScene {
   }
 
   protected createPhase(): void {
+    enableDebugNext({
+      scene: this,
+      next: "Evolution"
+    });
     const cx = 960;
     const cy = 540;
 

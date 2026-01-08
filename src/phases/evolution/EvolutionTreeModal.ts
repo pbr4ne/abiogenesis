@@ -3,6 +3,7 @@ import { LifeFormDef, LifeFormInstance, LifeFormType } from "./EvolutionTypes";
 import { LIFEFORMS } from "./LifeForms";
 import { log } from "../../utilities/GameUtils";
 import { scoreByType100 } from "./EvolutionIntelligence";
+import { getRun } from "../../utilities/GameSession";
 
 const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
 
@@ -275,7 +276,7 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     this.aliveCounts = this.countByType(lifeForms);
     this.score100ByType = scoreByType100(lifeForms);
 
-    const run = this.scene.registry.get("run") as any;
+    const run = getRun();
     const unlocked = this.resolveUnlocked(run?.unlockedLifeTypes, this.aliveCounts);
 
     for (const [type, node] of this.nodes) {

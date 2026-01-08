@@ -1,7 +1,7 @@
 
 import Phaser from "phaser";
 import { checkUrlParam, getUrlParam } from "../utilities/GameUtils";
-import PlanetRunState from "../planet/PlanetRunState";
+import { getRun } from "../utilities/GameSession";
 
 export default class Init extends Phaser.Scene {
 
@@ -11,8 +11,7 @@ export default class Init extends Phaser.Scene {
 
   create() {
 
-    const run = new PlanetRunState(40);
-    this.registry.set("run", run);
+    getRun();
 
     const sceneOverride = getUrlParam("scene");
     if (sceneOverride) {
@@ -29,5 +28,3 @@ export default class Init extends Phaser.Scene {
     this.events.emit("scene-awake");
   }
 }
-
-

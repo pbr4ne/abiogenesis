@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import PhaseScene from "../../scenes/PhaseScene";
 import { LifeFormType } from "./EvolutionTypes";
 import { LIFEFORMS } from "./LifeForms";
+import { enableDebugNext } from "../../utilities/DebugNav";
 
 const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
 
@@ -18,6 +19,10 @@ export default class EvolutionComplete extends PhaseScene {
   }
 
   protected createPhase(): void {
+    enableDebugNext({
+      scene: this,
+      next: "GalaxyMap"
+    });
     const cx = 960;
     const cy = 540;
 

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { LifeFormDef, LifeFormInstance } from "./EvolutionTypes";
 import PlanetRunState from "../../planet/PlanetRunState";
+import { getRun } from "../../utilities/GameSession";
 
 export type LifeHoverPayload = { lf: LifeFormInstance; def: LifeFormDef } | null;
 
@@ -197,7 +198,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   }
 
   private getRun(): PlanetRunState | null {
-    const run = this.scene.registry.get("run") as PlanetRunState | undefined;
+    const run = getRun();
     return run ?? null;
   }
 

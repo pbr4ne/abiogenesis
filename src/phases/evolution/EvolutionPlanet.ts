@@ -9,6 +9,7 @@ import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
 import { sprinkleLifeFormsDebug } from "./EvolutionDebugSprinkle";
 import DeathPoof from "./DeathPoof";
 import { checkUrlParam } from "../../utilities/GameUtils";
+import { getRun } from "../../utilities/GameSession";
 
 const rgbToHexStr = (r: number, g: number, b: number) =>
   "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
@@ -23,7 +24,7 @@ export default class EvolutionPlanet extends PlanetBase {
 
   constructor(scene: Phaser.Scene, x = 960, y = 540) {
     super(scene, x, y);
-    this.run = scene.registry.get("run") as PlanetRunState;
+    this.run = getRun();
 
     this.deathPoof = new DeathPoof(scene, { peakPx: 50 });
 

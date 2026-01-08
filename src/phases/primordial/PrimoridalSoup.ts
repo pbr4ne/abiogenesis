@@ -4,6 +4,7 @@ import { log } from "../../utilities/GameUtils";
 import DNAHelix from "./DNAHelix";
 import Nucleotides from "./Nucleotides";
 import Phaser from "phaser";
+import { enableDebugNext } from "../../utilities/DebugNav";
 
 export default class PrimordialSoup extends PhaseScene {
   private planet!: Planet;
@@ -14,6 +15,11 @@ export default class PrimordialSoup extends PhaseScene {
   }
 
   protected createPhase() {
+    enableDebugNext({
+      scene: this,
+      next: "PrimordialSoupComplete"
+    });
+
     const planetHeight = 768;
 
     const helixX = 960 + 384 + 220;

@@ -52,13 +52,3 @@ export default class TerraformingState extends Phaser.Events.EventEmitter {
     this.emit("change", "core", next);
   }
 }
-
-export const getTerraformingState = (scene: Phaser.Scene) => {
-  const key = "terraformingState";
-  let s = scene.registry.get(key) as TerraformingState | undefined;
-  if (!s) {
-    s = new TerraformingState();
-    scene.registry.set(key, s);
-  }
-  return s;
-};

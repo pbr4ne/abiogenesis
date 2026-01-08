@@ -3,12 +3,28 @@ import type { AltGrid } from "../phases/terraform/HydrosphereTerrain";
 import { enforceGlobalAltSplit5050, generateAltGrid } from "../phases/terraform/HydrosphereTerrain";
 import { LifeFormInstance, LifeFormType } from "../phases/evolution/EvolutionTypes";
 import { getUrlParam, log } from "../utilities/GameUtils";
+import TerraformingState from "../phases/terraform/TerraformingState";
+import TerraformingFacade from "~/phases/terraform/TerraformingFacade";
 
 export type TerraformLevels = {
   atmosphere: number;
   magnetosphere: number;
   hydrosphere: number;
   core: number;
+};
+
+const makeSeed = () => {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return (
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2) +
+    "-" +
+    Math.random().toString(36).slice(2)
+  );
 };
 
 export default class PlanetRunState {
@@ -23,9 +39,11 @@ export default class PlanetRunState {
 
   public terraform: TerraformLevels;
   public evoPointsBank = 1;
+  public readonly terraforming = new TerraformingState();
+  public terraformingFacade?: TerraformingFacade;
 
   constructor(divisions: number, seed?: string) {
-    this.seed = seed ?? Phaser.Math.RND.uuid();
+    this.seed = seed ?? makeSeed();
     const rng = new Phaser.Math.RandomDataGenerator([this.seed]);
     this.hydroAlt = generateAltGrid(divisions, divisions, rng);
     enforceGlobalAltSplit5050(this.hydroAlt, 10, 20, rng);

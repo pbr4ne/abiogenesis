@@ -14,6 +14,8 @@ import EvolutionCometButton from "./EvolutionCometButton";
 import { scoreByType100 } from "./EvolutionIntelligence";
 import { LIFEFORMS } from "./LifeForms";
 import { log } from "../../utilities/GameUtils";
+import { getRun } from "../../utilities/GameSession";
+import { enableDebugNext } from "../../utilities/DebugNav";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -37,6 +39,11 @@ export default class Evolution extends PhaseScene {
   }
 
   protected createPhase() {
+    enableDebugNext({
+      scene: this,
+      next: "EvolutionComplete"
+    });
+
     this.planet = new Planet(this, 960, 540);
     this.add.existing(this.planet);
     this.bgCam.ignore(this.planet);
@@ -50,7 +57,7 @@ export default class Evolution extends PhaseScene {
     this.events.on("evo:launchRocket", onLaunchRocket);
     this.onShutdown(() => this.events.off("evo:launchRocket", onLaunchRocket));
 
-    this.run = this.registry.get("run") as PlanetRunState;
+    this.run = getRun();
 
     this.abacusPoints = new AbacusPoints(this, {
       x: 280,
