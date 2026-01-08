@@ -35,7 +35,7 @@ export default class AbacusPoints extends Phaser.GameObjects.Container {
     super(scene, cfg.x, cfg.y);
 
     this.getPoints = cfg.getPoints;
-    this.maxPoints = cfg.maxPoints ?? 100;
+    this.maxPoints = cfg.maxPoints ?? 1000;
 
     this.wi = cfg.width ?? 320;
     this.rowGap = cfg.rowGap ?? 54;
@@ -44,15 +44,18 @@ export default class AbacusPoints extends Phaser.GameObjects.Container {
     this.frameG = scene.add.graphics();
     this.add(this.frameG);
 
-    const yHundreds = -this.rowGap;
-    const yTens = 0;
-    const yOnes = this.rowGap;
+    const yThousands = -this.rowGap * 1.5;
+    const yHundreds = -this.rowGap * 0.5;
+    const yTens = this.rowGap * 0.5;
+    const yOnes = this.rowGap * 1.5;
 
+    const colThousands = 0xb0b0b0;
     const colHundreds = 0x9e9e9e;
     const colTens = 0x7f7f7f;
     const colOnes = 0x5f5f5f;
 
     this.rows = [
+      this.makeRow(yThousands, colThousands),
       this.makeRow(yHundreds, colHundreds),
       this.makeRow(yTens, colTens),
       this.makeRow(yOnes, colOnes)
@@ -115,13 +118,7 @@ export default class AbacusPoints extends Phaser.GameObjects.Container {
 
     const r = this.beadR;
 
-    const shadow = this.scene.add.circle(
-      r * 0.22,
-      r * 0.22,
-      r,
-      0x000000,
-      0.18
-    );
+    const shadow = this.scene.add.circle(r * 0.22, r * 0.22, r, 0x000000, 0.18);
 
     const body = this.scene.add.circle(0, 0, r, baseCol, 1);
     body.setStrokeStyle(2, 0x000000, 0.55);
@@ -168,13 +165,15 @@ export default class AbacusPoints extends Phaser.GameObjects.Container {
     if (!force && pts === this.lastPts) return;
     this.lastPts = pts;
 
-    const hundreds = Math.floor(pts / 100);
+    const thousands = Math.floor(pts / 1000);
+    const hundreds = Math.floor(pts / 100) % 10;
     const tens = Math.floor(pts / 10) % 10;
     const ones = pts % 10;
 
-    this.applyRow(this.rows[0], hundreds);
-    this.applyRow(this.rows[1], tens);
-    this.applyRow(this.rows[2], ones);
+    this.applyRow(this.rows[0], thousands);
+    this.applyRow(this.rows[1], hundreds);
+    this.applyRow(this.rows[2], tens);
+    this.applyRow(this.rows[3], ones);
   }
 
   private applyRow(row: Row, countOnRight: number) {
