@@ -295,7 +295,11 @@ export default class LifeDetailsHover extends Phaser.GameObjects.Container {
     this.applyBar("survival", lf.survivalRate, tint);
 
     const mutationHasNext = (def.mutatesTo?.length ?? 0) > 0;
-    if (!mutationHasNext) {
+
+    //set to false to alpha/hide terminal mutation upgrades
+    const allowTerminalMutation = true;
+
+    if (!mutationHasNext && !allowTerminalMutation) {
       const b = this.bars.mutation;
       b.bg.setAlpha(0.55);
       b.icon.setAlpha(0.55);

@@ -370,7 +370,12 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const cost = this.getUpgradeCostForNextStep(nextStep);
 
     const mutationHasNext = (def.mutatesTo?.length ?? 0) > 0;
-    const statMeaningful = key !== "mutation" || mutationHasNext;
+
+    //set to false to alpha/hide terminal mutation upgrades
+    const allowTerminalMutation = true;
+
+    const statMeaningful =
+      key !== "mutation" || (mutationHasNext || allowTerminalMutation);
 
     const aMul = statMeaningful ? 1 : 0.28;
 
