@@ -46,7 +46,7 @@ export default class Terraforming extends PhaseScene {
       offsetRatio: 0.62,
       arcStartDeg: 225,
       arcEndDeg: 315,
-      radiusOffset: 54,
+      radiusOffset: 40,
     });
     this.add.existing(atmosphere);
     this.bgCam.ignore(atmosphere);
@@ -56,7 +56,7 @@ export default class Terraforming extends PhaseScene {
       offsetRatio: 0.62,
       arcStartDeg: 45,
       arcEndDeg: 135,
-      radiusOffset: 54,
+      radiusOffset: 40,
     });
     this.add.existing(magnetosphere);
     this.bgCam.ignore(magnetosphere);

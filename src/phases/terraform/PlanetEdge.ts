@@ -78,12 +78,15 @@ export default class PlanetEdge extends Phaser.GameObjects.Container {
       this.run.waterLevel = water;
 
       this.planet.applyHydrosphere(this.run, water);
+
+      let atmo = tf.ratio01("atmosphere");
+      drawAtmosphereGlow(this.glow, this.r, centerY, atmo);
     };
 
     apply();
 
     const onChange = (k: "atmosphere" | "magnetosphere" | "hydrosphere" | "core") => {
-      if (k !== "hydrosphere") return;
+      if (k !== "hydrosphere" && k !== "atmosphere") return;
       apply();
     };
 
