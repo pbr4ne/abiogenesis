@@ -23,13 +23,13 @@ const DEFAULT_TUNING: SimTuning = {
 
   baseMutationPerTick: 0.0035,
   baseReproPerTick: 0.008,
-  baseRandomDeathPerTick: 0.004,
+  baseRandomDeathPerTick: 0.001,
 
   baseAttackPerNeighbor: 0.015,
   attackKillChance: 0.35,
 
   pointsBasePerTick: 0.045,
-  pointsPerLifePerTick: 0.054,
+  pointsPerLifePerTick: 0.012,
   pointsPerDepthPerTick: 0.012
 };
 
