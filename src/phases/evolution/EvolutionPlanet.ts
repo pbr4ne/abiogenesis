@@ -8,6 +8,7 @@ import { LifeFormInstance } from "./EvolutionTypes";
 import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
 import { sprinkleLifeFormsDebug } from "./EvolutionDebugSprinkle";
 import DeathPoof from "./DeathPoof";
+import { checkUrlParam } from "../../utilities/GameUtils";
 
 const rgbToHexStr = (r: number, g: number, b: number) =>
   "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
@@ -35,13 +36,15 @@ export default class EvolutionPlanet extends PlanetBase {
       10
     );
 
-    // sprinkleLifeFormsDebug(
-    //   this.run,
-    //   this.divisions,
-    //   this.run.hydroAlt,
-    //   this.run.waterLevel,
-    //   5
-    // );
+    if (checkUrlParam("overrideAll", "true")) {
+      sprinkleLifeFormsDebug(
+        this.run,
+        this.divisions,
+        this.run.hydroAlt,
+        this.run.waterLevel,
+        5
+      );
+    }
 
     this.renderLifeForms();
     this.renderLifeBumps();

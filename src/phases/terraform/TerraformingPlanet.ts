@@ -8,6 +8,7 @@ import { paintHydrosphere } from "./HydrosphereMap";
 import { getTerraforming } from "./getTerraformingState";
 import { strokeProjectedSphereCircle, clamp, dot3 } from "./CircleProjection";
 import CoreExplosions from "./CoreExplosions";
+import { checkUrlParam } from "../../utilities/GameUtils";
 
 type Key = "atmosphere" | "magnetosphere" | "hydrosphere" | "core";
 
@@ -261,27 +262,39 @@ export default class TerraformingPlanet extends PlanetBase {
     const tf = getTerraforming(this.scene);
 
     if (k === "atmosphere") {
-      const strength01 = tf.ratio01("atmosphere");
-      this.applyAtmosphere(strength01);
+      let atmosphereLevel = tf.ratio01("atmosphere");
+      if (checkUrlParam("overrideAll", "true")) {
+        atmosphereLevel = 1;
+      }
+      this.applyAtmosphere(atmosphereLevel);
       return;
     }
 
     if (k === "magnetosphere") {
-      const strength01 = tf.ratio01("magnetosphere");
-      this.applyMagnetosphere(strength01);
+      let magnetosphereLevel = tf.ratio01("magnetosphere");
+      if (checkUrlParam("overrideAll", "true")) {
+        magnetosphereLevel = 1;
+      }
+      this.applyMagnetosphere(magnetosphereLevel);
       return;
     }
 
     if (k === "hydrosphere") {
-      const water = tf.waterStep10();
-      this.run.waterLevel = water;
-      this.applyHydrosphere(water);
+      let waterLevel = tf.waterStep10();
+      if (checkUrlParam("overrideAll", "true")) {
+        waterLevel = 10;
+      }
+      this.run.waterLevel = waterLevel;
+      this.applyHydrosphere(waterLevel);
       return;
     }
 
     if (k === "core") {
-      const strength01 = tf.ratio01("core");
-      this.applyCore(strength01);
+      let coreLevel = tf.ratio01("core");
+      if (checkUrlParam("overrideAll", "true")) {
+        coreLevel = 1;
+      }
+      this.applyCore(coreLevel);
       return;
     }
   }

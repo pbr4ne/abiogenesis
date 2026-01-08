@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { checkUrlParam } from "../../utilities/GameUtils";
 
 export type RGB = { r: number; g: number; b: number };
 
@@ -38,7 +39,9 @@ export default class SoupProgress {
   }
 
   public computeHelixBinsFromGrid(getCells: () => Iterable<RGB>) {
-    //this.setAllFill01(0.98);
+    if(checkUrlParam("overrideAll", "true")) {
+      this.setAllFill01(0.98);
+    }
     const prev = this.helixBins.slice();
 
     this.helixBins.fill(0);

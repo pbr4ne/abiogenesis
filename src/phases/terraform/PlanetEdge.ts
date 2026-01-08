@@ -4,6 +4,7 @@ import PlanetRunState from "../../planet/PlanetRunState";
 import { drawAtmosphereGlow } from "./AtmosphereRenderer";
 import { paintHydrosphere } from "./HydrosphereMap";
 import { getTerraforming } from "./getTerraformingState";
+import { checkUrlParam } from "../../utilities/GameUtils";
 
 type PlanetEdgeConfig = {
   diameter?: number;
@@ -68,18 +69,21 @@ export default class PlanetEdge extends Phaser.GameObjects.Container {
     this.glow.setBlendMode(Phaser.BlendModes.ADD);
     this.add(this.glow);
 
-    drawAtmosphereGlow(this.glow, this.r, centerY, 1);
-
     const tf = getTerraforming(scene);
 
     const apply = () => {
 
-      const water = tf.waterStep10();
+      let water = tf.waterStep10();
+      if (checkUrlParam("overrideAll", "true")) {
+        water = 1000;
+      }
       this.run.waterLevel = water;
-
       this.planet.applyHydrosphere(this.run, water);
 
       let atmo = tf.ratio01("atmosphere");
+      if (checkUrlParam("overrideAll", "true")) {
+        atmo = 1;
+      }
       drawAtmosphereGlow(this.glow, this.r, centerY, atmo);
     };
 
