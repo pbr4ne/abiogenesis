@@ -15,6 +15,9 @@ type DeviceSlotsCfg = {
   deviceKeys: readonly [string, string, string];
   deviceColors: readonly [number, number, number];
 
+  emptySlotColor?: number;
+  emptySlotHoverColor?: number;
+
   getSlots: () => (0 | 1 | 2 | null)[];
   getSlotTransform: (slotIndex: number) => SlotTransform;
 
@@ -37,6 +40,9 @@ export default class DeviceSlots {
 
   private getSlots: () => (0 | 1 | 2 | null)[];
   private getSlotTransform: (slotIndex: number) => SlotTransform;
+
+  private emptySlotColor: number;
+private emptySlotHoverColor: number;
 
   private onPlace: (slotIndex: number) => void;
 
@@ -64,6 +70,8 @@ export default class DeviceSlots {
 
     this.getSlots = cfg.getSlots;
     this.getSlotTransform = cfg.getSlotTransform;
+    this.emptySlotColor = cfg.emptySlotColor ?? 0xffff00;
+this.emptySlotHoverColor = cfg.emptySlotHoverColor ?? 0xffd84d;
 
     this.onPlace = cfg.onPlace;
 
@@ -99,7 +107,7 @@ export default class DeviceSlots {
     const c = this.scene.add.container(x, y);
 
     const dot = this.scene.add.graphics();
-    dot.lineStyle(4, 0xffff00, 0.85);
+    dot.lineStyle(4, this.emptySlotColor, 0.85);
     dot.strokeCircle(0, 0, 16);
 
     const hitRadius = 26;
@@ -109,14 +117,14 @@ export default class DeviceSlots {
     hit.on("pointerover", () => {
       this.scene.input.setDefaultCursor("pointer");
       dot.clear();
-      dot.lineStyle(5, 0xffd84d, 1);
+      dot.lineStyle(5, this.emptySlotHoverColor, 1);
       dot.strokeCircle(0, 0, 18);
     });
 
     hit.on("pointerout", () => {
       this.scene.input.setDefaultCursor("default");
       dot.clear();
-      dot.lineStyle(4, 0xffff00, 0.85);
+      dot.lineStyle(4, this.emptySlotColor, 0.85);
       dot.strokeCircle(0, 0, 16);
     });
 

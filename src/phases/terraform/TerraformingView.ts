@@ -199,6 +199,9 @@ export default class TerraformingView extends Phaser.GameObjects.Container {
       deviceKeys: this.deviceKeys,
       deviceColors: this.deviceButtonTheme?.stroke ?? [0xffffff, 0xffffff, 0xffffff],
 
+      emptySlotColor: this.deviceButtonTheme?.stroke?.[this.selectedDevice ?? 0] ?? 0xffff00,
+      emptySlotHoverColor: this.deviceButtonTheme?.glow?.[this.selectedDevice ?? 0],
+
       getSlots: () => this.deviceSlots,
       getSlotTransform: (i) => this.getSlotTransform(i),
 
