@@ -22,6 +22,12 @@ type SimTuning = {
   wildSpawnReproMul: number;
   wildSpawnMaxPerTick: number;
 
+  maxAttacksPerTick: number;
+  newbornGraceTicks: number;
+  depthReproMulPerDepth: number;
+  depthRandomDeathReducePerDepth: number;
+  depthKillReducePerDepth: number;
+
   logEvents: boolean;
 };
 
@@ -42,6 +48,12 @@ const DEFAULT_TUNING: SimTuning = {
   baseWildSpawnPerTick: 0.00035,
   wildSpawnReproMul: 0.12,
   wildSpawnMaxPerTick: 2,
+
+  maxAttacksPerTick: 1,
+  newbornGraceTicks: 8,
+  depthReproMulPerDepth: 0.04,
+  depthRandomDeathReducePerDepth: 0.03,
+  depthKillReducePerDepth: 0.03,
 
   logEvents: true
 };
@@ -120,6 +132,8 @@ export default class EvolutionSim {
 
   private depthByType: Map<LifeFormType, number>;
 
+  private tickN = 0;
+
   constructor(run: PlanetRunState, divisions: number, tuning?: Partial<SimTuning>) {
     this.run = run;
     this.divisions = divisions;
@@ -129,6 +143,8 @@ export default class EvolutionSim {
   }
 
   public tick() {
+    this.tickN++;
+
     if (this.run.lifeForms.length === 0) return;
 
     this.accumulatePoints();
@@ -157,6 +173,14 @@ export default class EvolutionSim {
       [1, -1], [1, 0], [1, 1]
     ] as const;
 
+    const depthOf = (t: LifeFormType) => this.depthByType.get(t) ?? 0;
+
+    const isNewbornProtected = (lf: LifeFormInstance) => {
+      const bt = (lf as any).bornTick as number | undefined;
+      if (bt === undefined) return false;
+      return (this.tickN - bt) < Math.max(0, this.tuning.newbornGraceTicks | 0);
+    };
+
     const getNeighbors = (lf: LifeFormInstance) => {
       const out: LifeFormInstance[] = [];
       for (const [dr, dc] of neighborDeltas) {
@@ -182,12 +206,20 @@ export default class EvolutionSim {
     const mutationChance = (lf: LifeFormInstance) =>
       clamp01(this.tuning.baseMutationPerTick * lf.mutationRate);
 
-    const reproChance = (lf: LifeFormInstance) =>
-      clamp01(this.tuning.baseReproPerTick * lf.reproductionRate);
+    const reproChance = (lf: LifeFormInstance) => {
+      const d = depthOf(lf.type);
+      const mul = 1 + this.tuning.depthReproMulPerDepth * d;
+      return clamp01(this.tuning.baseReproPerTick * lf.reproductionRate * mul);
+    };
 
     const randomDeathChance = (lf: LifeFormInstance) => {
       const survive01 = clamp01(lf.survivalRate / 100);
-      return clamp01(this.tuning.baseRandomDeathPerTick * (1 - survive01));
+      const d = depthOf(lf.type);
+
+      const reduce = this.tuning.depthRandomDeathReducePerDepth * d;
+      const mul = Math.max(0.2, 1 - reduce);
+
+      return clamp01(this.tuning.baseRandomDeathPerTick * (1 - survive01) * mul);
     };
 
     const attackChanceAgainst = (attacker: LifeFormInstance) => {
@@ -205,22 +237,43 @@ export default class EvolutionSim {
         continue;
       }
 
-      const neighbors = getNeighbors(lf);
-      if (neighbors.length > 0) {
-        for (const other of neighbors) {
-          if (!alive.has(lf.id) || !alive.has(other.id)) continue;
-          if (other.type === lf.type) continue;
+      const enemies = getNeighbors(lf).filter(o =>
+        alive.has(o.id) &&
+        o.type !== lf.type
+      );
 
-          if (this.rng.frac() < attackChanceAgainst(lf)) {
-            const defenderSurvive01 = clamp01(other.survivalRate / 100);
-            const killChance = clamp01(this.tuning.attackKillChance * (1 - 0.75 * defenderSurvive01));
-            if (this.rng.frac() < killChance) {
-              deaths.add(other.id);
-              alive.delete(other.id);
-              if (this.tuning.logEvents) {
-                log(`[evo] death attack attacker=${lf.type}(${lf.id}) defender=${other.type}(${other.id}) at=${other.row},${other.col}`);
-              }
-            }
+      const maxAttacks = Math.max(0, this.tuning.maxAttacksPerTick | 0);
+
+      for (let ai = 0; ai < maxAttacks; ai++) {
+        if (!alive.has(lf.id)) break;
+        if (enemies.length === 0) break;
+
+        if (this.rng.frac() >= attackChanceAgainst(lf)) continue;
+
+        const other = enemies[this.rng.between(0, enemies.length - 1)];
+        if (!alive.has(other.id)) continue;
+
+        if (isNewbornProtected(other)) continue;
+
+        const defenderSurvive01 = clamp01(other.survivalRate / 100);
+
+        const defDepth = depthOf(other.type);
+        const depthReduce = Math.max(0, this.tuning.depthKillReducePerDepth * defDepth);
+        const depthMul = Math.max(0.25, 1 - depthReduce);
+
+        const killChance =
+          clamp01(this.tuning.attackKillChance * (1 - 0.75 * defenderSurvive01) * depthMul);
+
+        if (this.rng.frac() < killChance) {
+          deaths.add(other.id);
+          alive.delete(other.id);
+
+          if (this.tuning.logEvents) {
+            log(`[evo] death attack attacker=${lf.type}(${lf.id}) defender=${other.type}(${other.id}) at=${other.row},${other.col}`);
+          }
+
+          for (let i = enemies.length - 1; i >= 0; i--) {
+            if (!alive.has(enemies[i].id)) enemies.splice(i, 1);
           }
         }
       }
@@ -273,6 +326,8 @@ export default class EvolutionSim {
         lf.reproductionRate = 1;
         lf.survivalRate = 1;
 
+        (lf as any).bornTick = this.tickN;
+
         if (this.tuning.logEvents) {
           log(`[evo] mutate apply id=${lf.id} ${from} -> ${to} at=${lf.row},${lf.col}`);
         }
@@ -288,8 +343,9 @@ export default class EvolutionSim {
           reproductionRate: 1,
           survivalRate: 1,
           row: b.row,
-          col: b.col
-        });
+          col: b.col,
+          bornTick: this.tickN
+        } as any);
       }
     }
 
@@ -423,8 +479,9 @@ export default class EvolutionSim {
         reproductionRate: 1,
         survivalRate: 1,
         row: s.row,
-        col: s.col
-      });
+        col: s.col,
+        bornTick: this.tickN
+      } as any);
 
       if (this.tuning.logEvents) log(`[evo] birth ensureMin type=prokaryote at=${s.row},${s.col}`);
     }
