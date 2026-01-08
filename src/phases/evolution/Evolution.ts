@@ -43,6 +43,12 @@ export default class Evolution extends PhaseScene {
       scene: this,
       next: "EvolutionComplete"
     });
+    
+    this.rocketLaunched = false;
+    this.cometArmed = false;
+    this.lastEvoPts = -1;
+    this.prevCanvasCursor = null;
+    this.forceCrosshair = undefined;
 
     this.planet = new Planet(this, 960, 540);
     this.add.existing(this.planet);

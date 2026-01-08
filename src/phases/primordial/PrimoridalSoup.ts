@@ -20,6 +20,8 @@ export default class PrimordialSoup extends PhaseScene {
       next: "PrimordialSoupComplete"
     });
 
+    this.didComplete = false;
+
     const planetHeight = 768;
 
     const helixX = 960 + 384 + 220;
