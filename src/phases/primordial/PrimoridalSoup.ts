@@ -27,7 +27,7 @@ export default class PrimordialSoup extends PhaseScene {
 
     const helix = new DNAHelix(this, helixX, helixY, { height: planetHeight });
     this.add.existing(helix);
-    
+
     this.bgCam.ignore(helix);
 
     this.planet = new Planet(this, 960, 540);
@@ -39,7 +39,6 @@ export default class PrimordialSoup extends PhaseScene {
     this.bgCam.ignore(meters);
 
     helix.setProgress(this.planet.getProgress());
-
 
     this.planet.startSoup();
 
@@ -58,6 +57,9 @@ export default class PrimordialSoup extends PhaseScene {
     if (!progress.isEffectivelyComplete()) return;
 
     this.didComplete = true;
-    this.time.delayedCall(0, () => this.scene.start("PrimordialSoupComplete"));
+
+    this.time.delayedCall(5000, () => {
+      this.scene.start("PrimordialSoupComplete");
+    });
   }
 }
