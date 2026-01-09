@@ -43,7 +43,7 @@ export default class SoundToggleButton {
     this.icon.setScrollFactor(0);
     this.icon.setDepth(depthBase + 1);
     this.icon.setTintFill(0xffffff);
-    this.icon.setAlpha(0.85);
+    this.icon.setAlpha(0.55);
 
     this.fitIconTo(this.icon, Math.floor(this.size * 0.62));
 
@@ -86,7 +86,7 @@ export default class SoundToggleButton {
       scene.tweens.add({
         targets: this.icon,
         scale: this.icon.scaleX / 1.08,
-        alpha: 0.85,
+        alpha: 0.55,
         duration: 120,
         ease: "Sine.easeOut"
       });
