@@ -16,7 +16,7 @@ export default class PhaseBreadcrumb extends Phaser.GameObjects.Container {
     super(scene, x, y);
 
     this.setScrollFactor(0);
-    this.setDepth(100000);
+    this.setDepth(5000);
 
     const iconH = 60;
     const arrowH = 42;
