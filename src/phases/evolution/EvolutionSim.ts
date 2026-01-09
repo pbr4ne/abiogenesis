@@ -60,6 +60,11 @@ const DEFAULT_TUNING: SimTuning = {
   logEvents: false
 };
 
+const POLE_ROWS = 7;
+
+const isPolarRow = (row: number, rows: number) =>
+  row < POLE_ROWS || row >= (rows - POLE_ROWS);
+
 const computeDepthByType = () => {
   const types = Object.keys(LIFEFORMS) as LifeFormType[];
 
@@ -572,9 +577,14 @@ export default class EvolutionSim {
   }
 
   private pickRandomEmptyCellForType(occupied: Set<string>, t: LifeFormType, tries: number) {
+    const rows = this.divisions;
+    const cols = this.divisions;
+
     for (let i = 0; i < tries; i++) {
-      const row = this.rng.between(0, this.divisions - 1);
-      const col = this.rng.between(0, this.divisions - 1);
+      const row = this.rng.between(0, rows - 1);
+      if (isPolarRow(row, rows)) continue;
+
+      const col = this.rng.between(0, cols - 1);
 
       const k = keyOf(row, col);
       if (occupied.has(k)) continue;
@@ -587,8 +597,10 @@ export default class EvolutionSim {
 
     const spots: { row: number; col: number }[] = [];
 
-    for (let row = 0; row < this.divisions; row++) {
-      for (let col = 0; col < this.divisions; col++) {
+    for (let row = 0; row < rows; row++) {
+      if (isPolarRow(row, rows)) continue;
+
+      for (let col = 0; col < cols; col++) {
         const k = keyOf(row, col);
         if (occupied.has(k)) continue;
         if (!this.isValidTileForType(t, row, col)) continue;
@@ -616,6 +628,8 @@ export default class EvolutionSim {
     const spots: { row: number; col: number }[] = [];
 
     for (let row = 0; row < this.divisions; row++) {
+      if (isPolarRow(row, this.divisions)) continue;
+
       for (let col = 0; col < this.divisions; col++) {
         if (byCell.has(keyOf(row, col))) continue;
         if (this.run.hydroAlt?.[row]?.[col] === undefined) continue;
@@ -623,6 +637,7 @@ export default class EvolutionSim {
         spots.push({ row, col });
       }
     }
+
 
     for (let i = spots.length - 1; i > 0; i--) {
       const j = this.rng.between(0, i);

@@ -1,9 +1,16 @@
 import type PlanetRunState from "../../planet/PlanetRunState";
 import { LifeFormInstance } from "./EvolutionTypes";
 
+const POLE_ROWS = 7;
+
+const isPolarRow = (row: number, rows: number) =>
+  row < POLE_ROWS || row >= (rows - POLE_ROWS);
+
 const pickRandomWaterCells = (divisions: number, isWater: (r: number, c: number) => boolean, count: number) => {
   const cells: { row: number; col: number }[] = [];
   for (let row = 0; row < divisions; row++) {
+    if (isPolarRow(row, divisions)) continue;
+
     for (let col = 0; col < divisions; col++) {
       if (isWater(row, col)) cells.push({ row, col });
     }
