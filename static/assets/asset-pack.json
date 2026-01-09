@@ -2,6 +2,13 @@
     "section1": {
         "files": [
             {
+                "url": [
+                    "assets/audio/Adenine.mp3"
+                ],
+                "type": "audio",
+                "key": "Adenine"
+            },
+            {
                 "url": "assets/images/air.png",
                 "type": "image",
                 "key": "air"
@@ -30,6 +37,13 @@
                 "url": "assets/images/arrow.png",
                 "type": "image",
                 "key": "arrow"
+            },
+            {
+                "url": [
+                    "assets/audio/Atmosphere.mp3"
+                ],
+                "type": "audio",
+                "key": "Atmosphere"
             },
             {
                 "url": "assets/images/atmosphereDevice1.png",
@@ -72,6 +86,13 @@
                 "key": "comet"
             },
             {
+                "url": [
+                    "assets/audio/Core.mp3"
+                ],
+                "type": "audio",
+                "key": "Core"
+            },
+            {
                 "url": "assets/images/coreDevice1.png",
                 "type": "image",
                 "key": "coreDevice1"
@@ -95,6 +116,13 @@
                 "url": "assets/images/crystal.png",
                 "type": "image",
                 "key": "crystal"
+            },
+            {
+                "url": [
+                    "assets/audio/Cytosine.mp3"
+                ],
+                "type": "audio",
+                "key": "Cytosine"
             },
             {
                 "url": "assets/images/death.png",
@@ -132,9 +160,23 @@
                 "key": "evolution"
             },
             {
+                "url": [
+                    "assets/audio/Evolution Complete.mp3"
+                ],
+                "type": "audio",
+                "key": "Evolution Complete"
+            },
+            {
                 "url": "assets/images/evolution_tree.png",
                 "type": "image",
                 "key": "evolution_tree"
+            },
+            {
+                "url": [
+                    "assets/audio/Extinction Event.mp3"
+                ],
+                "type": "audio",
+                "key": "Extinction Event"
             },
             {
                 "url": "assets/images/fish.png",
@@ -162,9 +204,30 @@
                 "key": "galaxy"
             },
             {
+                "url": [
+                    "assets/audio/Game Complete.mp3"
+                ],
+                "type": "audio",
+                "key": "Game Complete"
+            },
+            {
+                "url": [
+                    "assets/audio/Guanine.mp3"
+                ],
+                "type": "audio",
+                "key": "Guanine"
+            },
+            {
                 "url": "assets/images/human.png",
                 "type": "image",
                 "key": "human"
+            },
+            {
+                "url": [
+                    "assets/audio/Hydrosphere.mp3"
+                ],
+                "type": "audio",
+                "key": "Hydrosphere"
             },
             {
                 "url": "assets/images/hydrosphereDevice1.png",
@@ -227,6 +290,13 @@
                 "key": "life_form_reproduced"
             },
             {
+                "url": [
+                    "assets/audio/Magnetosphere.mp3"
+                ],
+                "type": "audio",
+                "key": "Magnetosphere"
+            },
+            {
                 "url": "assets/images/magnetosphereDevice1.png",
                 "type": "image",
                 "key": "magnetosphereDevice1"
@@ -257,6 +327,13 @@
                 "key": "music"
             },
             {
+                "url": [
+                    "assets/audio/Mutation Event.mp3"
+                ],
+                "type": "audio",
+                "key": "Mutation Event"
+            },
+            {
                 "url": "assets/images/no_music.png",
                 "type": "image",
                 "key": "no_music"
@@ -275,6 +352,20 @@
                 "url": "assets/images/plus.png",
                 "type": "image",
                 "key": "plus"
+            },
+            {
+                "url": [
+                    "assets/audio/primordial_music.mp3"
+                ],
+                "type": "audio",
+                "key": "primordial_music"
+            },
+            {
+                "url": [
+                    "assets/audio/Primordial Soup Complete.mp3"
+                ],
+                "type": "audio",
+                "key": "Primordial Soup Complete"
             },
             {
                 "url": "assets/images/prokaryote.png",
@@ -325,6 +416,27 @@
                 "url": "assets/images/terraformed.png",
                 "type": "image",
                 "key": "terraformed"
+            },
+            {
+                "url": [
+                    "assets/audio/terraforming_music.mp3"
+                ],
+                "type": "audio",
+                "key": "terraforming_music"
+            },
+            {
+                "url": [
+                    "assets/audio/Terraforming Complete.mp3"
+                ],
+                "type": "audio",
+                "key": "Terraforming Complete"
+            },
+            {
+                "url": [
+                    "assets/audio/Thymine.mp3"
+                ],
+                "type": "audio",
+                "key": "Thymine"
             },
             {
                 "url": "assets/images/trash.png",

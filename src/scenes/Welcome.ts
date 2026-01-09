@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import BaseScene from "./BaseScene";
 import WelcomePlanet from "./WelcomePlanet";
 import { createStarfield, Starfield } from "../utilities/StarField";
+import { Audio } from "../utilities/GameSounds";
 
 export default class Welcome extends BaseScene {
   private bgCam!: Phaser.Cameras.Scene2D.Camera;
@@ -15,6 +16,8 @@ export default class Welcome extends BaseScene {
 
   create(): void {
     super.create();
+
+    Audio.init(this.sys.game);
 
     this.bgCam = this.cameras.main;
     this.gameCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -120,7 +123,8 @@ export default class Welcome extends BaseScene {
       y: number,
       leftKey: string,
       rightKey: string,
-      initialRightActive: boolean
+      initialRightActive: boolean,
+      onChange?: (rightActive: boolean) => void
     ) => {
       const w = BTN * 2 + GAP;
       const h = BTN;
@@ -182,11 +186,14 @@ export default class Welcome extends BaseScene {
       };
 
       const setRightActive = (v: boolean) => {
+        if (rightActive === v) return;
         rightActive = v;
         redraw();
+        onChange?.(rightActive);
       };
 
       redraw();
+      onChange?.(rightActive);
 
       zone.on("pointerover", () => {
         hovered = true;
@@ -216,7 +223,16 @@ export default class Welcome extends BaseScene {
 
     const toggleW = BTN * 2 + GAP;
     const toggleX = creditsX - BTN / 2 - GAP - toggleW / 2;
-    const musicToggle = makeToggle2x(toggleX, uiY, "music", "no_music", false);
+    const musicToggle = makeToggle2x(
+      toggleX,
+      uiY,
+      "music",
+      "no_music",
+      !Audio.isMusicEnabled(),
+      (rightActive) => {
+        Audio.setMusicEnabled(!rightActive);
+      }
+    );
 
     const btns: Phaser.GameObjects.GameObject[] = [
       clearBtn.bg,

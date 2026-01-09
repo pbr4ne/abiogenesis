@@ -6,6 +6,7 @@ import Nucleotides from "./Nucleotides";
 import Phaser from "phaser";
 import { enableDebugNext } from "../../utilities/DebugNav";
 import { getRun } from "../../utilities/GameSession";
+import { Audio } from "../../utilities/GameSounds";
 
 export default class PrimordialSoup extends PhaseScene {
   private planet!: Planet;
@@ -16,6 +17,10 @@ export default class PrimordialSoup extends PhaseScene {
   }
 
   protected createPhase() {
+    Audio.init(this.sys.game);
+    Audio.playMusic("primordial_music", { loop: true, volume: 0.2 });
+    this.onShutdown(() => Audio.stopMusicIfKey("primordial_music"));
+
     const run = getRun();
     run.waterLevel = Math.max(run.waterLevel, 10);
   

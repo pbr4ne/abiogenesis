@@ -1,17 +1,18 @@
-
 import Phaser from "phaser";
 import { checkUrlParam, getUrlParam } from "../utilities/GameUtils";
 import { getRun } from "../utilities/GameSession";
+import { Audio } from "../utilities/GameSounds";
 
 export default class Init extends Phaser.Scene {
-
   constructor() {
     super("Init");
   }
 
   create() {
-
     getRun();
+
+    Audio.init(this.sys.game);
+    Audio.setMusicEnabled(true);
 
     const sceneOverride = getUrlParam("scene");
     if (sceneOverride) {

@@ -8,7 +8,7 @@ import Core from "./Core";
 import TerraformingPlanet from "./TerraformingPlanet";
 import { getTerraforming } from "./getTerraformingState";
 import { enableDebugNext } from "../../utilities/DebugNav";
-
+import { Audio } from "../../utilities/GameSounds";
 
 export default class Terraforming extends PhaseScene {
   public planet!: Planet;
@@ -18,6 +18,10 @@ export default class Terraforming extends PhaseScene {
   }
 
   protected createPhase() {
+    Audio.init(this.sys.game);
+    Audio.playMusic("terraforming_music", { loop: true, volume: 0.2 });
+    this.onShutdown(() => Audio.stopMusicIfKey("terraforming_music"));
+
     enableDebugNext({
       scene: this,
       next: "TerraformingComplete"
