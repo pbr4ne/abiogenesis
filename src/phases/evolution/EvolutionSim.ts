@@ -502,7 +502,9 @@ export default class EvolutionSim {
     const hasSea = hs.includes("sea");
     const hasAir = hs.includes("air");
 
-    if (hasAir && !hasLand && !hasSea) return "any";
+    //make air behave like land to nerf bird
+    if (hasAir && !hasLand && !hasSea) return "land";
+
     if (hasLand && hasSea) return "any";
     if (hasLand) return "land";
     if (hasSea) return "sea";
