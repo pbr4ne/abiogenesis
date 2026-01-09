@@ -16,6 +16,7 @@ import { LifeFormDef, LifeFormInstance, LifeFormType } from "./EvolutionTypes";
 import LifePanel from "./LifeDetailsHover";
 import LifeDetailsModal from "./LifeDetailsModal";
 import { LIFEFORMS } from "./LifeForms";
+import { Audio } from "../../utilities/GameSounds";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -33,16 +34,19 @@ export default class Evolution extends PhaseScene {
   private prevCanvasCursor: string | null = null;
   private forceCrosshair?: () => void;
   private rocketLaunched = false;
-
   private cometUnlocked = false;
+  private prevAliveTypes = new Set<LifeFormType>();
 
   constructor() {
     super("Evolution");
   }
 
   protected createPhase() {
+    Audio.init(this.sys.game);
+
     const run = getRun();
     run.waterLevel = Math.max(run.waterLevel, 10);
+    this.prevAliveTypes = new Set(run.lifeForms.map(lf => lf.type));
 
     enableDebugNext({
       scene: this,
@@ -88,6 +92,7 @@ export default class Evolution extends PhaseScene {
       loop: true,
       callback: () => {
         this.sim.tick();
+        this.playEvoEventSfxFromTypes();
 
         this.maybeUnlockComet();
 
@@ -241,6 +246,40 @@ export default class Evolution extends PhaseScene {
         this.refreshComet();
       });
     });
+  }
+
+  private playEvoEventSfxFromTypes() {
+    const aliveNow = new Set<LifeFormType>();
+    for (const lf of getRun().lifeForms) {
+      aliveNow.add(lf.type);
+    }
+
+    let anyNewOrReUnlocked = false;
+    for (const t of aliveNow) {
+      if (!this.prevAliveTypes.has(t)) {
+        anyNewOrReUnlocked = true;
+        break;
+      }
+    }
+
+    let anyExtinction = false;
+    for (const t of this.prevAliveTypes) {
+      if (!aliveNow.has(t)) {
+        anyExtinction = true;
+        break;
+      }
+    }
+
+    this.prevAliveTypes = aliveNow;
+
+    if (anyExtinction) {
+      Audio.playExclusiveSfx("Extinction Event", { volume: 0.5 });
+      return;
+    }
+
+    if (anyNewOrReUnlocked) {
+      Audio.playExclusiveSfx("Mutation Event", { volume: 0.5 });
+    }
   }
 
   private maybeLaunchRocket() {
