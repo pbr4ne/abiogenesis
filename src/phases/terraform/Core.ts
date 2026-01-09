@@ -83,14 +83,14 @@ export default class Core extends TerraformingView {
       deviceRates: { 0: 1, 1: 2, 2: 8 },
 
       deviceButtonTheme: {
-        stroke: [0xc9a24d, 0xf0c75e, 0xffe08a],
-        glow: [0xead9a5, 0xffecb3, 0xfff4cf],
+        stroke: [0xffc400, 0xffcf33, 0xffffb3],
+        glow: [0xfff0a6, 0xfff4b8, 0xffffea],
         hoverStrokeMul: 0.35
       },
 
       onBackEvent: "ui:goToPlanet",
 
-      thermoColour: 0xffe08a
+      thermoColour: 0xffc400
     });
 
     this.cols = cols;
