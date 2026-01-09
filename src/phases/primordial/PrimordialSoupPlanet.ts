@@ -61,14 +61,15 @@ export default class PrimordialSoupPlanet extends PlanetBase {
   private trySpawnHalo(row: number, col: number, rgb: { r: number; g: number; b: number }) {
     const now = this.scene.time.now;
     if (now < this.haloCooldownUntil) return;
-    if (this.haloActiveCount >= 6) return;
+    if (this.haloActiveCount >= 12) return;
 
     const p = this.cellCenterLocal(row, col);
     if (!p.visible) return;
 
     const base = Phaser.Math.Clamp((Math.PI * this.r) / this.divisions, 10, 26);
-    const r0 = base * 0.35;
-    const r1 = base * 1.15;
+
+    const r0 = base * 0.42;
+    const r1 = base * 1.65;
 
     const colHex = (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 
@@ -85,14 +86,20 @@ export default class PrimordialSoupPlanet extends PlanetBase {
 
     this.halos.push(halo);
     this.haloActiveCount++;
-    this.haloCooldownUntil = now + 180;
+    this.haloCooldownUntil = now + 40;
 
     this.scene.tweens.add({
       targets: halo,
       scale: r1 / r0,
       alpha: 0,
-      duration: 850,
+      duration: 520,
       ease: "Sine.easeOut",
+      repeat: 1,
+      repeatDelay: 70,
+      onRepeat: () => {
+        halo.setScale(1);
+        halo.setAlpha(0.9);
+      },
       onComplete: () => {
         halo.destroy();
         this.haloActiveCount = Math.max(0, this.haloActiveCount - 1);
