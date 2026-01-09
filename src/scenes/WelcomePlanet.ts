@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import PlanetBase from "../planet/PlanetBase";
+import { pickCellByNearestProjectedCenter } from "../planet/PlanetMath";
 
 const hsvToRgb = (h: number, s: number, v: number) => {
   const c = v * s;
@@ -36,23 +37,21 @@ type CellState = {
   h: number;
   s: number;
   v: number;
-  targetV: number;
-  white01: number;
+  a: number;
+  targetA: number;
 };
 
 export default class WelcomePlanet extends PlanetBase {
   private tickEv?: Phaser.Time.TimerEvent;
-  private glowEv?: Phaser.Time.TimerEvent;
   private cells: CellState[] = [];
-
-  private glowRow = 0;
-  private glowCol = 0;
-  private glowT = 0;
-  private glowDurMs = 0;
 
   private hoverMul = 1;
   private hoverTween?: Phaser.Tweens.Tween;
   private destroyed = false;
+
+  private painting = false;
+  private lastPaintRow = -999;
+  private lastPaintCol = -999;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, {
@@ -65,11 +64,13 @@ export default class WelcomePlanet extends PlanetBase {
 
     this.hitZone.on("pointerover", this.onOver);
     this.hitZone.on("pointerout", this.onOut);
+    this.hitZone.on("pointermove", this.onMove);
 
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.destroyed = true;
       this.hitZone.off("pointerover", this.onOver);
       this.hitZone.off("pointerout", this.onOut);
+      this.hitZone.off("pointermove", this.onMove);
     });
   }
 
@@ -81,19 +82,16 @@ export default class WelcomePlanet extends PlanetBase {
     return row * this.divisions + col;
   }
 
-  private mixToWhiteFromRgb(r: number, g: number, b: number, white01: number) {
-    const w = this.clamp01(white01);
-    const rr = Math.round(r + (255 - r) * w);
-    const gg = Math.round(g + (255 - g) * w);
-    const bb = Math.round(b + (255 - b) * w);
-    return rgbToHexStr(rr, gg, bb);
-  }
-
   private apply(row: number, col: number, c: CellState) {
+    const a = this.clamp01(c.a);
+    if (a <= 0.001) {
+      this.gridData.setHex(row, col, "#000000", 0);
+      return;
+    }
+
     const v = this.clamp01(c.v * this.hoverMul);
     const { r, g, b } = hsvToRgb(c.h, c.s, v);
-    const outHex = this.mixToWhiteFromRgb(r, g, b, c.white01);
-    this.gridData.setHex(row, col, outHex, 1);
+    this.gridData.setHex(row, col, rgbToHexStr(r, g, b), a);
   }
 
   private setHoverMul(to: number) {
@@ -104,21 +102,106 @@ export default class WelcomePlanet extends PlanetBase {
       targets: this,
       hoverMul: to,
       duration: to > this.hoverMul ? 120 : 180,
-      ease: "Sine.easeOut",
-      onUpdate: () => this.redrawAll()
+      ease: "Sine.easeOut"
     });
   }
 
   private onOver = () => {
     if (this.destroyed) return;
+    this.painting = true;
     this.scene?.input?.setDefaultCursor("pointer");
-    this.setHoverMul(2);
+    this.setHoverMul(1.15);
   };
 
   private onOut = () => {
     if (this.destroyed) return;
+    this.painting = false;
+    this.lastPaintRow = -999;
+    this.lastPaintCol = -999;
     this.scene?.input?.setDefaultCursor("default");
     this.setHoverMul(1);
+  };
+
+  private worldToCell(pointer: Phaser.Input.Pointer) {
+    const r = this.diameter * 0.5;
+
+    const m = this.getWorldTransformMatrix();
+
+    const inv = new Phaser.GameObjects.Components.TransformMatrix();
+    inv.copyFrom(m);
+    inv.invert();
+
+    const p = new Phaser.Math.Vector2(pointer.worldX, pointer.worldY);
+    inv.transformPoint(p.x, p.y, p);
+
+    const nx = p.x / r;
+    const ny = p.y / r;
+
+    if (nx * nx + ny * ny > 1) return null;
+
+    const u = (nx + 1) * 0.5;
+    const v = (ny + 1) * 0.5;
+
+    const col = Phaser.Math.Clamp(
+      Math.floor(u * this.divisions),
+      0,
+      this.divisions - 1
+    );
+
+    const row = Phaser.Math.Clamp(
+      Math.floor(v * this.divisions),
+      0,
+      this.divisions - 1
+    );
+
+    return { row, col };
+  }
+
+  private paintAt(row: number, col: number) {
+    const div = this.divisions;
+
+    const paintOne = (rr: number, cc: number, a: number) => {
+      if (rr < 0 || cc < 0 || rr >= div || cc >= div) return;
+      const c = this.cells[this.idx(rr, cc)];
+      c.h = Phaser.Math.Between(0, 359);
+      c.s = Phaser.Math.FloatBetween(0.75, 1);
+      c.v = Phaser.Math.FloatBetween(0.75, 1);
+      c.a = Math.max(c.a, a);
+      c.targetA = Math.max(c.targetA, a);
+    };
+
+    paintOne(row, col, 1);
+
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        if (Phaser.Math.FloatBetween(0, 1) < 0.65) paintOne(row + dr, col + dc, 0.75);
+      }
+    }
+
+    for (let dr = -2; dr <= 2; dr++) {
+      for (let dc = -2; dc <= 2; dc++) {
+        if (Math.abs(dr) <= 1 && Math.abs(dc) <= 1) continue;
+        if (Math.abs(dr) + Math.abs(dc) > 3) continue;
+        if (Phaser.Math.FloatBetween(0, 1) < 0.22) paintOne(row + dr, col + dc, 0.45);
+      }
+    }
+  }
+
+  private onMove = (pointer: Phaser.Input.Pointer, localX: number, localY: number) => {
+    if (this.destroyed || !this.painting) return;
+
+    const dx = localX - this.r;
+    const dy = localY - this.r;
+
+    const cell = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+    if (!cell) return;
+
+    if (cell.row === this.lastPaintRow && cell.col === this.lastPaintCol) return;
+    this.lastPaintRow = cell.row;
+    this.lastPaintCol = cell.col;
+
+    this.paintAt(cell.row, cell.col);
   };
 
   private initCells() {
@@ -128,31 +211,16 @@ export default class WelcomePlanet extends PlanetBase {
     for (let row = 0; row < div; row++) {
       for (let col = 0; col < div; col++) {
         const c: CellState = {
-          h: Phaser.Math.Between(0, 359),
-          s: Phaser.Math.FloatBetween(0.55, 0.9),
-          v: Phaser.Math.FloatBetween(0.12, 0.22),
-          targetV: Phaser.Math.FloatBetween(0.14, 0.2),
-          white01: 0
+          h: 0,
+          s: 0,
+          v: 0,
+          a: 0,
+          targetA: 0
         };
 
         this.cells[this.idx(row, col)] = c;
         this.apply(row, col, c);
       }
-    }
-  }
-
-  private spawnBrightCells() {
-    const div = this.divisions;
-    const n = 45;
-
-    for (let i = 0; i < n; i++) {
-      const row = Phaser.Math.Between(0, div - 1);
-      const col = Phaser.Math.Between(0, div - 1);
-
-      const c = this.cells[this.idx(row, col)];
-      c.h = Phaser.Math.Between(0, 359);
-      c.s = Phaser.Math.FloatBetween(0.85, 1);
-      c.targetV = Phaser.Math.FloatBetween(0.82, 0.99);
     }
   }
 
@@ -163,76 +231,17 @@ export default class WelcomePlanet extends PlanetBase {
       for (let col = 0; col < div; col++) {
         const c = this.cells[this.idx(row, col)];
 
-        c.v += (c.targetV - c.v) * 0.08;
+        c.a += (c.targetA - c.a) * 0.35;
+        c.targetA *= 0.78;
 
-        if (c.targetV > 0.25 && c.v > c.targetV * 0.9) {
-          c.targetV = Phaser.Math.FloatBetween(0.14, 0.2);
+        if (c.a < 0.01 && c.targetA < 0.01) {
+          c.a = 0;
+          c.targetA = 0;
         }
-
-        c.white01 += (0 - c.white01) * 0.12;
 
         this.apply(row, col, c);
       }
     }
-  }
-
-  private redrawAll() {
-    const div = this.divisions;
-    for (let row = 0; row < div; row++) {
-      for (let col = 0; col < div; col++) {
-        this.apply(row, col, this.cells[this.idx(row, col)]);
-      }
-    }
-    this.redrawTiles();
-  }
-
-  private startWhiteGlow() {
-    const div = this.divisions;
-    this.glowRow = Phaser.Math.Between(0, div - 1);
-    this.glowCol = Phaser.Math.Between(0, div - 1);
-    this.glowT = 0;
-    this.glowDurMs = Phaser.Math.Between(600, 1100);
-  }
-
-  private tickWhiteGlow(dtMs: number) {
-    if (this.glowDurMs <= 0) return;
-
-    this.glowT += dtMs;
-    const t01 = this.clamp01(this.glowT / this.glowDurMs);
-
-    const up01 = t01 < 0.25 ? t01 / 0.25 : 1;
-    const down01 = t01 < 0.25 ? 1 : 1 - (t01 - 0.25) / 0.75;
-    const pulse = this.clamp01(Math.min(up01, down01));
-
-    const div = this.divisions;
-
-    const setW = (row: number, col: number, w01: number) => {
-      if (row < 0 || col < 0 || row >= div || col >= div) return;
-      const c = this.cells[this.idx(row, col)];
-      c.white01 = Math.max(c.white01, w01);
-    };
-
-    setW(this.glowRow, this.glowCol, 0.95 * pulse);
-
-    const n1 = 0.55 * pulse;
-    const n2 = 0.28 * pulse;
-
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        if (dr === 0 && dc === 0) continue;
-        setW(this.glowRow + dr, this.glowCol + dc, n1);
-      }
-    }
-
-    for (let dr = -2; dr <= 2; dr++) {
-      for (let dc = -2; dc <= 2; dc++) {
-        if (Math.abs(dr) <= 1 && Math.abs(dc) <= 1) continue;
-        if (Math.abs(dr) + Math.abs(dc) > 3) continue;
-        setW(this.glowRow + dr, this.glowCol + dc, n2);
-      }
-    }
-
-    if (t01 >= 1) this.glowDurMs = 0;
   }
 
   public startFlashing() {
@@ -241,28 +250,11 @@ export default class WelcomePlanet extends PlanetBase {
     this.initCells();
     this.redrawTiles();
 
-    const scheduleGlow = () => {
-      const delay = Phaser.Math.Between(100, 200);
-
-      this.glowEv = this.scene?.time?.addEvent({
-        delay,
-        loop: false,
-        callback: () => {
-          if (this.destroyed) return;
-          this.startWhiteGlow();
-          if (!this.destroyed) scheduleGlow();
-        }
-      });
-    };
-
-    scheduleGlow();
-
     this.tickEv = this.scene?.time?.addEvent({
-      delay: 220,
+      delay: 50,
       loop: true,
       callback: () => {
-        this.spawnBrightCells();
-        this.tickWhiteGlow(220);
+        if (this.destroyed) return;
         this.decayCells();
         this.redrawTiles();
       }
@@ -273,15 +265,13 @@ export default class WelcomePlanet extends PlanetBase {
     this.tickEv?.remove(false);
     this.tickEv = undefined;
 
-    this.glowEv?.remove(false);
-    this.glowEv = undefined;
-
-    this.glowDurMs = 0;
-
     this.hoverTween?.stop();
     this.hoverTween = undefined;
 
     this.hoverMul = 1;
+    this.painting = false;
+    this.lastPaintRow = -999;
+    this.lastPaintCol = -999;
     this.scene?.input?.setDefaultCursor("default");
   }
 
