@@ -77,7 +77,7 @@ export default class Core extends TerraformingView {
       deviceKeys: ["coreDevice1", "coreDevice2", "coreDevice3"],
 
       slotCount: Core.SLOT_COUNT,
-      thermoMax: 6000,
+      thermoMax: 4000,
       points: 5,
       deviceCosts: { 0: 5, 1: 50, 2: 250 },
       deviceRates: { 0: 1, 1: 2, 2: 8 },
