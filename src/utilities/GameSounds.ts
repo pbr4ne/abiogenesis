@@ -30,7 +30,9 @@ class AudioManager {
     this.soundEnabled = enabled;
 
     if (!enabled) {
-      this.stopAll();
+      this.stopMusic();
+      this.stopExclusiveSfx();
+      this.sound?.stopAll();
       return;
     }
 
