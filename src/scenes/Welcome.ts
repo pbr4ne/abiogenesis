@@ -329,7 +329,7 @@ export default class Welcome extends BaseScene {
 
     this.planet.startFlashing();
 
-    const BTN = 120;
+    const BTN = 100;
     const PAD = 34;
     const GAP = 18;
     const R = 16;
@@ -358,15 +358,15 @@ export default class Welcome extends BaseScene {
     };
 
     const makeSquareIcon = (key: string, x: number, y: number) => {
+      const baseAlpha = 0.5;
+
       const img = this.add.image(x, y, key);
       img.setScrollFactor(0);
       img.setDepth(11);
       img.setTintFill(0xffffff);
-      img.setAlpha(0.92);
+      img.setAlpha(baseAlpha);
 
       fitIconTo(img, Math.floor(BTN * 0.68));
-
-      img.setInteractive({ useHandCursor: true });
 
       const baseScale = img.scaleX;
 
@@ -381,17 +381,7 @@ export default class Welcome extends BaseScene {
         });
       };
 
-      img.on("pointerover", () => {
-        this.input.setDefaultCursor("pointer");
-        tweenTo(1.10, 1);
-      });
-
-      img.on("pointerout", () => {
-        this.input.setDefaultCursor("default");
-        tweenTo(1, 0.92);
-      });
-
-      return img;
+      return { img, tweenTo, baseAlpha };
     };
 
     const makeSquareButton = (x: number, y: number, iconKey: string, onClick?: () => void) => {
@@ -413,19 +403,18 @@ export default class Welcome extends BaseScene {
       zone.on("pointerover", () => {
         hovered = true;
         redraw();
-        this.input.setDefaultCursor("pointer");
+        icon.tweenTo(1.10, 1.0);
       });
 
       zone.on("pointerout", () => {
         hovered = false;
         redraw();
-        this.input.setDefaultCursor("default");
+        icon.tweenTo(1.0, icon.baseAlpha);
       });
 
       zone.on("pointerdown", () => onClick?.());
-      icon.on("pointerdown", () => onClick?.());
 
-      return { bg, zone, icon };
+      return { bg, zone, icon: icon.img };
     };
 
     const makeToggle2x = (
@@ -456,6 +445,22 @@ export default class Welcome extends BaseScene {
       let rightActive = initialRightActive;
       let hovered = false;
 
+      const applyIconState = () => {
+        const inactiveAlpha = 0.35;
+        const activeAlpha = 1.0;
+
+        const leftTargetAlpha = rightActive ? inactiveAlpha : activeAlpha;
+        const rightTargetAlpha = rightActive ? activeAlpha : inactiveAlpha;
+
+        if (hovered) {
+          left.tweenTo(1.08, rightActive ? 0.75 : 1.0);
+          right.tweenTo(1.08, rightActive ? 1.0 : 0.75);
+        } else {
+          left.tweenTo(1.0, leftTargetAlpha);
+          right.tweenTo(1.0, rightTargetAlpha);
+        }
+      };
+
       const redraw = () => {
         bg.clear();
 
@@ -475,8 +480,7 @@ export default class Welcome extends BaseScene {
         bg.fillStyle(0xffffff, hovered ? 0.10 : 0.08);
         bg.fillRoundedRect(selX - BTN / 2 + 6, y - BTN / 2 + 6, BTN - 12, BTN - 12, R - 6);
 
-        left.setAlpha(rightActive ? 0.35 : 1);
-        right.setAlpha(rightActive ? 1 : 0.35);
+        applyIconState();
       };
 
       const setRightActive = (v: boolean) => {
@@ -489,13 +493,11 @@ export default class Welcome extends BaseScene {
       zone.on("pointerover", () => {
         hovered = true;
         redraw();
-        this.input.setDefaultCursor("pointer");
       });
 
       zone.on("pointerout", () => {
         hovered = false;
         redraw();
-        this.input.setDefaultCursor("default");
       });
 
       zone.on("pointerdown", (p: Phaser.Input.Pointer) => {
@@ -503,10 +505,7 @@ export default class Welcome extends BaseScene {
         setRightActive(localX > w / 2);
       });
 
-      left.on("pointerdown", () => setRightActive(false));
-      right.on("pointerdown", () => setRightActive(true));
-
-      return { bg, zone, left, right, isRightActive: () => rightActive };
+      return { bg, zone, left: left.img, right: right.img, isRightActive: () => rightActive };
     };
 
     const uiY = this.scale.height - PAD - BTN / 2;
@@ -518,7 +517,7 @@ export default class Welcome extends BaseScene {
     const creditsBtn = makeSquareButton(creditsX, uiY, "credits", () => { });
 
     const toggleW = BTN * 2 + GAP;
-    const toggleX = creditsX - (BTN / 2) - GAP - toggleW / 2;
+    const toggleX = creditsX - BTN / 2 - GAP - toggleW / 2;
     const musicToggle = makeToggle2x(toggleX, uiY, "music", "no_music", false);
 
     const btns: Phaser.GameObjects.GameObject[] = [
