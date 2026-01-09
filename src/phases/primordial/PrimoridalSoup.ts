@@ -5,6 +5,7 @@ import DNAHelix from "./DNAHelix";
 import Nucleotides from "./Nucleotides";
 import Phaser from "phaser";
 import { enableDebugNext } from "../../utilities/DebugNav";
+import { getRun } from "../../utilities/GameSession";
 
 export default class PrimordialSoup extends PhaseScene {
   private planet!: Planet;
@@ -15,6 +16,9 @@ export default class PrimordialSoup extends PhaseScene {
   }
 
   protected createPhase() {
+    const run = getRun();
+    run.waterLevel = Math.max(run.waterLevel, 10);
+  
     enableDebugNext({
       scene: this,
       next: "PrimordialSoupComplete"

@@ -1,21 +1,21 @@
 import Phaser from "phaser";
-import PhaseScene from "../../scenes/PhaseScene";
-import Planet from "./EvolutionPlanet";
-import LifePanel from "./LifeDetailsHover";
-import LifeDetailsModal from "./LifeDetailsModal";
-import { LifeFormDef, LifeFormInstance, LifeFormType } from "./EvolutionTypes";
-import EvolutionTreeModal from "./EvolutionTreeModal";
-import EvolutionTreeButton from "./EvolutionTreeButton";
 import PlanetRunState from "../../planet/PlanetRunState";
-import EvolutionSim from "./EvolutionSim";
+import PhaseScene from "../../scenes/PhaseScene";
+import { enableDebugNext } from "../../utilities/DebugNav";
+import { getRun } from "../../utilities/GameSession";
+import { log } from "../../utilities/GameUtils";
 import AbacusPoints from "./AbacusPoints";
-import EvolutionTop3Hud from "./EvolutionTop3Hud";
 import EvolutionCometButton from "./EvolutionCometButton";
 import { scoreByType100 } from "./EvolutionIntelligence";
+import Planet from "./EvolutionPlanet";
+import EvolutionSim from "./EvolutionSim";
+import EvolutionTop3Hud from "./EvolutionTop3Hud";
+import EvolutionTreeButton from "./EvolutionTreeButton";
+import EvolutionTreeModal from "./EvolutionTreeModal";
+import { LifeFormDef, LifeFormInstance, LifeFormType } from "./EvolutionTypes";
+import LifePanel from "./LifeDetailsHover";
+import LifeDetailsModal from "./LifeDetailsModal";
 import { LIFEFORMS } from "./LifeForms";
-import { log } from "../../utilities/GameUtils";
-import { getRun } from "../../utilities/GameSession";
-import { enableDebugNext } from "../../utilities/DebugNav";
 
 export default class Evolution extends PhaseScene {
   private run!: PlanetRunState;
@@ -39,6 +39,9 @@ export default class Evolution extends PhaseScene {
   }
 
   protected createPhase() {
+    const run = getRun();
+	  run.waterLevel = Math.max(run.waterLevel, 10);
+  
     enableDebugNext({
       scene: this,
       next: "EvolutionComplete"
