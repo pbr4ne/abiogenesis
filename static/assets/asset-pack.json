@@ -145,6 +145,11 @@
                 "key": "dna"
             },
             {
+                "url": "assets/images/dog.png",
+                "type": "image",
+                "key": "dog"
+            },
+            {
                 "url": "assets/images/dolphin.png",
                 "type": "image",
                 "key": "dolphin"
@@ -245,6 +250,11 @@
                 "key": "hydrosphereDevice3"
             },
             {
+                "url": "assets/images/icons.png",
+                "type": "image",
+                "key": "icons"
+            },
+            {
                 "url": "assets/images/infinity.png",
                 "type": "image",
                 "key": "infinity"
@@ -288,6 +298,16 @@
                 "url": "assets/images/life_form_reproduced.png",
                 "type": "image",
                 "key": "life_form_reproduced"
+            },
+            {
+                "url": "assets/images/litter.png",
+                "type": "image",
+                "key": "litter"
+            },
+            {
+                "url": "assets/images/lucky.png",
+                "type": "image",
+                "key": "lucky"
             },
             {
                 "url": [
@@ -344,6 +364,11 @@
                 "key": "octopus"
             },
             {
+                "url": "assets/images/phaser.png",
+                "type": "image",
+                "key": "phaser"
+            },
+            {
                 "url": "assets/images/planet.png",
                 "type": "image",
                 "key": "planet"
@@ -366,6 +391,11 @@
                 ],
                 "type": "audio",
                 "key": "primordial_music"
+            },
+            {
+                "url": "assets/images/programming.png",
+                "type": "image",
+                "key": "programming"
             },
             {
                 "url": "assets/images/prokaryote.png",
@@ -464,9 +494,19 @@
                 "key": "virus"
             },
             {
+                "url": "assets/images/voice.png",
+                "type": "image",
+                "key": "voice"
+            },
+            {
                 "url": "assets/images/whale.png",
                 "type": "image",
                 "key": "whale"
+            },
+            {
+                "url": "assets/images/writing.png",
+                "type": "image",
+                "key": "writing"
             }
         ]
     },

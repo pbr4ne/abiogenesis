@@ -3,12 +3,14 @@ import BaseScene from "./BaseScene";
 import WelcomePlanet from "./WelcomePlanet";
 import { createStarfield, Starfield } from "../utilities/StarField";
 import { Audio } from "../utilities/GameSounds";
+import CreditsModal from "./CreditsModal";
 
 export default class Welcome extends BaseScene {
   private bgCam!: Phaser.Cameras.Scene2D.Camera;
   private gameCam!: Phaser.Cameras.Scene2D.Camera;
   private starfield!: Starfield;
   private planet!: WelcomePlanet;
+  private creditsModal!: CreditsModal;
 
   constructor() {
     super("Welcome");
@@ -31,7 +33,7 @@ export default class Welcome extends BaseScene {
 
     this.planet.startFlashing();
 
-    const BTN = 100;
+    const BTN = 78;
     const PAD = 34;
     const GAP = 18;
     const R = 16;
@@ -82,6 +84,27 @@ export default class Welcome extends BaseScene {
           ease: "Sine.easeOut"
         });
       };
+
+      this.creditsModal = new CreditsModal({
+        scene: this,
+        rows: [
+          [
+            { iconKey: "programming", url: "https://github.com/pbr4ne", color: 0x6cf5ff },
+            { iconKey: "writing", url: "https://jamesfunfer.com", color: 0xffc2f2 },
+            { iconKey: "music", url: "https://www.youtube.com/user/Kitchen1066", color: 0xfff08a },
+            { iconKey: "voice", url: "https://jamesfunfer.com", color: 0xb7ff9b }
+          ],
+          [
+            { iconKey: "phaser", url: "https://phaser.io", color: 0x9fd0ff },
+            { iconKey: "icons", url: "https://www.freepik.com/icons", color: 0xffa6a6 }
+          ],
+          [
+            { iconKey: "lucky", color: 0xd7b6ff },
+            { iconKey: "litter", color: 0xa6ffe9 },
+            { iconKey: "dog", color: 0xffd19a }
+          ]
+        ]
+      });
 
       return { img, tweenTo, baseAlpha };
     };
@@ -220,7 +243,11 @@ export default class Welcome extends BaseScene {
     const clearBtn = makeSquareButton(clearX, uiY, "clear_save", () => { });
 
     const creditsX = clearX - (BTN + GAP);
-    const creditsBtn = makeSquareButton(creditsX, uiY, "credits", () => { });
+    const creditsBtn = makeSquareButton(creditsX, uiY, "credits", () => {
+      if (this.creditsModal.isOpen()) this.creditsModal.hide();
+      else this.creditsModal.show();
+    });
+
 
     const toggleW = BTN * 2 + GAP;
     const toggleX = creditsX - BTN / 2 - GAP - toggleW / 2;
@@ -271,6 +298,7 @@ export default class Welcome extends BaseScene {
 
     this.onShutdown(() => {
       btns.forEach((b) => b.destroy());
+      this.creditsModal.destroy();
       this.starfield.destroy();
       this.planet.destroy();
       this.input.setDefaultCursor("default");
