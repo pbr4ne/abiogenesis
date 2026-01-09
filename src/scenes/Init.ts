@@ -12,7 +12,7 @@ export default class Init extends Phaser.Scene {
     getRun();
 
     Audio.init(this.sys.game);
-    Audio.setMusicEnabled(true);
+    Audio.setSoundEnabled(true);
 
     const sceneOverride = getUrlParam("scene");
     if (sceneOverride) {

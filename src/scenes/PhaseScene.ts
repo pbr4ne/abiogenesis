@@ -2,6 +2,8 @@ import Phaser from "phaser";
 import BaseScene from "./BaseScene";
 import { createStarfield, Starfield } from "../utilities/StarField";
 import PhaseBreadcrumb from "./PhaseBreadcrumb";
+import { Audio } from "../utilities/GameSounds";
+import SoundToggleButton from "./SoundToggleButton";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -19,6 +21,8 @@ export default abstract class PhaseScene extends BaseScene {
   private readonly phaseKey: PhaseKey;
   private breadcrumb?: PhaseBreadcrumb;
 
+  private soundBtn?: SoundToggleButton;
+
   constructor(phaseKey: PhaseKey) {
     super(phaseKey);
     this.phaseKey = phaseKey;
@@ -29,6 +33,28 @@ export default abstract class PhaseScene extends BaseScene {
 
     this.setupCameras();
     this.starfield = createStarfield(this, this.bgCam, this.gameCam);
+
+    Audio.init(this.sys.game);
+
+    const BTN = 78;
+    const PAD = 34;
+
+    this.soundBtn = new SoundToggleButton(
+      this,
+      DESIGN_W - PAD - BTN / 2,
+      DESIGN_H - PAD - BTN / 2,
+      {
+        size: BTN,
+        radius: 16,
+        depthBase: 1000,
+        iconOnKey: "sound_on",
+        iconOffKey: "sound_off",
+        getEnabled: () => Audio.isSoundEnabled(),
+        setEnabled: (v) => Audio.setSoundEnabled(v)
+      }
+    );
+
+    this.soundBtn.getObjects().forEach((o) => this.bgCam.ignore(o));
 
     this.createPhase();
 
@@ -93,7 +119,7 @@ export default abstract class PhaseScene extends BaseScene {
 
       case "GalaxyMap":
         return "system";
-        
+
       case "EndGame":
         return "system";
     }

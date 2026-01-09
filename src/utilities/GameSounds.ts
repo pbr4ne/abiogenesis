@@ -9,7 +9,7 @@ class AudioManager {
   private inited = false;
   private sound?: Phaser.Sound.BaseSoundManager;
 
-  private musicEnabled = true;
+  private soundEnabled = true;
 
   private currentMusicKey: string | null = null;
   private currentMusic?: Phaser.Sound.BaseSound;
@@ -20,12 +20,12 @@ class AudioManager {
     this.sound = game.sound;
   }
 
-  isMusicEnabled() {
-    return this.musicEnabled;
+  isSoundEnabled() {
+    return this.soundEnabled;
   }
 
-  setMusicEnabled(enabled: boolean) {
-    this.musicEnabled = enabled;
+  setSoundEnabled(enabled: boolean) {
+    this.soundEnabled = enabled;
 
     if (!enabled) {
       this.stopMusic();
@@ -42,7 +42,7 @@ class AudioManager {
 
     this.currentMusicKey = key;
 
-    if (!this.musicEnabled) return;
+    if (!this.soundEnabled) return;
 
     if (this.currentMusic && this.currentMusic.isPlaying && this.currentMusic.key === key) return;
 
@@ -55,6 +55,12 @@ class AudioManager {
 
     this.currentMusic = music;
     music.play();
+  }
+
+  playSfx(key: string, config?: Phaser.Types.Sound.SoundConfig) {
+    if (!this.sound) throw new Error("Audio.init(game) must be called before using Audio.");
+    if (!this.soundEnabled) return;
+    this.sound.play(key, config);
   }
 
   stopMusic() {

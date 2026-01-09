@@ -226,11 +226,11 @@ export default class Welcome extends BaseScene {
     const musicToggle = makeToggle2x(
       toggleX,
       uiY,
-      "music",
-      "no_music",
-      !Audio.isMusicEnabled(),
+      "sound_on",
+      "sound_off",
+      !Audio.isSoundEnabled(),
       (rightActive) => {
-        Audio.setMusicEnabled(!rightActive);
+        Audio.setSoundEnabled(!rightActive);
       }
     );
 
