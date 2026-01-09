@@ -62,6 +62,11 @@
                 "key": "check"
             },
             {
+                "url": "assets/images/clear_save.png",
+                "type": "image",
+                "key": "clear_save"
+            },
+            {
                 "url": "assets/images/comet.png",
                 "type": "image",
                 "key": "comet"
@@ -82,6 +87,11 @@
                 "key": "coreDevice3"
             },
             {
+                "url": "assets/images/credits.png",
+                "type": "image",
+                "key": "credits"
+            },
+            {
                 "url": "assets/images/crystal.png",
                 "type": "image",
                 "key": "crystal"
@@ -95,6 +105,11 @@
                 "url": "assets/images/dnosaur.png",
                 "type": "image",
                 "key": "dinosaur"
+            },
+            {
+                "url": "assets/images/diskette.png",
+                "type": "image",
+                "key": "diskette"
             },
             {
                 "url": "assets/images/dna.png",
@@ -237,9 +252,14 @@
                 "key": "mollusk"
             },
             {
-                "url": "assets/images/sea.png",
+                "url": "assets/images/music.png",
                 "type": "image",
-                "key": "sea"
+                "key": "music"
+            },
+            {
+                "url": "assets/images/no_music.png",
+                "type": "image",
+                "key": "no_music"
             },
             {
                 "url": "assets/images/octopus.png",
@@ -282,6 +302,11 @@
                 "key": "rodent"
             },
             {
+                "url": "assets/images/sea.png",
+                "type": "image",
+                "key": "sea"
+            },
+            {
                 "url": "assets/images/shield.png",
                 "type": "image",
                 "key": "shield"
@@ -300,6 +325,11 @@
                 "url": "assets/images/terraformed.png",
                 "type": "image",
                 "key": "terraformed"
+            },
+            {
+                "url": "assets/images/trash.png",
+                "type": "image",
+                "key": "trash"
             },
             {
                 "url": "assets/images/tree.png",

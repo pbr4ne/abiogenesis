@@ -7,14 +7,29 @@ const hsvToRgb = (h: number, s: number, v: number) => {
   const c = v * s;
   const hh = (h % 360) / 60;
   const x = c * (1 - Math.abs((hh % 2) - 1));
-  let r = 0, g = 0, b = 0;
+  let r = 0,
+    g = 0,
+    b = 0;
 
-  if (hh < 1) { r = c; g = x; }
-  else if (hh < 2) { r = x; g = c; }
-  else if (hh < 3) { g = c; b = x; }
-  else if (hh < 4) { g = x; b = c; }
-  else if (hh < 5) { r = x; b = c; }
-  else { r = c; b = x; }
+  if (hh < 1) {
+    r = c;
+    g = x;
+  } else if (hh < 2) {
+    r = x;
+    g = c;
+  } else if (hh < 3) {
+    g = c;
+    b = x;
+  } else if (hh < 4) {
+    g = x;
+    b = c;
+  } else if (hh < 5) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
 
   const m = v - c;
   return {
@@ -199,8 +214,8 @@ class WelcomePlanet extends PlanetBase {
     this.glowT += dtMs;
     const t01 = this.clamp01(this.glowT / this.glowDurMs);
 
-    const up01 = t01 < 0.25 ? (t01 / 0.25) : 1;
-    const down01 = t01 < 0.25 ? 1 : (1 - (t01 - 0.25) / 0.75);
+    const up01 = t01 < 0.25 ? t01 / 0.25 : 1;
+    const down01 = t01 < 0.25 ? 1 : 1 - (t01 - 0.25) / 0.75;
     const pulse = this.clamp01(Math.min(up01, down01));
 
     const div = this.divisions;
@@ -314,18 +329,226 @@ export default class Welcome extends BaseScene {
 
     this.planet.startFlashing();
 
+    const BTN = 120;
+    const PAD = 34;
+    const GAP = 18;
+    const R = 16;
+
+    const fitIconTo = (img: Phaser.GameObjects.Image, maxPx: number) => {
+      const maxDim = Math.max(img.width, img.height);
+      const s = maxPx / maxDim;
+      img.setScale(s);
+    };
+
+    const drawSquare = (
+      g: Phaser.GameObjects.Graphics,
+      cx: number,
+      cy: number,
+      w: number,
+      h: number,
+      hovered: boolean
+    ) => {
+      g.clear();
+
+      g.fillStyle(0x000000, hovered ? 0.52 : 0.40);
+      g.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, R);
+
+      g.lineStyle(2, 0xffffff, hovered ? 0.36 : 0.22);
+      g.strokeRoundedRect(cx - w / 2, cy - h / 2, w, h, R);
+    };
+
+    const makeSquareIcon = (key: string, x: number, y: number) => {
+      const img = this.add.image(x, y, key);
+      img.setScrollFactor(0);
+      img.setDepth(11);
+      img.setTintFill(0xffffff);
+      img.setAlpha(0.92);
+
+      fitIconTo(img, Math.floor(BTN * 0.68));
+
+      img.setInteractive({ useHandCursor: true });
+
+      const baseScale = img.scaleX;
+
+      const tweenTo = (scaleMul: number, alpha: number) => {
+        this.tweens.killTweensOf(img);
+        this.tweens.add({
+          targets: img,
+          scale: baseScale * scaleMul,
+          alpha,
+          duration: 120,
+          ease: "Sine.easeOut"
+        });
+      };
+
+      img.on("pointerover", () => {
+        this.input.setDefaultCursor("pointer");
+        tweenTo(1.10, 1);
+      });
+
+      img.on("pointerout", () => {
+        this.input.setDefaultCursor("default");
+        tweenTo(1, 0.92);
+      });
+
+      return img;
+    };
+
+    const makeSquareButton = (x: number, y: number, iconKey: string, onClick?: () => void) => {
+      const bg = this.add.graphics();
+      bg.setScrollFactor(0);
+      bg.setDepth(10);
+
+      const zone = this.add.zone(x, y, BTN, BTN);
+      zone.setScrollFactor(0);
+      zone.setDepth(12);
+      zone.setInteractive({ useHandCursor: true });
+
+      const icon = makeSquareIcon(iconKey, x, y);
+
+      let hovered = false;
+      const redraw = () => drawSquare(bg, x, y, BTN, BTN, hovered);
+      redraw();
+
+      zone.on("pointerover", () => {
+        hovered = true;
+        redraw();
+        this.input.setDefaultCursor("pointer");
+      });
+
+      zone.on("pointerout", () => {
+        hovered = false;
+        redraw();
+        this.input.setDefaultCursor("default");
+      });
+
+      zone.on("pointerdown", () => onClick?.());
+      icon.on("pointerdown", () => onClick?.());
+
+      return { bg, zone, icon };
+    };
+
+    const makeToggle2x = (
+      x: number,
+      y: number,
+      leftKey: string,
+      rightKey: string,
+      initialRightActive: boolean
+    ) => {
+      const w = BTN * 2 + GAP;
+      const h = BTN;
+
+      const bg = this.add.graphics();
+      bg.setScrollFactor(0);
+      bg.setDepth(10);
+
+      const zone = this.add.zone(x, y, w, h);
+      zone.setScrollFactor(0);
+      zone.setDepth(12);
+      zone.setInteractive({ useHandCursor: true });
+
+      const leftX = x - w / 2 + BTN / 2;
+      const rightX = x + w / 2 - BTN / 2;
+
+      const left = makeSquareIcon(leftKey, leftX, y);
+      const right = makeSquareIcon(rightKey, rightX, y);
+
+      let rightActive = initialRightActive;
+      let hovered = false;
+
+      const redraw = () => {
+        bg.clear();
+
+        bg.fillStyle(0x000000, hovered ? 0.52 : 0.40);
+        bg.fillRoundedRect(x - w / 2, y - h / 2, w, h, R);
+
+        bg.lineStyle(2, 0xffffff, hovered ? 0.36 : 0.22);
+        bg.strokeRoundedRect(x - w / 2, y - h / 2, w, h, R);
+
+        bg.lineStyle(1, 0xffffff, hovered ? 0.18 : 0.12);
+        bg.beginPath();
+        bg.moveTo(x, y - h / 2 + 12);
+        bg.lineTo(x, y + h / 2 - 12);
+        bg.strokePath();
+
+        const selX = rightActive ? rightX : leftX;
+        bg.fillStyle(0xffffff, hovered ? 0.10 : 0.08);
+        bg.fillRoundedRect(selX - BTN / 2 + 6, y - BTN / 2 + 6, BTN - 12, BTN - 12, R - 6);
+
+        left.setAlpha(rightActive ? 0.35 : 1);
+        right.setAlpha(rightActive ? 1 : 0.35);
+      };
+
+      const setRightActive = (v: boolean) => {
+        rightActive = v;
+        redraw();
+      };
+
+      redraw();
+
+      zone.on("pointerover", () => {
+        hovered = true;
+        redraw();
+        this.input.setDefaultCursor("pointer");
+      });
+
+      zone.on("pointerout", () => {
+        hovered = false;
+        redraw();
+        this.input.setDefaultCursor("default");
+      });
+
+      zone.on("pointerdown", (p: Phaser.Input.Pointer) => {
+        const localX = p.x - (x - w / 2);
+        setRightActive(localX > w / 2);
+      });
+
+      left.on("pointerdown", () => setRightActive(false));
+      right.on("pointerdown", () => setRightActive(true));
+
+      return { bg, zone, left, right, isRightActive: () => rightActive };
+    };
+
+    const uiY = this.scale.height - PAD - BTN / 2;
+
+    const clearX = this.scale.width - PAD - BTN / 2;
+    const clearBtn = makeSquareButton(clearX, uiY, "clear_save", () => { });
+
+    const creditsX = clearX - (BTN + GAP);
+    const creditsBtn = makeSquareButton(creditsX, uiY, "credits", () => { });
+
+    const toggleW = BTN * 2 + GAP;
+    const toggleX = creditsX - (BTN / 2) - GAP - toggleW / 2;
+    const musicToggle = makeToggle2x(toggleX, uiY, "music", "no_music", false);
+
+    const btns: Phaser.GameObjects.GameObject[] = [
+      clearBtn.bg,
+      clearBtn.zone,
+      clearBtn.icon,
+
+      creditsBtn.bg,
+      creditsBtn.zone,
+      creditsBtn.icon,
+
+      musicToggle.bg,
+      musicToggle.zone,
+      musicToggle.left,
+      musicToggle.right
+    ];
+
     const startGame = () => {
       this.planet.stopFlashing();
       this.cameras.main.fadeOut(150, 0, 0, 0);
-      this.cameras.main.once(
-        Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
-        () => this.scene?.start("Terraforming")
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () =>
+        this.scene?.start("Terraforming")
       );
     };
 
     this.planet.onPlanetPointerDown(startGame);
 
     this.onShutdown(() => {
+      btns.forEach((b) => b.destroy());
+
       this.starfield.destroy();
       this.planet.destroy();
       this.input.setDefaultCursor("default");
