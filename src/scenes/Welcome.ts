@@ -252,10 +252,19 @@ export default class Welcome extends BaseScene {
 
     const startGame = () => {
       this.planet.stopFlashing();
-      this.cameras.main.fadeOut(150, 0, 0, 0);
-      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () =>
-        this.scene?.start("Terraforming")
-      );
+
+      this.input.enabled = false;
+
+      this.tweens.add({
+        targets: this.planet,
+        alpha: 0,
+        scale: this.planet.scale * 0.98,
+        duration: 1000,
+        ease: "Sine.easeIn",
+        onComplete: () => {
+          this.scene.start("Terraforming");
+        }
+      });
     };
 
     this.planet.onPlanetPointerDown(startGame);
