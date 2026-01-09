@@ -27,6 +27,7 @@ type SimTuning = {
   depthReproMulPerDepth: number;
   depthRandomDeathReducePerDepth: number;
   depthKillReducePerDepth: number;
+  depthReproQuadPerDepth: number;
 
   logEvents: boolean;
 };
@@ -45,17 +46,18 @@ const DEFAULT_TUNING: SimTuning = {
   pointsPerLifePerTick: 0.012,
   pointsPerDepthPerTick: 0.012,
 
-  baseWildSpawnPerTick: 0.00035,
-  wildSpawnReproMul: 0.12,
-  wildSpawnMaxPerTick: 2,
+  baseWildSpawnPerTick: 0.01,
+  wildSpawnReproMul: 0.18,
+  wildSpawnMaxPerTick: 4,
 
   maxAttacksPerTick: 1,
-  newbornGraceTicks: 8,
-  depthReproMulPerDepth: 0.04,
+  newbornGraceTicks: 16,
+  depthReproMulPerDepth: 0.10,
   depthRandomDeathReducePerDepth: 0.03,
   depthKillReducePerDepth: 0.03,
+  depthReproQuadPerDepth: 0.02,
 
-  logEvents: true
+  logEvents: false
 };
 
 const computeDepthByType = () => {
@@ -198,7 +200,9 @@ export default class EvolutionSim {
         const nr = wrap(lf.row + dr, rows);
         const nc = wrap(lf.col + dc, cols);
         const k = keyOf(nr, nc);
-        if (!occupied.has(k)) out.push({ row: nr, col: nc });
+        if (occupied.has(k)) continue;
+        if (!this.isValidTileForType(lf.type, nr, nc)) continue;
+        out.push({ row: nr, col: nc });
       }
       return out;
     };
@@ -208,7 +212,7 @@ export default class EvolutionSim {
 
     const reproChance = (lf: LifeFormInstance) => {
       const d = depthOf(lf.type);
-      const mul = 1 + this.tuning.depthReproMulPerDepth * d;
+      const mul = 1 + this.tuning.depthReproMulPerDepth * d + this.tuning.depthReproQuadPerDepth * d * d;
       return clamp01(this.tuning.baseReproPerTick * lf.reproductionRate * mul);
     };
 
@@ -316,6 +320,9 @@ export default class EvolutionSim {
     }
 
     if (mutations.size > 0) {
+      const occupiedNow = new Set<string>();
+      for (const lf of this.run.lifeForms) occupiedNow.add(keyOf(lf.row, lf.col));
+
       for (const lf of this.run.lifeForms) {
         const to = mutations.get(lf.id);
         if (!to) continue;
@@ -327,6 +334,8 @@ export default class EvolutionSim {
         lf.survivalRate = 1;
 
         (lf as any).bornTick = this.tickN;
+
+        this.relocateIfNeeded(lf, occupiedNow);
 
         if (this.tuning.logEvents) {
           log(`[evo] mutate apply id=${lf.id} ${from} -> ${to} at=${lf.row},${lf.col}`);
@@ -369,8 +378,14 @@ export default class EvolutionSim {
     occupied: Set<string>,
     births: { row: number; col: number; type: LifeFormType; reason: "repro" | "wild" }[]
   ) {
+    const logOn = !!this.tuning.logEvents;
+
     const maxPerTick = Math.max(0, this.tuning.wildSpawnMaxPerTick | 0);
-    if (maxPerTick <= 0) return;
+    if (logOn) log(`[evo][wild] begin tick=${this.tickN} maxPerTick=${maxPerTick} lifeN=${this.run.lifeForms.length} occupiedN=${occupied.size}`);
+    if (maxPerTick <= 0) {
+      if (logOn) log(`[evo][wild] stop: maxPerTick<=0`);
+      return;
+    }
 
     const stats = new Map<LifeFormType, { n: number; reproSum: number }>();
     for (const lf of this.run.lifeForms) {
@@ -379,45 +394,191 @@ export default class EvolutionSim {
       s.reproSum += lf.reproductionRate;
       stats.set(lf.type, s);
     }
-    if (stats.size === 0) return;
+
+    if (stats.size === 0) {
+      if (logOn) log(`[evo][wild] stop: stats.size===0`);
+      return;
+    }
 
     const excluded = new Set<LifeFormType>(["prokaryote", "eukaryote", "virus"] as LifeFormType[]);
 
+    if (logOn) {
+      const keys = Array.from(stats.entries()).map(([t, s]) => `${t}(n=${s.n})`).join(", ");
+      log(`[evo][wild] statsTypes=${stats.size} excluded=${Array.from(excluded).join(",")} types=${keys}`);
+    }
+
     let spawned = 0;
 
+    const detailEvery = 30;
+    const doDetail = logOn && (this.tickN % detailEvery === 0);
+
+    let excludedHits = 0;
+    let rollFailHits = 0;
+    let noSpotHits = 0;
+    let okRollHits = 0;
+
     for (const [type, s] of stats) {
-      if (spawned >= maxPerTick) break;
-      if (excluded.has(type)) continue;
+      if (spawned >= maxPerTick) {
+        if (logOn) log(`[evo][wild] stop: reached maxPerTick spawned=${spawned}/${maxPerTick}`);
+        break;
+      }
+
+      if (excluded.has(type)) {
+        excludedHits++;
+        if (doDetail) log(`[evo][wild] skip type=${type} reason=excluded`);
+        continue;
+      }
 
       const avgRepro = s.n > 0 ? s.reproSum / s.n : 1;
 
-      const chance = clamp01(
-        this.tuning.baseWildSpawnPerTick * (1 + this.tuning.wildSpawnReproMul * Math.max(0, avgRepro - 1))
-      );
+      const chanceRaw =
+        this.tuning.baseWildSpawnPerTick *
+        (1 + this.tuning.wildSpawnReproMul * Math.max(0, avgRepro - 1));
 
-      if (this.rng.frac() >= chance) continue;
+      const chance = clamp01(chanceRaw);
 
-      const spot = this.pickRandomEmptyCell(occupied, 220);
-      if (!spot) continue;
+      const roll = this.rng.frac();
+
+      if (doDetail) {
+        log(
+          `[evo][wild] check type=${type} n=${s.n} avgRepro=${avgRepro.toFixed(2)} ` +
+          `chanceRaw=${chanceRaw.toFixed(8)} chance=${chance.toFixed(8)} roll=${roll.toFixed(8)}`
+        );
+      }
+
+      if (roll >= chance) {
+        rollFailHits++;
+        continue;
+      }
+
+      okRollHits++;
+
+      const spot = this.pickRandomEmptyCellForType(occupied, type, 220);
+
+      if (!spot) {
+        noSpotHits++;
+        if (doDetail) {
+          const req = this.requiredHabitatForType(type);
+          const hydro = this.run.hydroAlt ? "yes" : "no";
+          log(`[evo][wild] fail type=${type} reason=noSpot reqHabitat=${req} hydroAlt=${hydro} occupiedN=${occupied.size}`);
+        }
+        continue;
+      }
 
       const k = keyOf(spot.row, spot.col);
       births.push({ row: spot.row, col: spot.col, type, reason: "wild" });
       occupied.add(k);
       spawned++;
 
-      if (this.tuning.logEvents) {
-        log(`[evo] birth wild type=${type} avgRepro=${avgRepro.toFixed(2)} chance=${chance.toFixed(6)} at=${spot.row},${spot.col}`);
+      if (logOn) {
+        log(`[evo][wild] SPAWN type=${type} at=${spot.row},${spot.col} spawned=${spawned}/${maxPerTick}`);
       }
+    }
+
+    if (logOn) {
+      log(
+        `[evo][wild] end tick=${this.tickN} spawned=${spawned} ` +
+        `excludedSkips=${excludedHits} rollFails=${rollFailHits} okRolls=${okRollHits} noSpot=${noSpotHits} ` +
+        `detailEvery=${detailEvery}${doDetail ? " (detailed)" : ""}`
+      );
     }
   }
 
-  private pickRandomEmptyCell(occupied: Set<string>, tries: number) {
+  private tileHabitatAt(row: number, col: number): "land" | "sea" | null {
+    if (!this.run.hydroAlt) return null;
+    const v = this.run.hydroAlt[row]?.[col];
+    if (v === undefined) return null;
+    return v > this.run.waterLevel ? "land" : "sea";
+  }
+
+  private requiredHabitatForType(t: LifeFormType): "land" | "sea" | "any" {
+    const hs = LIFEFORMS[t].habitats;
+    const hasLand = hs.includes("land");
+    const hasSea = hs.includes("sea");
+    const hasAir = hs.includes("air");
+
+    if (hasAir && !hasLand && !hasSea) return "any";
+    if (hasLand && hasSea) return "any";
+    if (hasLand) return "land";
+    if (hasSea) return "sea";
+    return "any";
+  }
+
+  private isValidTileForType(t: LifeFormType, row: number, col: number): boolean {
+    const req = this.requiredHabitatForType(t);
+    if (req === "any") return true;
+
+    const h = this.tileHabitatAt(row, col);
+    if (!h) return false;
+
+    return h === req;
+  }
+
+  private findNearestValidEmptyTile(
+    startRow: number,
+    startCol: number,
+    t: LifeFormType,
+    occupied: Set<string>
+  ): { row: number; col: number } | null {
+    const req = this.requiredHabitatForType(t);
+    if (req === "any") return { row: startRow, col: startCol };
+
+    const rows = this.divisions;
+    const cols = this.divisions;
+
+    const startK = keyOf(startRow, startCol);
+    const visited = new Set<string>([startK]);
+    const q: { row: number; col: number }[] = [{ row: startRow, col: startCol }];
+
+    const deltas = [
+      [-1, 0], [1, 0],
+      [0, -1], [0, 1]
+    ] as const;
+
+    while (q.length > 0) {
+      const cur = q.shift()!;
+      const k = keyOf(cur.row, cur.col);
+
+      if (!occupied.has(k) && this.isValidTileForType(t, cur.row, cur.col)) return cur;
+
+      for (const [dr, dc] of deltas) {
+        const nr = wrap(cur.row + dr, rows);
+        const nc = wrap(cur.col + dc, cols);
+        const nk = keyOf(nr, nc);
+        if (visited.has(nk)) continue;
+        visited.add(nk);
+        q.push({ row: nr, col: nc });
+      }
+    }
+
+    return null;
+  }
+
+  private relocateIfNeeded(lf: LifeFormInstance, occupied: Set<string>) {
+    if (this.requiredHabitatForType(lf.type) === "any") return;
+
+    if (this.isValidTileForType(lf.type, lf.row, lf.col)) return;
+
+    const oldK = keyOf(lf.row, lf.col);
+    occupied.delete(oldK);
+
+    const spot = this.findNearestValidEmptyTile(lf.row, lf.col, lf.type, occupied);
+    if (spot) {
+      lf.row = spot.row;
+      lf.col = spot.col;
+    }
+
+    occupied.add(keyOf(lf.row, lf.col));
+  }
+
+  private pickRandomEmptyCellForType(occupied: Set<string>, t: LifeFormType, tries: number) {
     for (let i = 0; i < tries; i++) {
       const row = this.rng.between(0, this.divisions - 1);
       const col = this.rng.between(0, this.divisions - 1);
 
       const k = keyOf(row, col);
       if (occupied.has(k)) continue;
+      if (!this.isValidTileForType(t, row, col)) continue;
 
       if (this.run.hydroAlt && this.run.hydroAlt[row]?.[col] === undefined) continue;
 
@@ -430,6 +591,7 @@ export default class EvolutionSim {
       for (let col = 0; col < this.divisions; col++) {
         const k = keyOf(row, col);
         if (occupied.has(k)) continue;
+        if (!this.isValidTileForType(t, row, col)) continue;
         if (this.run.hydroAlt && this.run.hydroAlt[row]?.[col] === undefined) continue;
         spots.push({ row, col });
       }
