@@ -39,6 +39,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   private static readonly PLUS_SIZE = 50;
   private onPointsChanged: (() => void) | null = null;
 
+  private biomeIcons: Record<"sea" | "land" | "air", Phaser.GameObjects.Image>;
+
   private clickLock: Record<StatKey, boolean> = {
     mutation: false,
     reproduction: false,
@@ -97,7 +99,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     this.bigIcon = scene.add.image(
       leftColX + bigSize / 2 + bigIconOffsetX,
-      cy,
+      cy - 50,
       "prokaryote"
     );
 
@@ -105,6 +107,19 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     this.bigIconBorder = scene.add.rectangle(this.bigIcon.x, this.bigIcon.y, bigSize + 114, bigSize + 114, 0x000000, 0x000000);
     this.bigIconBorder.setStrokeStyle(3, 0xffffff, 0.25);
+
+    const biomeSize = 64;
+    const biomeGap = 18;
+
+    const biomeY = this.bigIcon.y + bigSize / 2 + 122;
+    const biomeCx = this.bigIcon.x;
+
+    const sea = scene.add.image(biomeCx - (biomeSize + biomeGap), biomeY, "sea").setDisplaySize(biomeSize, biomeSize);
+    const land = scene.add.image(biomeCx, biomeY, "land").setDisplaySize(biomeSize, biomeSize);
+    const air = scene.add.image(biomeCx + (biomeSize + biomeGap), biomeY, "air").setDisplaySize(biomeSize, biomeSize);
+
+    this.biomeIcons = { sea, land, air };
+
 
     const rightPad = 34;
     const rightColX = cx + w / 2 - rightPad - 660;
@@ -126,6 +141,9 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
       this.panel,
       this.bigIconBorder,
       this.bigIcon,
+      this.biomeIcons.sea,
+      this.biomeIcons.land,
+      this.biomeIcons.air,
 
       this.rows.mutation.left,
       this.rows.mutation.mid,
@@ -212,6 +230,34 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const bb = Phaser.Math.Clamp(Math.round(b + (255 - b) * amt01), 0, 255);
 
     return (rr << 16) | (gg << 8) | bb;
+  }
+
+  private supportsBiome(def: LifeFormDef, biome: "sea" | "land" | "air") {
+    const d: any = def as any;
+
+    const arr: any =
+      d.biomes ??
+      d.biomeTypes ??
+      d.habitats ??
+      d.environments ??
+      d.biome ??
+      d.habitat;
+
+    if (Array.isArray(arr)) return arr.includes(biome);
+    if (typeof arr === "string") return arr === biome;
+
+    return false;
+  }
+
+  private applyBiomeIcons(def: LifeFormDef, tint: number) {
+    for (const biome of ["sea", "land", "air"] as const) {
+      const ok = this.supportsBiome(def, biome);
+
+      this.biomeIcons[biome].clearTint();
+      this.biomeIcons[biome].setTintFill(tint);
+
+      this.biomeIcons[biome].setAlpha(ok ? 1 : 0.18);
+    }
   }
 
   private getStat(lf: LifeFormInstance, key: StatKey) {
@@ -339,6 +385,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     this.bigIcon.setTexture(def.type);
     this.bigIcon.setTintFill(tint);
     this.bigIconBorder.setStrokeStyle(3, tint, 0.9);
+    this.applyBiomeIcons(def, tint);
 
     this.applyRow("mutation", def, lf, tint);
     this.applyRow("reproduction", def, lf, tint);

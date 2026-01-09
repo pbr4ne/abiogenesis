@@ -237,9 +237,9 @@
                 "key": "mollusk"
             },
             {
-                "url": "assets/images/ocean.png",
+                "url": "assets/images/sea.png",
                 "type": "image",
-                "key": "ocean"
+                "key": "sea"
             },
             {
                 "url": "assets/images/octopus.png",
