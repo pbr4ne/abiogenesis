@@ -34,14 +34,16 @@ export default class Evolution extends PhaseScene {
   private forceCrosshair?: () => void;
   private rocketLaunched = false;
 
+  private cometUnlocked = false;
+
   constructor() {
     super("Evolution");
   }
 
   protected createPhase() {
     const run = getRun();
-	  run.waterLevel = Math.max(run.waterLevel, 10);
-  
+    run.waterLevel = Math.max(run.waterLevel, 10);
+
     enableDebugNext({
       scene: this,
       next: "EvolutionComplete"
@@ -68,6 +70,8 @@ export default class Evolution extends PhaseScene {
 
     this.run = getRun();
 
+    this.cometUnlocked = this.hasCometUnlockLifeAliveNow();
+
     this.abacusPoints = new AbacusPoints(this, {
       x: 280,
       y: 360,
@@ -85,13 +89,15 @@ export default class Evolution extends PhaseScene {
       callback: () => {
         this.sim.tick();
 
+        this.maybeUnlockComet();
+
         this.maybeLaunchRocket();
 
         const pts = this.run.getEvoPointsAvailable();
         if (pts !== this.lastEvoPts) {
           this.lastEvoPts = pts;
           this.events.emit("evoPoints:changed", pts);
-          this.cometBtn.refresh();
+          this.refreshComet();
         }
 
         this.planet.refreshFromRun();
@@ -124,10 +130,10 @@ export default class Evolution extends PhaseScene {
       if (this.evoModal.isOpen()) {
         this.evoModal.hide();
         this.hoverPanel.hide();
-        this.cometBtn.setHiddenForMainHover(false);
+        if (this.cometUnlocked) this.cometBtn.setHiddenForMainHover(false);
       } else {
         this.evoModal.show(this.run.lifeForms);
-        this.cometBtn.refresh();
+        this.refreshComet();
       }
     });
 
@@ -138,6 +144,8 @@ export default class Evolution extends PhaseScene {
       getPoints: () => this.run.getEvoPointsAvailable(),
       minPointsToShow: 5,
       onClick: () => {
+        if (!this.cometUnlocked) return;
+
         if (this.cometArmed) {
           this.setCometArmed(false);
           return;
@@ -149,7 +157,7 @@ export default class Evolution extends PhaseScene {
     });
     this.add.existing(this.cometBtn);
 
-    this.cometBtn.refresh();
+    this.applyCometLockState();
 
     const cancelCometOnOutsideClick = (pointer: Phaser.Input.Pointer) => {
       if (!this.cometArmed) return;
@@ -202,33 +210,37 @@ export default class Evolution extends PhaseScene {
     this.events.on("life:hover", (p: { lf: LifeFormInstance; def: LifeFormDef } | null) => {
       if (this.evoModal.isOpen()) return;
       this.hoverPanel.setLife(p);
-      this.cometBtn.setHiddenForMainHover(!!p);
+
+      if (this.cometUnlocked) {
+        this.cometBtn.setHiddenForMainHover(!!p);
+      }
     });
 
     this.events.on("life:select", (payload: { lf: LifeFormInstance; def: LifeFormDef }) => {
       this.hoverPanel.setLife(null);
-      this.cometBtn.setHiddenForMainHover(false);
+
+      if (this.cometUnlocked) {
+        this.cometBtn.setHiddenForMainHover(false);
+      }
+
       this.modal.show(payload);
     });
 
-    this.events.on(
-      "comet:target",
-      (e: { row: number; col: number; x: number; y: number }) => {
-        if (!this.cometArmed) return;
+    this.events.on("comet:target", (e: { row: number; col: number; x: number; y: number }) => {
+      if (!this.cometArmed) return;
 
-        this.setCometArmed(false);
+      this.setCometArmed(false);
 
-        const fromX = this.scale.width + 120;
-        const fromY = -120;
+      const fromX = this.scale.width + 120;
+      const fromY = -120;
 
-        this.playCometStrike(fromX, fromY, e.x, e.y, () => {
-          this.kill3x3At(e.row, e.col);
-          this.planet.refreshFromRun();
-          this.abacusPoints.refresh();
-          this.cometBtn.refresh();
-        });
-      }
-    );
+      this.playCometStrike(fromX, fromY, e.x, e.y, () => {
+        this.kill3x3At(e.row, e.col);
+        this.planet.refreshFromRun();
+        this.abacusPoints.refresh();
+        this.refreshComet();
+      });
+    });
   }
 
   private maybeLaunchRocket() {
@@ -258,7 +270,10 @@ export default class Evolution extends PhaseScene {
     this.modal?.hide?.();
     this.evoModal?.hide?.();
     this.setCometArmed(false);
-    this.cometBtn?.setHiddenForMainHover?.(false);
+
+    if (this.cometUnlocked) {
+      this.cometBtn?.setHiddenForMainHover?.(false);
+    }
 
     const cx = this.planet.x;
     const cy = this.planet.y;
@@ -369,7 +384,7 @@ export default class Evolution extends PhaseScene {
       this.input.on(Phaser.Input.Events.POINTER_OVER, force);
 
       this.hoverPanel.setLife(null);
-      this.cometBtn.setHiddenForMainHover(false);
+      if (this.cometUnlocked) this.cometBtn.setHiddenForMainHover(false);
     } else {
       (this.planet as any).setCometMode?.(false);
 
@@ -490,5 +505,35 @@ export default class Evolution extends PhaseScene {
       tw.remove();
       g.destroy();
     });
+  }
+
+  private hasCometUnlockLifeAliveNow() {
+    const ok = new Set<LifeFormType>(["tree", "flower", "fish", "octopus", "insect", "crystal"]);
+    return this.run.lifeForms.some(lf => ok.has(lf.type));
+  }
+
+  private applyCometLockState() {
+    if (this.cometUnlocked) {
+      this.cometBtn.setInteractive({ useHandCursor: true });
+      this.cometBtn.refresh();
+    } else {
+      if (this.cometArmed) this.setCometArmed(false);
+      this.cometBtn.setHiddenForMainHover(false);
+      this.cometBtn.setVisible(false);
+      this.cometBtn.disableInteractive();
+    }
+  }
+
+  private maybeUnlockComet() {
+    if (this.cometUnlocked) return;
+    if (!this.hasCometUnlockLifeAliveNow()) return;
+
+    this.cometUnlocked = true;
+    this.applyCometLockState();
+  }
+
+  private refreshComet() {
+    if (!this.cometUnlocked) return;
+    this.cometBtn.refresh();
   }
 }
