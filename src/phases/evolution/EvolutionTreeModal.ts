@@ -89,7 +89,7 @@ export default class EvolutionTreeModal extends Phaser.GameObjects.Container {
     this.add([this.backdrop, this.panel, this.g, this.closeHit, this.closeText]);
 
     this.setScrollFactor(0);
-    this.setDepth(10000);
+    this.setDepth(20000);
     this.setVisible(false);
 
     this.backdrop.on("pointerdown", () => this.hide());

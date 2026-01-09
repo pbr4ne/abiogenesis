@@ -159,7 +159,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     ]);
 
     this.setScrollFactor(0);
-    this.setDepth(10000);
+    this.setDepth(30000);
     this.setVisible(false);
 
     this.backdrop.on("pointerdown", (p: Phaser.Input.Pointer) => {
