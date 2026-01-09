@@ -63,9 +63,13 @@ export default class EvolutionTreeButton extends Phaser.GameObjects.Container {
 
   private draw(strokeColor: number) {
     this.bg.clear();
+
+    const r = Math.max(12, Math.round(this.size * 0.12));
+
     this.bg.fillStyle(0x20202c, 1);
-    this.bg.fillRect(-this.half, -this.half, this.size, this.size);
+    this.bg.fillRoundedRect(-this.half, -this.half, this.size, this.size, r);
+
     this.bg.lineStyle(6, strokeColor, 1);
-    this.bg.strokeRect(-this.half, -this.half, this.size, this.size);
+    this.bg.strokeRoundedRect(-this.half, -this.half, this.size, this.size, r);
   }
 }
