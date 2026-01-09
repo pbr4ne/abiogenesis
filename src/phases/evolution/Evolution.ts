@@ -251,6 +251,7 @@ export default class Evolution extends PhaseScene {
   private playEvoEventSfxFromTypes() {
     const aliveNow = new Set<LifeFormType>();
     for (const lf of getRun().lifeForms) {
+      if (lf.type === "prokaryote") continue;
       aliveNow.add(lf.type);
     }
 
