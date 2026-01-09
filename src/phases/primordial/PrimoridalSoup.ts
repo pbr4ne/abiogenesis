@@ -8,9 +8,20 @@ import { enableDebugNext } from "../../utilities/DebugNav";
 import { getRun } from "../../utilities/GameSession";
 import { Audio } from "../../utilities/GameSounds";
 
+type BaseKey = "A" | "C" | "G" | "T";
+
+const NUCLEOTIDE_SFX: Record<BaseKey, string> = {
+  A: "Adenine",
+  C: "Cytosine",
+  G: "Guanine",
+  T: "Thymine",
+};
+
 export default class PrimordialSoup extends PhaseScene {
   private planet!: Planet;
   private didComplete = false;
+
+  private didNucleotideSfx: Record<BaseKey, boolean> = { A: false, C: false, G: false, T: false };
 
   constructor() {
     super("PrimordialSoup");
@@ -23,13 +34,14 @@ export default class PrimordialSoup extends PhaseScene {
 
     const run = getRun();
     run.waterLevel = Math.max(run.waterLevel, 10);
-  
+
     enableDebugNext({
       scene: this,
       next: "PrimordialSoupComplete"
     });
 
     this.didComplete = false;
+    this.didNucleotideSfx = { A: false, C: false, G: false, T: false };
 
     const planetHeight = 768;
 
@@ -61,7 +73,25 @@ export default class PrimordialSoup extends PhaseScene {
     log("PrimordialSoup scene created");
   }
 
+  private checkNucleotideCompleteSfx() {
+    const progress = this.planet.getProgress();
+    const gatc = progress.getGATC01();
+
+    const COMPLETE_AT = 0.999;
+
+    for (const k of ["A", "C", "G", "T"] as const) {
+      if (this.didNucleotideSfx[k]) continue;
+      if ((gatc[k] ?? 0) < COMPLETE_AT) continue;
+
+      this.didNucleotideSfx[k] = true;
+
+      Audio.playExclusiveSfx(NUCLEOTIDE_SFX[k], { volume: 0.5 });
+    }
+  }
+
   private checkComplete() {
+    this.checkNucleotideCompleteSfx();
+
     if (this.didComplete) return;
 
     const progress = this.planet.getProgress();
