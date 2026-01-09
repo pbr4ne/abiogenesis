@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import PhaseScene from "../scenes/PhaseScene";
 import { LifeFormType } from "../phases/evolution/EvolutionTypes";
 import { LIFEFORMS } from "../phases/evolution/LifeForms";
+import { Audio } from "../utilities/GameSounds";
 
 type EndPlanet = {
   x: number;
@@ -21,6 +22,9 @@ export default class EndGame extends PhaseScene {
   }
 
   protected createPhase() {
+    Audio.init(this.sys.game);
+    Audio.playSfx("Game Complete", { volume: 0.5 });
+
     const w = 1920;
     const h = 1080;
 

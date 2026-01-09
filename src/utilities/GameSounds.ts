@@ -28,7 +28,7 @@ class AudioManager {
     this.soundEnabled = enabled;
 
     if (!enabled) {
-      this.stopMusic();
+      this.stopAll();
       return;
     }
 
@@ -69,6 +69,16 @@ class AudioManager {
     this.currentMusic.stop();
     this.currentMusic.destroy();
     this.currentMusic = undefined;
+  }
+
+  stopAll() {
+    if (!this.sound) return;
+
+    this.stopMusic();
+
+    this.sound.stopAll();
+
+    this.currentMusicKey = null;
   }
 
   stopMusicIfKey(key: string) {

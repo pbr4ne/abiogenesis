@@ -18,6 +18,7 @@ export default class Welcome extends BaseScene {
     super.create();
 
     Audio.init(this.sys.game);
+    Audio.stopAll();
 
     this.bgCam = this.cameras.main;
     this.gameCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
