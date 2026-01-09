@@ -14,6 +14,8 @@ class AudioManager {
   private currentMusicKey: string | null = null;
   private currentMusic?: Phaser.Sound.BaseSound;
 
+  private currentExclusiveSfx?: Phaser.Sound.BaseSound;
+
   init(game: Phaser.Game) {
     if (this.inited) return;
     this.inited = true;
@@ -63,6 +65,33 @@ class AudioManager {
     this.sound.play(key, config);
   }
 
+  private stopExclusiveSfx() {
+    if (!this.currentExclusiveSfx) return;
+
+    this.currentExclusiveSfx.stop();
+    this.currentExclusiveSfx.destroy();
+    this.currentExclusiveSfx = undefined;
+  }
+
+  playExclusiveSfx(key: string, config?: Phaser.Types.Sound.SoundConfig) {
+    if (!this.sound) throw new Error("Audio.init(game) must be called before using Audio.");
+    if (!this.soundEnabled) return;
+
+    this.stopExclusiveSfx();
+
+    const sfx = this.sound.add(key, config);
+    this.currentExclusiveSfx = sfx;
+
+    sfx.once(Phaser.Sound.Events.COMPLETE, () => {
+      if (this.currentExclusiveSfx === sfx) {
+        this.currentExclusiveSfx = undefined;
+      }
+      sfx.destroy();
+    });
+
+    sfx.play();
+  }
+
   stopMusic() {
     if (!this.currentMusic) return;
 
@@ -75,6 +104,7 @@ class AudioManager {
     if (!this.sound) return;
 
     this.stopMusic();
+    this.stopExclusiveSfx();
 
     this.sound.stopAll();
 

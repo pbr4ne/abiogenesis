@@ -29,36 +29,15 @@ export default class TerraformingFacade extends Phaser.Events.EventEmitter {
     }
   }
 
-  public get atmosphereLevel() {
-    return this.run.terraform.atmosphere;
-  }
+  public get atmosphereLevel() { return this.run.terraform.atmosphere; }
+  public get magnetosphereLevel() { return this.run.terraform.magnetosphere; }
+  public get hydrosphereLevel() { return this.run.terraform.hydrosphere; }
+  public get coreLevel() { return this.run.terraform.core; }
 
-  public get magnetosphereLevel() {
-    return this.run.terraform.magnetosphere;
-  }
-
-  public get hydrosphereLevel() {
-    return this.run.terraform.hydrosphere;
-  }
-
-  public get coreLevel() {
-    return this.run.terraform.core;
-  }
-
-  public setAtmosphereLevel(v: number) {
-    this.setLevel("atmosphere", v);
-  }
-
-  public setMagnetosphereLevel(v: number) {
-    this.setLevel("magnetosphere", v);
-  }
-
-  public setHydrosphereLevel(v: number) {
-    this.setLevel("hydrosphere", v);
-  }
-  public setCoreLevel(v: number) {
-    this.setLevel("core", v);
-  }
+  public setAtmosphereLevel(v: number) { this.setLevel("atmosphere", v); }
+  public setMagnetosphereLevel(v: number) { this.setLevel("magnetosphere", v); }
+  public setHydrosphereLevel(v: number) { this.setLevel("hydrosphere", v); }
+  public setCoreLevel(v: number) { this.setLevel("core", v); }
 
   public isComplete() {
     return (
@@ -81,6 +60,12 @@ export default class TerraformingFacade extends Phaser.Events.EventEmitter {
     return this.run.terraform[k];
   }
 
+  private emitReachedMaxIfCrossed(k: TerraformKey, prev: number, next: number) {
+    if (prev < TerraformingFacade.MAX && next >= TerraformingFacade.MAX) {
+      this.emit("reachedMax", k, next);
+    }
+  }
+
   private setLevel(k: TerraformKey, v: number) {
     const next = Phaser.Math.Clamp(Math.round(v), 0, TerraformingFacade.MAX);
     const prev = this.run.terraform[k];
@@ -90,6 +75,9 @@ export default class TerraformingFacade extends Phaser.Events.EventEmitter {
 
     this.emit("change", k, next);
     this.emit(`change:${k}`, next);
+
+    this.emitReachedMaxIfCrossed(k, prev, next);
+
     this.emit("maybeComplete");
   }
 }

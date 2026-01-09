@@ -9,6 +9,7 @@ import TerraformingPlanet from "./TerraformingPlanet";
 import { getTerraforming } from "./getTerraformingState";
 import { enableDebugNext } from "../../utilities/DebugNav";
 import { Audio } from "../../utilities/GameSounds";
+import { log } from "../../utilities/GameUtils";
 
 export default class Terraforming extends PhaseScene {
   public planet!: Planet;
@@ -28,6 +29,23 @@ export default class Terraforming extends PhaseScene {
     });
 
     const tf = getTerraforming(this);
+
+    const SFX_BY_KEY = {
+      atmosphere: "Atmosphere",
+      magnetosphere: "Magnetosphere",
+      hydrosphere: "Hydrosphere",
+      core: "Core",
+    } as const;
+
+    const onReachedMax = (k: "atmosphere" | "magnetosphere" | "hydrosphere" | "core") => {
+      log(`
+        Terraforming: ${k} reached max level!`)
+        log(`Playing SFX: ${SFX_BY_KEY[k]}`);
+      Audio.playExclusiveSfx(SFX_BY_KEY[k], { volume: 0.5 });
+    };
+
+    tf.on("reachedMax", onReachedMax);
+    this.onShutdown(() => tf.off("reachedMax", onReachedMax));
 
     let transitioning = false;
 
