@@ -89,19 +89,28 @@ export default class Welcome extends BaseScene {
         scene: this,
         rows: [
           [
-            { iconKey: "programming", url: "https://github.com/pbr4ne", color: 0x6cf5ff },
-            { iconKey: "writing", url: "https://jamesfunfer.com", color: 0xffc2f2 },
-            { iconKey: "music", url: "https://www.youtube.com/user/Kitchen1066", color: 0xfff08a },
-            { iconKey: "voice", url: "https://jamesfunfer.com", color: 0xb7ff9b }
+            { iconKey: "programming", url: "https://github.com/pbr4ne", colour: 0x6cf5ff },
+            { iconKey: "writing", url: "https://jamesfunfer.com", colour: 0xffc2f2 },
+            { iconKey: "music", url: "https://www.youtube.com/user/Kitchen1066", colour: 0xfff08a },
+            { iconKey: "voice", url: "https://jamesfunfer.com", colour: 0xb7ff9b }
           ],
           [
-            { iconKey: "phaser", url: "https://phaser.io", color: 0x9fd0ff },
-            { iconKey: "icons", url: "https://www.freepik.com/icons", color: 0xffa6a6 }
+            { iconKey: "phaser", url: "https://phaser.io", colour: 0x9fd0ff },
+            { iconKey: "icons", url: "https://www.freepik.com/icons", colour: 0xffa6a6 }
           ],
           [
-            { iconKey: "lucky", color: 0xd7b6ff },
-            { iconKey: "litter", color: 0xa6ffe9 },
-            { iconKey: "dog", color: 0xffd19a }
+            { iconKey: "lucky", colour: 0xd7b6ff },
+            { iconKey: "litter", colour: 0xa6ffe9 },
+            { iconKey: "dog", colour: 0xffd19a },
+            { iconKey: "mooncat", colour: 0xff7ad6 },
+            { iconKey: "starcat", colour: 0xffb3ff },
+            { iconKey: "chameleon", colour: 0x78f2ff },
+          ],
+          [
+            { iconKey: "raccoon", colour: 0xffc36b },
+            { iconKey: "solarsystem", colour: 0xb6ff7a },
+            { iconKey: "chaos", colour: 0xc9a8ff },
+            { iconKey: "guitar", colour: 0xffee7a }
           ]
         ]
       });

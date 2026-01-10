@@ -3,7 +3,7 @@ import Phaser from "phaser";
 export type CreditLink = {
   iconKey: string;
   url?: string;
-  color: number;
+  colour: number;
 };
 
 type CreditsModalCfg = {
@@ -24,6 +24,19 @@ type CreditsModalCfg = {
   closeInset?: number;
   closeFontMul?: number;
   closeGapBelow?: number;
+};
+
+type SectionLayout = {
+  startRow: number;
+  rowCount: number;
+
+  maxRowW: number;
+  rowsH: number;
+
+  xLeft: number;
+  yTop: number;
+  w: number;
+  h: number;
 };
 
 export default class CreditsModal extends Phaser.GameObjects.Container {
@@ -56,6 +69,10 @@ export default class CreditsModal extends Phaser.GameObjects.Container {
     const closeInset = cfg.closeInset ?? 6;
     const closeFontMul = cfg.closeFontMul ?? 0.6;
     const closeGapBelow = cfg.closeGapBelow ?? 30;
+
+    const SECTION_PAD = Math.round(BTN * 0.22);
+    const SECTION_GAP = Math.round(ROW_GAP * 0.9);
+    const SECTION_R = R + 10;
 
     this.setDepth(depth);
     this.setScrollFactor(0);
@@ -120,7 +137,7 @@ export default class CreditsModal extends Phaser.GameObjects.Container {
         .image(x, y, item.iconKey)
         .setDepth(depth + 4)
         .setScrollFactor(0)
-        .setTintFill(item.color)
+        .setTintFill(item.colour)
         .setAlpha(enabled ? 0.85 : 0.78);
 
       fitIconTo(icon, Math.floor(BTN * 0.68));
@@ -178,19 +195,57 @@ export default class CreditsModal extends Phaser.GameObjects.Container {
 
     const rows = cfg.rows ?? [];
 
-    const maxRowWidth = Math.max(
-      ...rows.map((r) => (r.length <= 0 ? 0 : r.length * BTN + Math.max(0, r.length - 1) * GAP)),
-      BTN
-    );
+    const rowW = (row: CreditLink[]) =>
+      row.length <= 0 ? 0 : row.length * BTN + Math.max(0, row.length - 1) * GAP;
 
-    const gridH =
-      rows.length <= 0 ? 0 : rows.length * BTN + Math.max(0, rows.length - 1) * (GAP + ROW_GAP);
+    const sectionDefs = [
+      { startRow: 0, rowCount: Math.min(1, rows.length) },
+      { startRow: 1, rowCount: Math.max(0, Math.min(1, rows.length - 1)) },
+      { startRow: 2, rowCount: Math.max(0, rows.length - 2) }
+    ].filter((s) => s.rowCount > 0);
+
+    const maxRowWidth = Math.max(...rows.map((r) => rowW(r)), BTN);
 
     const closeHit = Math.round(BTN * 0.5);
     const reservedTop = closeHit + closeGapBelow;
 
-    const panelW = maxRowWidth + panelPad * 2;
-    const panelH = reservedTop + gridH + panelPad;
+    const sectionLayouts: SectionLayout[] = [];
+
+    let totalSectionsH = 0;
+    sectionDefs.forEach((sd, i) => {
+      let secMaxW = 0;
+      for (let r = sd.startRow; r < sd.startRow + sd.rowCount; r++) {
+        secMaxW = Math.max(secMaxW, rowW(rows[r] ?? []));
+      }
+
+      const rowsH =
+        sd.rowCount <= 0
+          ? 0
+          : sd.rowCount * BTN + Math.max(0, sd.rowCount - 1) * (GAP + ROW_GAP);
+
+      const secW = Math.max(secMaxW, BTN) + SECTION_PAD * 2;
+      const secH = rowsH + SECTION_PAD * 2;
+
+      sectionLayouts.push({
+        startRow: sd.startRow,
+        rowCount: sd.rowCount,
+        maxRowW: secMaxW,
+        rowsH,
+        xLeft: 0,
+        yTop: 0,
+        w: secW,
+        h: secH
+      });
+
+      totalSectionsH += secH;
+      if (i < sectionDefs.length - 1) totalSectionsH += SECTION_GAP;
+    });
+
+    const maxSectionW = Math.max(...sectionLayouts.map((s) => s.w), maxRowWidth + SECTION_PAD * 2);
+
+    const panelW = maxSectionW + panelPad * 2;
+    const panelH = reservedTop + totalSectionsH + panelPad;
+
 
     const panelX = w / 2;
     const panelY = h / 2;
@@ -254,16 +309,67 @@ export default class CreditsModal extends Phaser.GameObjects.Container {
     this.add(closeText);
     this.btns.push(closeZone, closeText);
 
-    let y = panelTop + reservedTop + BTN / 2;
-    const xStart = panelLeft + panelPad + BTN / 2;
+    const drawSectionBox = (layout: SectionLayout) => {
+      const g = scene.add.graphics().setDepth(depth + 2).setScrollFactor(0);
 
-    rows.forEach((row) => {
-      let x = xStart;
-      row.forEach((item) => {
-        makeSquareButton(x, y, item);
-        x += BTN + GAP;
-      });
-      y += BTN + GAP + ROW_GAP;
+      g.fillStyle(0x000000, 0.34);
+      g.fillRoundedRect(layout.xLeft, layout.yTop, layout.w, layout.h, SECTION_R);
+
+      g.lineStyle(2, 0xffffff, 0.20);
+      g.strokeRoundedRect(layout.xLeft, layout.yTop, layout.w, layout.h, SECTION_R);
+
+      this.add(g);
+      this.btns.push(g);
+      return g;
+    };
+
+    const drawHeartsInEmptySlot = (xStart: number, yStart: number) => {
+      const icon = scene.add.image(0, 0, "hearts").setDepth(depth + 7).setScrollFactor(0);
+
+      const maxH = Math.floor(BTN * 0.48);
+      const maxDim = Math.max(icon.width, icon.height);
+      icon.setScale(maxH / maxDim);
+
+      const col = 5;
+      const row = 1;
+
+      const x = xStart + col * (BTN + GAP);
+      const y = yStart + row * (BTN + GAP + ROW_GAP);
+
+      icon.setPosition(x, y);
+      icon.setTintFill(0xffffff);
+      icon.setAlpha(0.20);
+
+      this.add(icon);
+      this.btns.push(icon);
+    };
+
+    let secY = panelTop + reservedTop;
+
+    sectionLayouts.forEach((layout, si) => {
+      const secLeft = panelLeft + panelPad;
+
+      layout.xLeft = secLeft;
+      layout.yTop = secY;
+      layout.w = maxSectionW;
+
+      drawSectionBox(layout);
+
+      let y = layout.yTop + SECTION_PAD + BTN / 2;
+      const xStart = layout.xLeft + SECTION_PAD + BTN / 2;
+
+      if (si === 2) drawHeartsInEmptySlot(xStart, y);
+
+      for (let r = layout.startRow; r < layout.startRow + layout.rowCount; r++) {
+        let x = xStart;
+        (rows[r] ?? []).forEach((item) => {
+          makeSquareButton(x, y, item);
+          x += BTN + GAP;
+        });
+        y += BTN + GAP + ROW_GAP;
+      }
+
+      secY += layout.h + SECTION_GAP;
     });
 
     this.blocker.on("pointerdown", () => this.hide());

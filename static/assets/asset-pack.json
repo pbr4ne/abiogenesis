@@ -71,6 +71,16 @@
                 "key": "cat"
             },
             {
+                "url": "assets/images/chameleon.png",
+                "type": "image",
+                "key": "chameleon"
+            },
+            {
+                "url": "assets/images/chaos.png",
+                "type": "image",
+                "key": "chaos"
+            },
+            {
                 "url": "assets/images/check.png",
                 "type": "image",
                 "key": "check"
@@ -230,6 +240,21 @@
                 "key": "Guanine"
             },
             {
+                "url": "assets/images/guitar.png",
+                "type": "image",
+                "key": "guitar"
+            },
+            {
+                "url": "assets/images/heart.png",
+                "type": "image",
+                "key": "heart"
+            },
+            {
+                "url": "assets/images/hearts.png",
+                "type": "image",
+                "key": "hearts"
+            },
+            {
                 "url": "assets/images/human.png",
                 "type": "image",
                 "key": "human"
@@ -349,6 +374,11 @@
                 "key": "mollusk"
             },
             {
+                "url": "assets/images/mooncat.png",
+                "type": "image",
+                "key": "mooncat"
+            },
+            {
                 "url": "assets/images/music.png",
                 "type": "image",
                 "key": "music"
@@ -410,6 +440,11 @@
                 "key": "prokaryote"
             },
             {
+                "url": "assets/images/raccoon.png",
+                "type": "image",
+                "key": "raccoon"
+            },
+            {
                 "url": "assets/images/reptile.png",
                 "type": "image",
                 "key": "reptile"
@@ -440,6 +475,11 @@
                 "key": "shield"
             },
             {
+                "url": "assets/images/solarsystem.png",
+                "type": "image",
+                "key": "solarsystem"
+            },
+            {
                 "url": "assets/images/sound_off.png",
                 "type": "image",
                 "key": "sound_off"
@@ -448,6 +488,11 @@
                 "url": "assets/images/sound_on.png",
                 "type": "image",
                 "key": "sound_on"
+            },
+            {
+                "url": "assets/images/starcat.png",
+                "type": "image",
+                "key": "starcat"
             },
             {
                 "url": "assets/images/sword.png",
