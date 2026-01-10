@@ -5,6 +5,7 @@ import { log } from "../../utilities/GameUtils";
 import { LifeFormType } from "../evolution/EvolutionTypes";
 import { LIFEFORMS } from "../evolution/LifeForms";
 import { resetRun } from "../../utilities/GameSession";
+import { Audio } from "../../utilities/GameSounds";
 
 type PlanetDef = {
   id: string;
@@ -35,6 +36,10 @@ export default class GalaxyMap extends PhaseScene {
   }
 
   protected createPhase() {
+    Audio.init(this.sys.game);
+    Audio.playMusic("galaxy_music", { loop: true });
+    this.onShutdown(() => Audio.stopMusicIfKey("galaxy_music"));
+
     const w = 1920;
     const h = 1080;
 

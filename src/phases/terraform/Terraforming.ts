@@ -20,7 +20,7 @@ export default class Terraforming extends PhaseScene {
 
   protected createPhase() {
     Audio.init(this.sys.game);
-    Audio.playMusic("terraforming_music", { loop: true, volume: 0.2 });
+    Audio.playMusic("terraforming_music", { loop: true });
     this.onShutdown(() => Audio.stopMusicIfKey("terraforming_music"));
 
     enableSkipPhase({
@@ -41,7 +41,7 @@ export default class Terraforming extends PhaseScene {
       log(`
         Terraforming: ${k} reached max level!`)
         log(`Playing SFX: ${SFX_BY_KEY[k]}`);
-      Audio.playExclusiveSfx(SFX_BY_KEY[k], { volume: 0.5 });
+      Audio.playExclusiveSfx(SFX_BY_KEY[k]);
     };
 
     tf.on("reachedMax", onReachedMax);

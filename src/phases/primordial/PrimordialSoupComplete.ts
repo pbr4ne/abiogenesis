@@ -10,7 +10,9 @@ export default class PrimordialSoupComplete extends PhaseScene {
 
   protected createPhase(): void {
     Audio.init(this.sys.game);
-    Audio.playSfx("Primordial Soup Complete", { volume: 0.5 });
+    Audio.playMusic("galaxy_music", { loop: true });
+    Audio.playSfx("Primordial Soup Complete");
+    this.onShutdown(() => Audio.stopMusicIfKey("galaxy_music"));
 
     enableSkipPhase({
       scene: this,

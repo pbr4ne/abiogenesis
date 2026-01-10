@@ -227,6 +227,13 @@
             },
             {
                 "url": [
+                    "assets/audio/galaxy_music.mp3"
+                ],
+                "type": "audio",
+                "key": "galaxy_music"
+            },
+            {
+                "url": [
                     "assets/audio/Game Complete.mp3"
                 ],
                 "type": "audio",

@@ -43,7 +43,7 @@ export default class Evolution extends PhaseScene {
 
   protected createPhase() {
     Audio.init(this.sys.game);
-    Audio.playMusic("evolution_music", { loop: true, volume: 0.2 });
+    Audio.playMusic("evolution_music", { loop: true });
     this.onShutdown(() => Audio.stopMusicIfKey("evolution_music"));
 
     const run = getRun();
@@ -276,12 +276,12 @@ export default class Evolution extends PhaseScene {
     this.prevAliveTypes = aliveNow;
 
     if (anyExtinction) {
-      Audio.playExclusiveSfx("Extinction Event", { volume: 0.5 });
+      Audio.playExclusiveSfx("Extinction Event");
       return;
     }
 
     if (anyNewOrReUnlocked) {
-      Audio.playExclusiveSfx("Mutation Event", { volume: 0.5 });
+      Audio.playExclusiveSfx("Mutation Event");
     }
   }
 

@@ -23,7 +23,9 @@ export default class EndGame extends PhaseScene {
 
   protected createPhase() {
     Audio.init(this.sys.game);
-    Audio.playSfx("Game Complete", { volume: 0.5 });
+    Audio.playMusic("galaxy_music", { loop: true });
+    Audio.playSfx("Game Complete");
+    this.onShutdown(() => Audio.stopMusicIfKey("galaxy_music"));
 
     const w = 1920;
     const h = 1080;

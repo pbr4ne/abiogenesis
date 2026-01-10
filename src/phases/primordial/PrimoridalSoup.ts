@@ -29,7 +29,7 @@ export default class PrimordialSoup extends PhaseScene {
 
   protected createPhase() {
     Audio.init(this.sys.game);
-    Audio.playMusic("primordial_music", { loop: true, volume: 0.2 });
+    Audio.playMusic("primordial_music", { loop: true });
     this.onShutdown(() => Audio.stopMusicIfKey("primordial_music"));
 
     const run = getRun();
@@ -85,7 +85,7 @@ export default class PrimordialSoup extends PhaseScene {
 
       this.didNucleotideSfx[k] = true;
 
-      Audio.playExclusiveSfx(NUCLEOTIDE_SFX[k], { volume: 0.5 });
+      Audio.playExclusiveSfx(NUCLEOTIDE_SFX[k]);
     }
   }
 
