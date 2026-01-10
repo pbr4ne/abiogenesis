@@ -138,9 +138,8 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
     const lifeForms = this.getLifeForms();
     const top = this.computeTop3(lifeForms);
 
-    const shouldShow = top.length >= 3;
-
-    if (shouldShow && !this.hasShown) this.hasShown = true;
+    const unlockedNow = top.length >= 3;
+    if (unlockedNow && !this.hasShown) this.hasShown = true;
 
     if (!this.hasShown) return;
 
@@ -157,7 +156,7 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
       });
     }
 
-    if (!shouldShow) {
+    if (top.length === 0) {
       this.clearHud();
       return;
     }
@@ -184,7 +183,7 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
     }
 
     this.layout();
-    this.placeMedal(true);
+    this.placeMedal(top.length > 0);
   }
 
   private placeMedal(visible: boolean) {
@@ -197,7 +196,6 @@ export default class EvolutionTop3Hud extends Phaser.GameObjects.Container {
       return;
     }
 
-    const wi = (topHover as any).wi as number;
     const hh = (topHover as any).h as number;
 
     const h = hh * this.evoScale;
