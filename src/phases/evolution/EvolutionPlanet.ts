@@ -5,7 +5,7 @@ import { ensureStartingProkaryotes } from "./EvolutionSpawn";
 import { LIFEFORMS } from "./LifeForms";
 import { drawCellBump } from "../../planet/PlanetRenderer";
 import { LifeFormInstance } from "./EvolutionTypes";
-import { pickCellByNearestProjectedCenter } from "../../planet/PlanetMath";
+import { projectCellCorners } from "../../planet/PlanetMath";
 import { sprinkleLifeFormsDebug } from "./EvolutionDebugSprinkle";
 import DeathPoof from "./DeathPoof";
 import { checkUrlParam } from "../../utilities/GameUtils";
@@ -65,7 +65,9 @@ export default class EvolutionPlanet extends PlanetBase {
   }
 
   private pickAnyCell(dx: number, dy: number) {
-    return pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+    const cell = this.pickCellByRay(dx, dy);
+    if (!cell) return null;
+    return { row: cell.row, col: cell.col };
   }
 
   private keyOf(row: number, col: number) {
@@ -144,6 +146,39 @@ export default class EvolutionPlanet extends PlanetBase {
     }
   }
 
+  private pickCellByRay(dx: number, dy: number) {
+    let nx = dx / this.r;
+    let ny = dy / this.r;
+
+    let rr = nx * nx + ny * ny;
+
+    if (rr > 1) {
+      const len = Math.sqrt(rr) || 1;
+      nx /= len;
+      ny /= len;
+      rr = 1;
+    }
+
+    const zCam = Math.sqrt(Math.max(0, 1 - rr));
+    const cam = { x: nx, y: ny, z: zCam };
+
+    const s = this.unrotate(cam.x, cam.y, cam.z);
+
+    const lat = Math.asin(Phaser.Math.Clamp(s.y, -1, 1));
+    const lon = Math.atan2(s.x, s.z);
+
+    const u = (lon + Math.PI) / (Math.PI * 2);
+    const v = (lat + Math.PI / 2) / Math.PI;
+
+    let row = Math.floor(v * this.divisions);
+    row = Phaser.Math.Clamp(row, 0, this.divisions - 1);
+
+    let col = Math.floor(u * this.divisions);
+    col = ((col % this.divisions) + this.divisions) % this.divisions;
+
+    return { row, col, zCam };
+  }
+
   private cellCenterWorld(row: number, col: number) {
     const v = (row + 0.5) / this.divisions;
     const lat = (v - 0.5) * Math.PI;
@@ -199,41 +234,81 @@ export default class EvolutionPlanet extends PlanetBase {
   }
 
   private pickLifeCellForgiving(dx: number, dy: number) {
-    const base = pickCellByNearestProjectedCenter(dx, dy, this.r, this.divisions, this.rotate);
+    const base = this.pickCellByRay(dx, dy);
     if (!base) return null;
 
     const isClickable = (r: number, c: number) => this.lifeByCell.has(this.keyOf(r, c));
 
-    if (isClickable(base.row, base.col)) return base;
+    if (isClickable(base.row, base.col)) {
+      return { row: base.row, col: base.col };
+    }
 
-    const slopPx = 22;
-    const searchR = 2;
+    const rimT = Phaser.Math.Clamp(1 - base.zCam, 0, 1);
+
+    const padPx = Phaser.Math.Linear(18, 44, rimT);
+
+    const searchR = 3;
 
     let best: { row: number; col: number } | null = null;
-    let bestD2 = slopPx * slopPx;
+    let bestScore = Number.POSITIVE_INFINITY;
+
+    const wrapCol = (c: number) => ((c % this.divisions) + this.divisions) % this.divisions;
 
     for (let rr = base.row - searchR; rr <= base.row + searchR; rr++) {
       if (rr < 0 || rr >= this.divisions) continue;
 
-      for (let cc = base.col - searchR; cc <= base.col + searchR; cc++) {
-        if (cc < 0 || cc >= this.divisions) continue;
+      for (let dc = -searchR; dc <= searchR; dc++) {
+        const cc = wrapCol(base.col + dc);
         if (!isClickable(rr, cc)) continue;
 
-        const p = this.cellCenterLocal(rr, cc);
-        if (!p.visible) continue;
+        const poly = projectCellCorners(rr, cc, this.r, this.divisions, this.rotate);
+        if (!poly) continue;
 
-        const ddx = dx - p.x;
-        const ddy = dy - p.y;
-        const d2 = ddx * ddx + ddy * ddy;
+        const inside = Phaser.Geom.Polygon.Contains(new Phaser.Geom.Polygon(poly as any), dx, dy);
+        if (inside) {
+          return { row: rr, col: cc };
+        }
 
-        if (d2 <= bestD2) {
-          bestD2 = d2;
+        const d2 = this.polyEdgeDist2(dx, dy, poly);
+        if (d2 <= padPx * padPx && d2 < bestScore) {
+          bestScore = d2;
           best = { row: rr, col: cc };
         }
       }
     }
 
-    return best ?? base;
+    return best ?? { row: base.row, col: base.col };
+  }
+
+  private pointSegDist2(px: number, py: number, ax: number, ay: number, bx: number, by: number) {
+    const abx = bx - ax;
+    const aby = by - ay;
+    const apx = px - ax;
+    const apy = py - ay;
+
+    const abLen2 = abx * abx + aby * aby || 1;
+    let t = (apx * abx + apy * aby) / abLen2;
+    t = Phaser.Math.Clamp(t, 0, 1);
+
+    const cx = ax + abx * t;
+    const cy = ay + aby * t;
+
+    const dx = px - cx;
+    const dy = py - cy;
+    return dx * dx + dy * dy;
+  }
+
+  private polyEdgeDist2(px: number, py: number, poly: { x: number; y: number }[]) {
+    let best = Number.POSITIVE_INFINITY;
+
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i];
+      const b = poly[(i + 1) % poly.length];
+      const d2 = this.pointSegDist2(px, py, a.x, a.y, b.x, b.y);
+      if (d2 < best) best = d2;
+    }
+
+    return best;
   }
 
   public enableLifeClick() {

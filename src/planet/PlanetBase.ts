@@ -32,8 +32,9 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
   protected lastRevealAt: number;
   protected lifeBumps!: Phaser.GameObjects.Graphics;
 
-  private yawRad = 0;
-  private tiltRad = 0;
+  protected yawRad = 0;
+  protected tiltRad = 0;
+
   private yawStepRad = 0;
 
   private isRotating = false;
@@ -57,6 +58,22 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
 
   private updateRotator() {
     this.rotate = makeRotator(this.tiltRad, this.yawRad);
+  }
+
+  protected unrotate(px: number, py: number, pz: number) {
+    const ct = Math.cos(this.tiltRad);
+    const st = Math.sin(this.tiltRad);
+
+    const y1 = py * ct + pz * st;
+    const z1 = -py * st + pz * ct;
+
+    const cy = Math.cos(this.yawRad);
+    const sy = Math.sin(this.yawRad);
+
+    const x0 = px * cy - z1 * sy;
+    const z0 = px * sy + z1 * cy;
+
+    return { x: x0, y: y1, z: z0 };
   }
 
   public getRadius() { return this.r; }
@@ -141,7 +158,12 @@ export default class PlanetBase extends Phaser.GameObjects.Container {
 
     this.hitZone = scene.add.zone(-this.r, -this.r, this.diameter, this.diameter);
     this.hitZone.setOrigin(0, 0);
-    this.hitZone.setInteractive(new Phaser.Geom.Circle(this.r, this.r, this.r), Phaser.Geom.Circle.Contains);
+    const EDGE_SLOP = 28;
+    this.hitZone.setInteractive(
+      new Phaser.Geom.Circle(this.r, this.r, this.r + EDGE_SLOP),
+      Phaser.Geom.Circle.Contains
+    );
+
     this.add(this.hitZone);
 
     this.startSmoothRotation(1200, -1);
