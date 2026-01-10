@@ -53,6 +53,18 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     survival: false
   };
 
+  private holdTimers: Partial<Record<StatKey, Phaser.Time.TimerEvent>> = {};
+  private holding: Record<StatKey, boolean> = {
+    mutation: false,
+    reproduction: false,
+    survival: false
+  };
+
+  private readonly HOLD_INITIAL_DELAY_MS = 260;
+  private readonly HOLD_REPEAT_MS = 70;
+
+  private onGlobalPointerUp: (() => void) | null = null;
+
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
 
@@ -119,7 +131,6 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     const air = scene.add.image(biomeCx + (biomeSize + biomeGap), biomeY, "air").setDisplaySize(biomeSize, biomeSize);
 
     this.biomeIcons = { sea, land, air };
-
 
     const rightPad = 34;
     const rightColX = cx + w / 2 - rightPad - 660;
@@ -209,9 +220,17 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
     this.scene.events.on("evoPoints:changed", this.onPointsChanged);
 
+    this.onGlobalPointerUp = () => this.stopAllHolds();
+    this.scene.input.on("pointerup", this.onGlobalPointerUp);
+
     this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       if (this.onPointsChanged) this.scene?.events?.off("evoPoints:changed", this.onPointsChanged);
       this.onPointsChanged = null;
+
+      if (this.onGlobalPointerUp) this.scene?.input?.off("pointerup", this.onGlobalPointerUp);
+      this.onGlobalPointerUp = null;
+
+      this.stopAllHolds();
     });
   }
 
@@ -372,6 +391,105 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     return Phaser.Math.Clamp(nextStep - 1, 0, maxCost);
   }
 
+  private stopHold(key: StatKey) {
+    this.holding[key] = false;
+
+    const t = this.holdTimers[key];
+    if (t) {
+      t.remove(false);
+      delete this.holdTimers[key];
+    }
+
+    this.clickLock[key] = false;
+  }
+
+  private stopAllHolds() {
+    this.stopHold("mutation");
+    this.stopHold("reproduction");
+    this.stopHold("survival");
+  }
+
+  private tryUpgradeOnce(key: StatKey): boolean {
+    if (this.clickLock[key]) return false;
+
+    const cur = this.current;
+    if (!cur) return false;
+
+    const run = this.getRun();
+    if (!run) return false;
+
+    const curV = this.getStat(cur.lf, key);
+    if (curV >= LifeDetailsModal.STAT_MAX) {
+      this.scene.events.emit("evoPoints:changed");
+      return false;
+    }
+
+    const nextStep = Math.floor(curV) + 1;
+    const cost = this.getUpgradeCostForNextStep(nextStep);
+
+    const available = run.getEvoPointsAvailable();
+    if (available < cost) {
+      this.scene.events.emit("evoPoints:changed");
+      return false;
+    }
+
+    this.clickLock[key] = true;
+
+    if (cost > 0 && !run.trySpendEvoPoints(cost)) {
+      this.scene.events.emit("evoPoints:changed");
+      this.clickLock[key] = false;
+      return false;
+    }
+
+    this.setStat(cur.lf, key, curV + 1);
+
+    const tint2 = rgbToHex(cur.def.colour.r, cur.def.colour.g, cur.def.colour.b);
+
+    this.applyRow("mutation", cur.def, cur.lf, tint2);
+    this.applyRow("reproduction", cur.def, cur.lf, tint2);
+    this.applyRow("survival", cur.def, cur.lf, tint2);
+
+    this.scene.events.emit("life:upgrade", { id: cur.lf.id, stat: key });
+    this.scene.events.emit("evoPoints:changed");
+
+    this.scene.time.delayedCall(0, () => {
+      this.clickLock[key] = false;
+    });
+
+    return true;
+  }
+
+  private startHold(key: StatKey) {
+    this.stopHold(key);
+    this.holding[key] = true;
+
+    const didFirst = this.tryUpgradeOnce(key);
+    if (!didFirst) {
+      this.stopHold(key);
+      return;
+    }
+
+    this.scene.time.delayedCall(this.HOLD_INITIAL_DELAY_MS, () => {
+      if (!this.holding[key]) return;
+
+      this.holdTimers[key] = this.scene.time.addEvent({
+        delay: this.HOLD_REPEAT_MS,
+        loop: true,
+        callback: () => {
+          if (!this.holding[key]) {
+            this.stopHold(key);
+            return;
+          }
+
+          const ok = this.tryUpgradeOnce(key);
+          if (!ok) {
+            this.stopHold(key);
+          }
+        }
+      });
+    });
+  }
+
   public show(payload: LifeHoverPayload) {
     if (!payload) return;
 
@@ -395,6 +513,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
   }
 
   public hide() {
+    this.stopAllHolds();
+
     this.current = null;
     this.setVisible(false);
     for (const k of ["mutation", "reproduction", "survival"] as const) {
@@ -481,6 +601,8 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     row.plus.off("pointerover");
     row.plus.off("pointerout");
     row.plus.off("pointerdown");
+    row.plus.off("pointerup");
+    row.plus.off("pointerupoutside");
     row.plus.disableInteractive();
 
     row.plus.setTintFill(tint);
@@ -490,6 +612,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     if (!canUpgradeStat) {
       row.costG.setVisible(false);
       this.plusHover[key] = false;
+      this.stopHold(key);
       return;
     }
 
@@ -537,6 +660,7 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
     row.plus.on("pointerout", () => {
       this.plusHover[key] = false;
       clearHoverVisuals();
+      this.stopHold(key);
     });
 
     row.plus.on("pointerdown", (p: Phaser.Input.Pointer) => {
@@ -544,52 +668,11 @@ export default class LifeDetailsModal extends Phaser.GameObjects.Container {
 
       if (!canClick) return;
 
-      if (this.clickLock[key]) return;
-      this.clickLock[key] = true;
-
-      const cur = this.current;
-      if (!cur) {
-        this.clickLock[key] = false;
-        return;
-      }
-
-      const run = this.getRun();
-      if (!run) {
-        this.clickLock[key] = false;
-        return;
-      }
-
-      const curV = this.getStat(cur.lf, key);
-      if (curV >= LifeDetailsModal.STAT_MAX) {
-        this.scene.events.emit("evoPoints:changed");
-        this.clickLock[key] = false;
-        return;
-      }
-
-      const nextStep = Math.floor(curV) + 1;
-      const cost2 = this.getUpgradeCostForNextStep(nextStep);
-
-      if (cost2 > 0 && !run.trySpendEvoPoints(cost2)) {
-        this.scene.events.emit("evoPoints:changed");
-        this.clickLock[key] = false;
-        return;
-      }
-
-      this.setStat(cur.lf, key, curV + 1);
-
-      const tint2 = rgbToHex(cur.def.colour.r, cur.def.colour.g, cur.def.colour.b);
-
-      this.applyRow("mutation", cur.def, cur.lf, tint2);
-      this.applyRow("reproduction", cur.def, cur.lf, tint2);
-      this.applyRow("survival", cur.def, cur.lf, tint2);
-
-      this.scene.events.emit("life:upgrade", { id: cur.lf.id, stat: key });
-      this.scene.events.emit("evoPoints:changed");
-
-      this.scene.time.delayedCall(0, () => {
-        this.clickLock[key] = false;
-      });
+      this.startHold(key);
     });
+
+    row.plus.on("pointerup", () => this.stopHold(key));
+    row.plus.on("pointerupoutside", () => this.stopHold(key));
 
     if (this.plusHover[key]) {
       applyHoverVisuals();
