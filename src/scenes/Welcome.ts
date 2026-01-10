@@ -248,10 +248,7 @@ export default class Welcome extends BaseScene {
 
     const uiY = this.scale.height - PAD - BTN / 2;
 
-    const clearX = this.scale.width - PAD - BTN / 2;
-    const clearBtn = makeSquareButton(clearX, uiY, "clear_save", () => { });
-
-    const creditsX = clearX - (BTN + GAP);
+    const creditsX = this.scale.width - PAD - BTN / 2;
     const creditsBtn = makeSquareButton(creditsX, uiY, "credits", () => {
       if (this.creditsModal.isOpen()) this.creditsModal.hide();
       else this.creditsModal.show();
@@ -272,10 +269,6 @@ export default class Welcome extends BaseScene {
     );
 
     const btns: Phaser.GameObjects.GameObject[] = [
-      clearBtn.bg,
-      clearBtn.zone,
-      clearBtn.icon,
-
       creditsBtn.bg,
       creditsBtn.zone,
       creditsBtn.icon,
