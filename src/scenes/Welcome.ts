@@ -287,18 +287,41 @@ export default class Welcome extends BaseScene {
     ];
 
     const startGame = () => {
-      this.planet.stopFlashing();
-
       this.input.enabled = false;
 
+      const planetR = 360 / 2;
+
+      const wash = this.add
+        .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0x0f0f0f, 1)
+        .setScrollFactor(0)
+        .setDepth(999999)
+        .setAlpha(0);
+
+      const maskG = this.make.graphics({ x: 0, y: 0 });
+      maskG.fillStyle(0xffffff, 1);
+      maskG.fillCircle(this.planet.x, this.planet.y, planetR);
+
+      const mask = maskG.createGeometryMask();
+      wash.setMask(mask);
+
+      wash.cameraFilter = this.bgCam.id;
+
       this.tweens.add({
-        targets: this.planet,
-        alpha: 0,
-        scale: this.planet.scale * 0.98,
-        duration: 1000,
-        ease: "Sine.easeIn",
+        targets: wash,
+        alpha: 1,
+        duration: 1900,
+        ease: "Sine.easeInOut",
         onComplete: () => {
+          wash.setAlpha(1);
+
+          this.planet.stopFlashing();
+
           this.scene.start("Terraforming");
+
+          this.time.delayedCall(0, () => {
+            wash.destroy();
+            maskG.destroy();
+          });
         }
       });
     };
