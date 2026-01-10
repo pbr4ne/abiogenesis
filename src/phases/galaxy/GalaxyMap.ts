@@ -26,19 +26,32 @@ export default class GalaxyMap extends PhaseScene {
     y: number;
   }[] = [];
 
+  private inputLocked = false;
+  private rocketTween?: Phaser.Tweens.Tween;
+  private rocketSprite?: Phaser.GameObjects.Image;
+
   constructor() {
     super("GalaxyMap");
   }
 
   public init(data: any) {
     const t = data?.lfType as LifeFormType | undefined;
-    if (t && (t in LIFEFORMS)) this.lfType = t;
+
+    if (t && (t in LIFEFORMS)) {
+      this.lfType = t;
+      return;
+    }
+
+    const keys = Object.keys(LIFEFORMS) as LifeFormType[];
+    this.lfType = Phaser.Utils.Array.GetRandom(keys);
   }
 
   protected createPhase() {
     Audio.init(this.sys.game);
     Audio.playMusic("galaxy_music", { loop: true, volume: 2.5 });
     this.onShutdown(() => Audio.stopMusicIfKey("galaxy_music"));
+
+    this.inputLocked = false;
 
     const w = 1920;
     const h = 1080;
@@ -251,6 +264,135 @@ export default class GalaxyMap extends PhaseScene {
     );
   }
 
+  private getRocketFromPoint() {
+    if (this.lfPlanetId) {
+      const idx = this.planets.findIndex(pp => pp.def.id === this.lfPlanetId);
+      const src = idx >= 0 ? this.planets[idx] : null;
+
+      if (src) {
+        const completedType = GalaxyMemory.completed[src.def.id] as LifeFormType | undefined;
+
+        const baseCol = completedType
+          ? Phaser.Display.Color.GetColor(
+            LIFEFORMS[completedType].colour.r,
+            LIFEFORMS[completedType].colour.g,
+            LIFEFORMS[completedType].colour.b
+          )
+          : this.planetBaseColor(idx);
+
+        return { x: src.x, y: src.y, tint: baseCol };
+      }
+    }
+
+    return { x: this.scale.width * 0.25, y: this.scale.height * 0.72, tint: 0xffffff };
+  }
+
+  private launchRocketTo(toX: number, toY: number, done: () => void) {
+    this.rocketTween?.remove();
+    this.rocketTween = undefined;
+
+    this.rocketSprite?.destroy();
+    this.rocketSprite = undefined;
+
+    const from = this.getRocketFromPoint();
+
+    const rocket = this.add.image(from.x, from.y, "rocketfull");
+    rocket.setScrollFactor(0);
+    rocket.setDepth(20000);
+    this.bgCam.ignore(rocket);
+
+    rocket.setTintFill(from.tint);
+
+    const targetW = 42;
+    const texW = rocket.width || 1;
+    rocket.setScale(targetW / texW);
+    rocket.setAlpha(0);
+
+    const dx = toX - from.x;
+    const dy = toY - from.y;
+
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    const midX = (from.x + toX) / 2;
+    const midY = (from.y + toY) / 2;
+
+    const perpX = -dy / Math.max(1, dist);
+    const perpY = dx / Math.max(1, dist);
+
+    const arc = Phaser.Math.Clamp(dist * 0.22, 40, 170);
+    const sign = (Math.random() < 0.5 ? -1 : 1) * 0.85;
+
+    const ctrlX = midX + perpX * arc * sign;
+    const ctrlY = midY + perpY * arc * sign;
+
+    const curve = new Phaser.Curves.QuadraticBezier(
+      new Phaser.Math.Vector2(from.x, from.y),
+      new Phaser.Math.Vector2(ctrlX, ctrlY),
+      new Phaser.Math.Vector2(toX, toY)
+    );
+
+    const payload = { t: 0 };
+
+    const drawAtT = (t: number) => {
+      const v = curve.getPoint(Phaser.Math.Clamp(t, 0, 1));
+      rocket.setPosition(v.x, v.y);
+
+      const tan = curve.getTangent(Phaser.Math.Clamp(t, 0, 1));
+      const ang = Math.atan2(tan.y, tan.x);
+      rocket.setRotation(ang + Math.PI / 2);
+    };
+
+    const dur = Phaser.Math.Clamp(900 + dist * 0.95, 1100, 2400);
+
+    this.rocketSprite = rocket;
+
+    const tw = this.tweens.add({
+      targets: payload,
+      t: 1,
+      duration: dur,
+      ease: "Cubic.easeInOut",
+      onStart: () => {
+        rocket.setAlpha(0.95);
+        rocket.setScale((targetW / texW) * 0.92);
+        this.tweens.add({
+          targets: rocket,
+          scale: targetW / texW,
+          alpha: 1,
+          duration: 160,
+          ease: "Quad.easeOut"
+        });
+      },
+      onUpdate: () => {
+        drawAtT(payload.t);
+      },
+      onComplete: () => {
+        this.tweens.add({
+          targets: rocket,
+          alpha: 0,
+          duration: 220,
+          ease: "Quad.easeIn",
+          onComplete: () => {
+            rocket.destroy();
+            this.rocketSprite = undefined;
+            done();
+          }
+        });
+      }
+    });
+
+    drawAtT(0);
+
+    this.rocketTween = tw;
+
+    this.onShutdown(() => {
+      this.rocketTween?.remove();
+      this.rocketTween = undefined;
+
+      this.rocketSprite?.destroy();
+      this.rocketSprite = undefined;
+    });
+  }
+
   private enablePlanetInput() {
     const hoverG = this.add.graphics();
     hoverG.setScrollFactor(0);
@@ -272,6 +414,7 @@ export default class GalaxyMap extends PhaseScene {
       hitCircle.setInteractive({ useHandCursor: true });
 
       hitCircle.on(Phaser.Input.Events.POINTER_OVER, () => {
+        if (this.inputLocked) return;
         hoverG.clear();
         hoverG.lineStyle(3, 0xffffff, 0.35);
         hoverG.strokeCircle(p.x, p.y, p.def.r + 6);
@@ -282,12 +425,17 @@ export default class GalaxyMap extends PhaseScene {
       });
 
       hitCircle.on(Phaser.Input.Events.POINTER_DOWN, () => {
-        GalaxyMemory.pendingPlanetId = p.def.id;
+        if (this.inputLocked) return;
+        this.inputLocked = true;
 
+        hoverG.clear();
+
+        GalaxyMemory.pendingPlanetId = p.def.id;
         resetRun();
 
-        this.scene.start("Terraforming");
-
+        this.launchRocketTo(p.x, p.y, () => {
+          this.scene.start("Terraforming");
+        });
       });
     }
 
