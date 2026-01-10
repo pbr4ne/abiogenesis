@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import PlanetRunState from "../../planet/PlanetRunState";
 import PhaseScene from "../../scenes/PhaseScene";
-import { enableDebugNext } from "../../utilities/DebugNav";
+import { enableSkipPhase } from "../../utilities/SkipPhase";
 import { getRun } from "../../utilities/GameSession";
 import { log } from "../../utilities/GameUtils";
 import AbacusPoints from "./AbacusPoints";
@@ -50,7 +50,7 @@ export default class Evolution extends PhaseScene {
     run.waterLevel = Math.max(run.waterLevel, 10);
     this.prevAliveTypes = new Set(run.lifeForms.map(lf => lf.type));
 
-    enableDebugNext({
+    enableSkipPhase({
       scene: this,
       next: "EvolutionComplete"
     });

@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import PhaseScene from "../../scenes/PhaseScene";
 import { LifeFormType } from "./EvolutionTypes";
 import { LIFEFORMS } from "./LifeForms";
-import { enableDebugNext } from "../../utilities/DebugNav";
+import { enableSkipPhase } from "../../utilities/SkipPhase";
 import { Audio } from "../../utilities/GameSounds";
 
 const rgbToHex = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
@@ -23,7 +23,7 @@ export default class EvolutionComplete extends PhaseScene {
     Audio.init(this.sys.game);
     Audio.playSfx("Evolution Complete", { volume: 0.5 });
 
-    enableDebugNext({
+    enableSkipPhase({
       scene: this,
       next: "GalaxyMap"
     });

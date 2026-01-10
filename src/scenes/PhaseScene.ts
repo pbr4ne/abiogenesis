@@ -4,6 +4,9 @@ import { createStarfield, Starfield } from "../utilities/StarField";
 import PhaseBreadcrumb from "./PhaseBreadcrumb";
 import { Audio } from "../utilities/GameSounds";
 import SoundToggleButton from "./SoundToggleButton";
+import { GalaxyMemory } from "../utilities/GalaxyMemory";
+import { invokeSkipPhase } from "../utilities/SkipPhase";
+import SkipPhaseButton from "./SkipPhaseButton";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -22,6 +25,7 @@ export default abstract class PhaseScene extends BaseScene {
   private breadcrumb?: PhaseBreadcrumb;
 
   private soundBtn?: SoundToggleButton;
+  private skipBtn?: SkipPhaseButton;
 
   constructor(phaseKey: PhaseKey) {
     super(phaseKey);
@@ -58,6 +62,34 @@ export default abstract class PhaseScene extends BaseScene {
 
     this.createPhase();
 
+    const tooltipIcons = this.getSkipTooltipIcons();
+
+    if (GalaxyMemory.pendingPlanetId !== null && tooltipIcons) {
+      const [left, mid, right] = tooltipIcons;
+
+      this.skipBtn = new SkipPhaseButton(
+        this,
+        (DESIGN_W - PAD - BTN / 2) - (BTN + 18),
+        DESIGN_H - PAD - BTN / 2,
+        {
+          size: BTN,
+          radius: 16,
+          depthBase: 1000,
+          tooltipLeftKey: left,
+          tooltipMidKey: mid,
+          tooltipRightKey: right,
+          onClick: () => invokeSkipPhase(this)
+        }
+      );
+
+      this.skipBtn.getObjects().forEach((o) => this.bgCam.ignore(o));
+
+      this.onShutdown(() => {
+        this.skipBtn?.destroy();
+        this.skipBtn = undefined;
+      });
+    }
+
     this.breadcrumb = new PhaseBreadcrumb(this, 40, 70, this.getPhaseGroup(), this.getPhaseActiveColor());
     this.add.existing(this.breadcrumb);
     this.bgCam.ignore(this.breadcrumb);
@@ -79,6 +111,19 @@ export default abstract class PhaseScene extends BaseScene {
 
   public setBreadcrumbVisible(v: boolean) {
     this.breadcrumb?.setVisible(v);
+  }
+
+  private getSkipTooltipIcons(): [string, string, string] | null {
+    switch (this.phaseKey) {
+      case "Terraforming":
+        return ["terraformed", "arrow", "dna"];
+
+      case "PrimordialSoup":
+        return ["dna", "arrow", "evolution"];
+
+      default:
+        return null;
+    }
   }
 
   private getPhaseActiveColor(): number {
@@ -118,8 +163,6 @@ export default abstract class PhaseScene extends BaseScene {
         return "evolution";
 
       case "GalaxyMap":
-        return "system";
-
       case "EndGame":
         return "system";
     }

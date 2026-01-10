@@ -556,6 +556,11 @@
                 "key": "whale"
             },
             {
+                "url": "assets/images/wormhole.png",
+                "type": "image",
+                "key": "wormhole"
+            },
+            {
                 "url": "assets/images/writing.png",
                 "type": "image",
                 "key": "writing"

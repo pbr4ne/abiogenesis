@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import PhaseScene from "../../scenes/PhaseScene";
-import { enableDebugNext } from "../../utilities/DebugNav";
+import { enableSkipPhase } from "../../utilities/SkipPhase";
 import { Audio } from "../../utilities/GameSounds";
 
 export default class TerraformingComplete extends PhaseScene {
@@ -12,7 +12,7 @@ export default class TerraformingComplete extends PhaseScene {
     Audio.init(this.sys.game);
     Audio.playSfx("Terraforming Complete", { volume: 0.5 });
 
-    enableDebugNext({
+    enableSkipPhase({
       scene: this,
       next: "PrimordialSoup"
     });

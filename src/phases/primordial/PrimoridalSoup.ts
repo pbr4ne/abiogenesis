@@ -4,7 +4,7 @@ import { log } from "../../utilities/GameUtils";
 import DNAHelix from "./DNAHelix";
 import Nucleotides from "./Nucleotides";
 import Phaser from "phaser";
-import { enableDebugNext } from "../../utilities/DebugNav";
+import { enableSkipPhase } from "../../utilities/SkipPhase";
 import { getRun } from "../../utilities/GameSession";
 import { Audio } from "../../utilities/GameSounds";
 
@@ -35,7 +35,7 @@ export default class PrimordialSoup extends PhaseScene {
     const run = getRun();
     run.waterLevel = Math.max(run.waterLevel, 10);
 
-    enableDebugNext({
+    enableSkipPhase({
       scene: this,
       next: "PrimordialSoupComplete"
     });
