@@ -21,9 +21,9 @@ export default class EvolutionComplete extends PhaseScene {
 
   protected createPhase(): void {
     Audio.init(this.sys.game);
-    Audio.playMusic("galaxy_music", { loop: true });
+    Audio.playMusic("transition_music", { loop: true });
     Audio.playSfx("Evolution Complete");
-    this.onShutdown(() => Audio.stopMusicIfKey("galaxy_music"));
+    this.onShutdown(() => Audio.stopMusicIfKey("transition_music"));
 
     enableSkipPhase({
       scene: this,

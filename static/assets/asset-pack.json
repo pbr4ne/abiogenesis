@@ -538,6 +538,13 @@
                 "key": "Thymine"
             },
             {
+                "url": [
+                    "assets/audio/transition_music.mp3"
+                ],
+                "type": "audio",
+                "key": "transition_music"
+            },
+            {
                 "url": "assets/images/trash.png",
                 "type": "image",
                 "key": "trash"

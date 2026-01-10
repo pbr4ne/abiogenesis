@@ -37,7 +37,7 @@ export default class GalaxyMap extends PhaseScene {
 
   protected createPhase() {
     Audio.init(this.sys.game);
-    Audio.playMusic("galaxy_music", { loop: true });
+    Audio.playMusic("galaxy_music", { loop: true, volume: 2.5 });
     this.onShutdown(() => Audio.stopMusicIfKey("galaxy_music"));
 
     const w = 1920;
