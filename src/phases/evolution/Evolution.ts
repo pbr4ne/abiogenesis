@@ -43,6 +43,8 @@ export default class Evolution extends PhaseScene {
 
   protected createPhase() {
     Audio.init(this.sys.game);
+    Audio.playMusic("evolution_music", { loop: true, volume: 0.2 });
+    this.onShutdown(() => Audio.stopMusicIfKey("evolution_music"));
 
     const run = getRun();
     run.waterLevel = Math.max(run.waterLevel, 10);

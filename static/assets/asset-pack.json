@@ -172,6 +172,13 @@
                 "key": "Evolution Complete"
             },
             {
+                "url": [
+                    "assets/audio/evolution_music.mp3"
+                ],
+                "type": "audio",
+                "key": "evolution_music"
+            },
+            {
                 "url": "assets/images/evolution_tree.png",
                 "type": "image",
                 "key": "evolution_tree"
