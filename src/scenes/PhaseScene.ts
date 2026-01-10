@@ -78,6 +78,12 @@ export default abstract class PhaseScene extends BaseScene {
           tooltipLeftKey: left,
           tooltipMidKey: mid,
           tooltipRightKey: right,
+
+          tooltipLeftTint: this.getBreadcrumbIconColor(left),
+          tooltipMidTint: 0x666666,
+          tooltipRightTint: this.getBreadcrumbIconColor(right),
+
+          iconTint: 0x2bff6a,
           onClick: () => invokeSkipPhase(this)
         }
       );
@@ -123,6 +129,21 @@ export default abstract class PhaseScene extends BaseScene {
 
       default:
         return null;
+    }
+  }
+
+  private getBreadcrumbIconColor(iconKey: string): number {
+    switch (iconKey) {
+      case "terraformed":
+        return 0x8fd3ff;
+      case "dna":
+        return 0xf5b942;
+      case "evolution":
+        return 0xff1cb7;
+      case "system":
+        return 0xffd27f;
+      default:
+        return 0xffffff;
     }
   }
 

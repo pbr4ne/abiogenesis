@@ -4,9 +4,17 @@ type SkipPhaseButtonCfg = {
   size?: number;
   radius?: number;
   depthBase?: number;
+
   tooltipLeftKey: string;
   tooltipMidKey: string;
   tooltipRightKey: string;
+
+  tooltipLeftTint?: number;
+  tooltipMidTint?: number;
+  tooltipRightTint?: number;
+
+  iconTint?: number;
+
   onClick: () => void;
 };
 
@@ -48,7 +56,7 @@ export default class SkipPhaseButton {
     this.icon = scene.add.image(x, y, "wormhole");
     this.icon.setScrollFactor(0);
     this.icon.setDepth(depthBase + 1);
-    this.icon.setTintFill(0xffffff);
+    this.icon.setTintFill(cfg.iconTint ?? 0xffffff);
     this.icon.setAlpha(0.55);
 
     this.fitIconTo(this.icon, Math.floor(this.size * 0.62));
@@ -65,15 +73,15 @@ export default class SkipPhaseButton {
 
     this.tipLeft = scene.add.image(0, 0, cfg.tooltipLeftKey);
     this.tipLeft.setScrollFactor(0);
-    this.tipLeft.setTintFill(0xffffff);
+    this.tipLeft.setTintFill(cfg.tooltipLeftTint ?? 0xffffff);
 
     this.tipMid = scene.add.image(0, 0, cfg.tooltipMidKey);
     this.tipMid.setScrollFactor(0);
-    this.tipMid.setTintFill(0xffffff);
+    this.tipMid.setTintFill(cfg.tooltipMidTint ?? 0xffffff);
 
     this.tipRight = scene.add.image(0, 0, cfg.tooltipRightKey);
     this.tipRight.setScrollFactor(0);
-    this.tipRight.setTintFill(0xffffff);
+    this.tipRight.setTintFill(cfg.tooltipRightTint ?? 0xffffff);
 
     this.tip = scene.add.container(0, 0, [this.tipBg, this.tipLeft, this.tipMid, this.tipRight]);
     this.tip.setScrollFactor(0);
