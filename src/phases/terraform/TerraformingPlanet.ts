@@ -18,6 +18,7 @@ type HotspotGroup = {
   event: string;
   baseA: number;
   hoverA: number;
+  fillA: number;
   colourHex: string;
   centerUnit: Vec3;
   angRad: number;
@@ -111,6 +112,7 @@ export default class TerraformingPlanet extends PlanetBase {
         event: "ui:goToAtmosphere",
         baseA: 0.85,
         hoverA: 1,
+        fillA: 0.18,
         colourHex: "#ff00ff",
         centerUnit: atmoCenter,
         angRad: cellAng * 4
@@ -120,6 +122,7 @@ export default class TerraformingPlanet extends PlanetBase {
         event: "ui:goToMagnetosphere",
         baseA: 0.85,
         hoverA: 1,
+        fillA: 0.18,
         colourHex: "#ff0000",
         centerUnit: magCenter,
         angRad: cellAng * 5
@@ -129,6 +132,7 @@ export default class TerraformingPlanet extends PlanetBase {
         event: "ui:goToHydrosphere",
         baseA: 0.85,
         hoverA: 1,
+        fillA: 0.18,
         colourHex: "#09b674",
         centerUnit: hydroCenter,
         angRad: cellAng * 5
@@ -138,6 +142,7 @@ export default class TerraformingPlanet extends PlanetBase {
         event: "ui:goToCore",
         baseA: 0.85,
         hoverA: 1,
+        fillA: 0.18,
         colourHex: "#ffd35a",
         centerUnit: coreCenter,
         angRad: cellAng * 4
@@ -237,6 +242,14 @@ export default class TerraformingPlanet extends PlanetBase {
         }
       }
     });
+
+    this.hitZone.on("pointerout", () => {
+      this.clearHotspotHover();
+    });
+
+    this.hitZone.on("pointerupoutside", () => {
+      this.clearHotspotHover();
+    });
   }
 
   private clearHotspotHover() {
@@ -325,8 +338,30 @@ export default class TerraformingPlanet extends PlanetBase {
     const rotate = this.getHotspotRotate();
 
     for (const group of this.hotspotGroups) {
-      const a = this.hoveredGroupKey === group.key ? group.hoverA : group.baseA;
+      const hovered = this.hoveredGroupKey === group.key;
+      const a = hovered ? group.hoverA : group.baseA;
       const hex = Phaser.Display.Color.HexStringToColor(group.colourHex).color;
+
+      if (hovered && group.fillA > 0) {
+        const steps = 8;
+        for (let i = 0; i < steps; i++) {
+          const t = 1 - i / steps;
+          const ang = group.angRad * t;
+          const fillAlpha = group.fillA * (t * t);
+
+          strokeProjectedSphereCircle(
+            g,
+            this.r,
+            group.centerUnit,
+            ang,
+            rotate,
+            18,
+            hex,
+            fillAlpha,
+            96
+          );
+        }
+      }
 
       strokeProjectedSphereCircle(
         g,
