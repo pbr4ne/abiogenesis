@@ -3,6 +3,7 @@ import PhaseScene from "../scenes/PhaseScene";
 import { LifeFormType } from "../phases/evolution/EvolutionTypes";
 import { LIFEFORMS } from "../phases/evolution/LifeForms";
 import { Audio } from "../utilities/GameSounds";
+import { GalaxyMemory } from "../utilities/GalaxyMemory";
 
 type EndPlanet = {
   x: number;
@@ -165,6 +166,8 @@ export default class EndGame extends PhaseScene {
     this.bgCam.ignore(inf);
 
     inf.on(Phaser.Input.Events.POINTER_DOWN, () => {
+      GalaxyMemory.pendingPlanetId = null;
+      GalaxyMemory.completed = {};
       this.scene.start("Welcome");
     });
 
