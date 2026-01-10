@@ -271,7 +271,7 @@ export default class CreditsModal extends Phaser.GameObjects.Container {
       .setInteractive({ useHandCursor: true });
 
     const closeText = scene.add
-      .text(closeX - closeHit / 2, closeY + closeHit / 2, "X", {
+      .text(closeX - closeHit / 2, closeY + closeHit / 2, "x", {
         fontFamily: "Arial",
         fontSize: `${Math.round(closeHit * closeFontMul)}px`,
         color: "#ffffff"
